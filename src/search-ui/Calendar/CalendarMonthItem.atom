@@ -1,0 +1,314 @@
+<!-- @ignore -->
+<template>
+    <div>
+        <div
+            a-if="date"
+            class="c-calendar-month-item c-line-top"
+        >
+            <div
+                a-if="date.dayArr[0]"
+                :style="{
+                    color: date.dayArr[0].timestamp < curDate.timestamp
+                        ? '#999'
+                        : '#333'
+                }"
+                class="title c-gap-top-large"
+            >
+                <!-- 这里是为了触发视图更新；在外侧无法触发 updated -->
+                <div style="display: none">
+                    {{ checkedArr }}
+                </div>
+                {{ date.year }}年{{ date.month }}月
+            </div>
+            <div
+                a-if="date.dayArr"
+                class="content"
+            >
+                <div
+                    a-for="(row, rowIndex) in math_ceil(date.dayArr.length / 7)"
+                    :key="rowIndex"
+                    class="row"
+                >
+                    <template a-for="(item, index) in date.dayArr">
+                        <span
+                            a-if="index >= rowIndex * 7 && index < (rowIndex + 1) * 7"
+                            :style="{
+                                'padding-left': index % 7 === 0 ? '.17rem' : 0,
+                                'padding-right': index % 7 === 6 ? '.17rem' : 0,
+                                'color': (item.timestamp < curDate.timestamp)
+                                    ? '#999'
+                                    : index % 7 === 0 || index % 7 === 6
+                                        ? dateCheckedBgColor
+                                        : '#000',
+                                'background-color': item.isInCheckedArea ? dateCheckedAreaBgColor : ''
+                            }"
+                            :class="{
+                                'item-disable': item.timestamp < curDate.timestamp
+                            }"
+                            :key="index"
+                            class="item WA_LOG_BTN"
+                            @click="handleDayClick({
+                                dayArr: date.dayArr,
+                                dayItem: item,
+                                monthIndex: monthIndex,
+                                index: index
+                            })"
+                        >
+                            <!-- 在选中区域左侧半背景 -->
+                            <div
+                                a-if="item.isInCheckedAreaLeft"
+                                :style="{
+                                    'background-color': dateCheckedAreaBgColor,
+                                    'width': index % 7 === 0
+                                        ? firstLeftBgWidth
+                                        : index % 7 === 6
+                                            ? lastLeftBgWidth
+                                            : '50%'
+                                }"
+                                class="left-bg"
+                            />
+                            <!-- 在选中区域右侧半背景 -->
+                            <div
+                                a-if="item.isInCheckedAreaRight"
+                                :style="{
+                                    'background-color': dateCheckedAreaBgColor,
+                                    'width': index % 7 === 0
+                                        ? firstRightBgWidth
+                                        : index % 7 === 6
+                                            ? lastRightBgWidth
+                                            : '50%'
+                                }"
+                                class="right-bg"
+                            />
+                            <!-- 圆形区域 -->
+                            <div
+                                ref="circleArea"
+                                :style="{
+                                    'background-color': item.checked && item.day ? dateCheckedBgColor : ''
+                                }"
+                                :class="{
+                                    'item-checked': item.checked && item.day
+                                }"
+                                class="wrapper"
+                            >
+                                <!-- 日期 -->
+                                <div class="c-font-medium day">
+                                    {{ item.day }}
+                                </div>
+                                <!-- 第一文本 -->
+                                <div
+                                    a-if="item.text"
+                                    class="text"
+                                >
+                                    {{ item.text }}
+                                </div>
+                            </div>
+                        </span>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        // 月份索引
+        monthIndex: Number,
+        // 日期对象
+        date: Object,
+        // 选中的数组
+        checkedArr: Array,
+        // 当前日期
+        curDate: Object,
+        // 日期选中背景颜色
+        dateCheckedBgColor: String,
+        // 日期选中区域背景颜色
+        dateCheckedAreaBgColor: String
+    },
+    data: {
+        // 屏幕宽度
+        screenWidth: 0,
+        // 栅格边宽度
+        colSideWidth: 17,
+        // 圆形区域宽度
+        circleAreaWidth: 0,
+        // 第一个左边背景宽度
+        firstLeftBgWidth: '50%',
+        // 第一个右边背景宽度
+        firstRightBgWidth: '50%',
+        // 最后一个左边背景宽度
+        lastLeftBgWidth: '50%',
+        // 最后一个右边背景宽度
+        lastRightBgWidth: '50%'
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-btn': '../Button/Button'
+    }
+}
+</script>
+
+<script>
+export default {
+    mounted() {
+        // attach
+        this.attach();
+        // 计算圆形区域的宽度
+        this.getCircleWidth();
+        // 判断是否在选择区域内
+        this.judgeIsInCheckedArea();
+    },
+    updated() {
+    },
+    methods: {
+        attach() {
+            // 获得屏幕宽度
+            this.screenWidth = document.body.clientWidth;
+            // 计算边框值
+            if (this.screenWidth < 360) {
+                this.colSideWidth = 17 * .9;
+            }
+            // 计算宽度默认值
+            this.circleAreaWidth = (this.screenWidth - this.colSideWidth * 2) / 7;
+        },
+        // 得到圆形区域的宽度
+        getCircleWidth() {
+            let offsetWidth = this.$refs.circleArea[0].offsetWidth;
+            if (offsetWidth) {
+                this.circleAreaWidth = offsetWidth;
+            }
+            // 因为通栏的时候最左和最右间距有问题，需要调整
+            this.firstLeftBgWidth = this.circleAreaWidth / 2 + this.colSideWidth + 'px';
+            this.firstRightBgWidth = this.circleAreaWidth / 2 + 'px';
+            this.lastLeftBgWidth = this.circleAreaWidth / 2 + 'px';
+            this.lastRightBgWidth = this.circleAreaWidth / 2 + this.colSideWidth + 'px';
+        },
+        // 天数点击事件
+        handleDayClick(obj) {
+            this.$emit('dayclick', obj);
+        },
+        // 判断是否在选择区域内
+        judgeIsInCheckedArea() {
+            // 长度小于 2 时
+            if (this.checkedArr.length < 2) {
+                this.date.dayArr.forEach((item, index) => {
+                    this.$set(item, 'isInCheckedArea', false);
+                    this.$set(item, 'isInCheckedAreaLeft', false);
+                    this.$set(item, 'isInCheckedAreaRight', false);
+                });
+            }
+            // 长度等于 2 时
+            else if (this.checkedArr.length === 2) {
+                let startTimestamp = this.checkedArr[0].dayItem.timestamp;
+                let endTimestamp = this.checkedArr[1].dayItem.timestamp;
+                // 如果开始结束都是同一天
+                if (startTimestamp === endTimestamp) {
+                    return;
+                }
+                this.date.dayArr.forEach((item, index) => {
+                    if (item.timestamp > startTimestamp && item.timestamp < endTimestamp) {
+                        this.$set(item, 'isInCheckedArea', true);
+                    }
+                    else if (item.timestamp === startTimestamp) {
+                        this.$set(item, 'isInCheckedAreaRight', true);
+                    }
+                    else if (item.timestamp === endTimestamp) {
+                        this.$set(item, 'isInCheckedAreaLeft', true);
+                    }
+                    else {
+                        this.$set(item, 'isInCheckedArea', false);
+                        this.$set(item, 'isInCheckedAreaLeft', false);
+                        this.$set(item, 'isInCheckedAreaRight', false);
+                    }
+                });
+            }
+        }
+    },
+    watch: {
+        checkedArr(newVal, oldVal) {
+            // 判断是否在选择区域内
+            this.judgeIsInCheckedArea();
+            // 计算圆形区域的宽度
+            this.getCircleWidth();
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.c-calendar-month-item {
+    box-sizing: border-box;
+    .title {
+        color: #333;
+        text-align: center;
+    }
+    .content {
+        padding-top: .17rem;
+        padding-bottom: .2rem;
+        .row {
+            display: flex;
+            // padding: 0 .17rem;
+            .item {
+                position: relative;
+                flex: 1;
+                .wrapper {
+                    position: relative;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    width: 100%;
+                    height: 0;
+                    padding-bottom: 100%;
+                    border-radius: 50%;
+                    text-align: center;
+                    .day {
+                        position: absolute;
+                        top: 50%;
+                        left: 0;
+                        right: 0;
+                        transform: translateY(-50%);
+                    }
+                    .text,
+                    .text2 {
+                        position: absolute;
+                        top: 50%;
+                        left: 0;
+                        right: 0;
+                        line-height: 1;
+                        transform: translateY(-50%);
+                        font-size: 10px;
+                    }
+                    .text {
+                        margin-top: 14px;
+                    }
+                    .text2 {
+                        margin-top: -14px;
+                    }
+                }
+                .item-checked {
+                    color: #fff;
+                }
+                .left-bg,
+                .right-bg {
+                    position: absolute;
+                    top: 0;
+                    height: 100%;
+                    width: 50%;
+                }
+                .left-bg {
+                    left: 0;
+                }
+                .right-bg {
+                    right: 0;
+                }
+            }
+            .item-disable {
+                color: #999;
+            }
+        }
+    }
+}
+</style>

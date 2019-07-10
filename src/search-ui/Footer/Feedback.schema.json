@@ -1,0 +1,52 @@
+{
+    "type": "object",
+    "properties": {
+        "feedback": {
+            "type": "object",
+            "@ChineseName": "反馈相关内容",
+            "description": "反馈相关内容",
+            "properties": {
+                "is_show": {
+                    "type": "string",
+                    "@ChineseName": "是否显示反馈",
+                    "@Demo": "1",
+                    "description": "是否显示反馈",
+                    "enum": ["0", "1"]
+                },
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "反馈标题",
+                    "@Demo": "反馈",
+                    "description": "反馈组件上显示的标题文字"
+                },
+                "content": {
+                    "type": "object",
+                    "@ChineseName": "反馈详情",
+                    "description": "反馈详情",
+                    "properties": {
+                        "text": {
+                            "type": "string",
+                            "@ChineseName": "反馈原因",
+                            "@Demo": "反馈",
+                            "description": "反馈原因文案"
+                        },
+                        "emptyEnable": {
+                            "type": "string",
+                            "@ChineseName": "是否允许用户不填写反馈内容提交",
+                            "@Demo": "0",
+                            "description": "是否允许用户不填写反馈内容提交",
+                            "enum": ["0", "1"]
+                        },
+                        "contactRequire": {
+                            "type": "string",
+                            "@ChineseName": "是否强制要求填写联系方式",
+                            "@Demo": "0",
+                            "description": "是否强制要求填写联系方式",
+                            "enum": ["0", "1"]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

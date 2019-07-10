@@ -1,0 +1,167 @@
+<template>
+    <div>
+        <template a-if="oState">
+            <div :style="wrapperStyle" class="c-toast-popup-wrapper">
+                <transition :name="transition" appear>
+                    <div class="c-toast-popup-content">
+                        <!-- @slot 默认 slot -->
+                        <slot></slot>
+                    </div>
+                </transition>
+            </div>
+            <div
+                a-if="hasMask"
+                :class="{
+                    'c-toast-popup-mask': true,
+                    'WA_LOG_OTHER': dismissible
+                }"
+                @touchmove.prevent
+                @click="maskClick"
+            >
+            </div>
+        </template>
+    </div>
+</template>
+<script type="config">
+{
+    props: {
+        /**
+         * 点击组件内容外部可关闭组件
+         */
+        dismissible: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 动画名称
+         */
+        transition: {
+            type: String,
+            default: 'zoom-in-from-big'
+        },
+        /**
+         * 组件状态
+         */
+        state: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 是否有遮罩
+         */
+        hasMask: {
+            type: Boolean,
+            default: true
+        },
+         /**
+         * Toast离顶部的距离
+         */
+        top: {
+            type: String,
+            default: '50%'
+        },
+        /**
+         * Toast离底部的距离
+         */
+        bottom: {
+            type: String,
+            default: ''
+        }
+    },
+    data: {
+        oState: state
+    }
+}
+</script>
+
+<script>
+export default {
+    watch: {
+        state(value, old) {
+            this.change(value);
+        }
+    },
+    computed: {
+        wrapperStyle() {
+            return {
+                'top': this.bottom === '' ? this.top : 'auto',
+                'bottom': this.bottom,
+                'transform': this.top === '50%' ? 'translate(0, -50%)' : '',
+                '-webkit-transform': this.top === '50%' ? 'translate(0, -50%)' : ''
+            };
+        }
+    },
+    methods: {
+        maskClick() {
+            if (!this.dismissible) {
+                return;
+            }
+            this.change(false);
+        },
+        change(value) {
+
+            /**
+             * 状态state 发生变化时触发 true 为打开，false 为关闭.
+             *
+             * @event change
+             */
+            this.$emit('change', value);
+            this.oState = value;
+        }
+    }
+};
+</script>
+
+<script type="php">
+    function computed_wrapperStyle($ctx){
+        $top = $ctx->_d['top'];
+        $bottom = $ctx->_d['bottom'];
+
+        $wrapperStyle['top'] = $bottom === '' ? $top : 'auto';
+        $wrapperStyle['bottom'] = $bottom;
+        $wrapperStyle['transform'] = $top === '50%' ? 'translate(0, -50%)' : '';
+        $wrapperStyle['-webkit-transform'] = $top === '50%' ? 'translate(0, -50%)' : '';
+        return $wrapperStyle;
+    }
+</script>
+
+<style lang="less" scoped>
+.c-toast-popup-wrapper {
+    position: fixed;
+    left: 0;
+    z-index: 910;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+.c-toast-popup-content {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+.c-toast-popup-mask {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 900;
+    background: rgba(0, 0, 0, 0.65);
+}
+.zoom-in-from-big-enter-active {
+    animation-name: zoom-in-from-big;
+    animation-duration: .2s;
+}
+@keyframes zoom-in-from-big {
+    0% {
+        opacity: 0;
+        transform: scale3d(1.3, 1.3, 1.3);
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+</style>

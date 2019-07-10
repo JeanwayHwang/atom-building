@@ -1,0 +1,36 @@
+{
+    "alias": [
+        "c-sigma"
+    ],
+    "type": "object",
+    "properties": {
+        "sigma": {
+            "type": "object",
+            "properties": {
+                "footerText": {
+                    "type": "string",
+                    "@ChineseName": "底部文字",
+                    "description": "底部文字",
+                    "@Demo": "详细攻略"
+                },
+                "footerUrl": {
+                    "type": "string",
+                    "@ChineseName": "底部跳转链接",
+                    "description": "底部跳转链接",
+                    "@Demo": "https://m.baidu.com"
+                },
+                "footerType": {
+                    "type": "string",
+                    "@ChineseName": "底部展现类型",
+                    "description": "底部展现类型",
+                    "@Demo": "linkBar"
+                }
+            },
+            "propsData": [
+                "footerText",
+                "footerUrl",
+                "footerType"
+            ]
+        }
+    }
+}

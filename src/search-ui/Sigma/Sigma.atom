@@ -1,0 +1,59 @@
+<template>
+    <article
+        :class="[$platform === 'pc' ? 'c-border' : '']"
+        class="c-container c-sigma-container"
+    >
+        <section>
+            <slot/>
+        </section>
+        <footer>
+            <slot
+                a-if="!hideFooter"
+                name="footer"
+            >
+                <c-sigma-footer
+                    :type="footerType"
+                    :text="footerText"
+                    :url="footerUrl"
+                    :url-params="footerUrlParams"
+                    :use-divider="footerUseDivider"
+                    :hide-other-result="hideOtherResult"
+                    :icon-color="iconColor"
+                    :icon-type="iconType"
+                />
+            </slot>
+        </footer>
+    </article>
+</template>
+
+<script type="config">
+{
+    props: {
+        footerType: String,
+        footerText: String,
+        footerUrl: String,
+        footerUrlParams: Object,
+        footerUseDivider: Boolean,
+        hideFooter: Boolean,
+        hideOtherResult: Boolean,
+        iconType: String,
+        iconColor: String
+    },
+    components: {
+        'c-sigma-footer': '../Sigma/SigmaFooter'
+    }
+}
+</script>
+
+<style lang="less" scoped>
+.c-sigma-container {
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.c-border {
+    border: 1px solid #e3e3e3;
+    border-bottom-color: #e0e0e0;
+    border-right-color: #ececec;
+}
+</style>

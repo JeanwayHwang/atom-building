@@ -1,0 +1,255 @@
+<!--@ignore-->
+<template>
+    <!-- TagItem -->
+    <!-- 选中时边线使用 box-shadow 模拟避免 Android 手机上右下角勾和边线间出现白线的问题 -->
+    <!-- 这里多加一个 spread-tag-item 是为了兼容线上已存在模板，因为线上已存在模板会使用类查询的方式，防止 js 报错 -->
+    <div
+        :style="[
+            {
+                'position': 'relative',
+                'overflow': 'hidden',
+                'color': color,
+                'background-color': '#fff',
+                '-webkit-box-shadow': '0 0 0 1px ' + borderColor + ' inset',
+                'box-shadow': '0 0 0 1px ' + borderColor + ' inset'
+            },
+            negative
+                ? {
+                    color: negativeColor
+                }
+                : {},
+            theme === 'gray'
+                ? {
+                    'background-color': grayThemeColor,
+                    '-webkit-box-shadow': '0 0 0 1px ' + grayThemeColor + ' inset',
+                    'box-shadow': '0 0 0 1px ' + grayThemeColor + ' inset'
+                }
+                : {},
+            selected
+                ? {
+                    'color': selectedColor === '#555' ? '#000' : selectedColor,
+                    'background-color': '#fff',
+                    '-webkit-box-shadow': '0 0 0 1px ' + selectedColor + ' inset',
+                    'box-shadow': '0 0 0 1px ' + selectedColor + ' inset'
+                }
+                : {},
+            size === 'large'
+                ? {
+                    'padding-top': '7px',
+                    'padding-bottom': '7px'
+                }
+                : {},
+            auto
+                ? {
+                    display: 'inline-block'
+                }
+                : {}
+        ]"
+        :class="[
+            !disable
+                ? 'WA_LOG_BTN'
+                : ''
+        ]"
+        class="spread-tag-item tag-item c-gap-inner-left c-gap-inner-right"
+        @click="handleClick"
+    >
+        <!-- 文案 -->
+        <span class="c-line-clamp1">
+            <c-icon
+                a-if="icon"
+                :type="icon"
+                class="c-gap-right-small"
+            />
+            <span>
+                {{ text }}
+            </span>
+        </span>
+        <!-- 多选右下角勾 -->
+        <!-- （多选 或者 强制加对勾样式）并且被选中时，显示对勾样式 -->
+        <template
+            a-if="
+                (type === 'checkbox' || forceCheck)
+                    && selected
+            "
+        >
+            <!-- 三角形 -->
+            <div
+                :style="{
+                    'border-bottom': '16px solid ' + selectedColor
+                }"
+                class="check-triangle"
+            />
+            <!-- 对勾 wrapper -->
+            <div class="check-icon-wrapper">
+                <!-- 对勾 -->
+                <c-icon
+                    type="check"
+                    class="check-icon"
+                />
+            </div>
+        </template>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 文案
+         */
+        text: String,
+
+        /**
+         * 图标
+         */
+        icon: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 类型；radio 单选；checkbox 多选
+         */
+        type: {
+            type: String,
+            default: 'radio'
+        },
+
+        /**
+         * 主题；normal 正常；gray 灰色主题
+         */
+        theme: {
+            type: String,
+            default: 'normal'
+        },
+
+        /**
+         * 大小；normal 正常；large 大号；
+         */
+        size: {
+            type: String,
+            default: 'normal'
+        },
+
+        /**
+         * 是否自适应
+         */
+        auto: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 是否被选中
+         */
+        selected: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 是否是负向文字
+         */
+        negative: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 是否禁用
+         */
+        disable: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 文字颜色
+         */
+        color: {
+            type: String,
+            default: '#000'
+        },
+
+        /**
+         * 边框颜色
+         */
+        borderColor: {
+            type: String,
+            default: '#eee'
+        },
+
+        /**
+         * 选中颜色；选中颜色需要和文字颜色相同
+         */
+        selectedColor: {
+            type: String,
+            default: '#555'
+        },
+
+        /**
+         * 强制显示对勾；不论是 radio 还是 checkbox，显示对勾就完事了
+         */
+        forceCheck: {
+            type: Boolean,
+            default: false
+        }
+    },
+    data: {
+        // 负向文字颜色
+        negativeColor: '#999',
+        // 灰色主题颜色
+        grayThemeColor: '#f8f8f8'
+    },
+    components: {
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleClick(e) {
+            this.$emit('click', e);
+        }
+    }
+};
+</script>
+
+<style module lang="less">
+.tag-item {
+    // 这里是为了兼容 Android 低版本浏览器里，右侧边线消失的问题
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-radius: 5px;
+    box-sizing: border-box;
+    text-align: center;
+    // 用来解决在 Android 机上，在筛选浮层里使用时，overflow: hidden 失效的问题
+    transform: translateZ(0);
+}
+.check-triangle {
+    position: absolute;
+    border-left: 17px solid transparent;
+    width: 0;
+    height: 0;
+    bottom: 0;
+    right: 0;
+    box-sizing: border-box;
+}
+.check-icon-wrapper {
+    position: absolute;
+    bottom: 3px;
+    right: -2px;
+    width: 17px;
+    height: 16px;
+}
+.check-icon {
+    display: inline;
+    font-size: 7px;
+    margin-left: 2px;
+    color: #fff;
+    font-weight: bold;
+}
+</style>

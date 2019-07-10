@@ -1,0 +1,294 @@
+<template>
+    <!-- 外层 wrapper -->
+    <div
+        :style="[
+            rowTile
+                ? {
+                    'margin-left': '-.17rem',
+                    'margin-right': '-.17rem'
+                }
+                : {}
+        ]"
+        class="scroll-auto"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
+        @touchend="handleTouchEnd"
+        @touchcancel="handleTouchCancel"
+    >
+        <!-- 降级 -->
+        <!-- better-scroll -->
+        <div
+            a-if="isDownGrade"
+            ref="downGradeWrapper"
+            class="down-grade-wrapper"
+        >
+            <div
+                ref="downGradeScroller"
+                class="down-grade-scroller"
+            >
+                <div
+                    a-for="(item, index) in slotsCount"
+                    ref="downGradeItem"
+                    :key="index"
+                    class="down-grade-item"
+                >
+                    <!-- @slot:default 横滑项 -->
+                    <slot :name="'slot' + index"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- 不降级 -->
+        <!-- 可滑动区域 -->
+        <div
+            a-else
+            :style="[
+                rowTile
+                    ? {
+                        'padding-left': '.17rem',
+                        'padding-right': '.17rem'
+                    }
+                    : {}
+            ]"
+            class="scroller"
+        >
+            <!-- 行 -->
+            <div
+                a-for="(i, rowIndex) in row"
+                :key="rowIndex"
+                class="row"
+            >
+                <!-- 项 -->
+                <div
+                    a-for="(j, columnIndex) in column"
+                    :key="columnIndex"
+                    :style="[
+                        rowTile && columnIndex === column - 1
+                            ? {
+                                'padding-right': '.17rem'
+                            }
+                            : {}
+                    ]"
+                    class="item"
+                >
+                    <!-- @slot:default 横滑项 -->
+                    <slot
+                        :name="'slot' + (sortOrder === 'horizontal'
+                            ? (columnIndex + rowIndex * column)
+                            : (rowIndex + columnIndex * row)
+                        )"
+                    />
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 横滑的行数
+         */
+        row: {
+            type: Number,
+            default: 1
+        },
+
+        /**
+         * 排序顺序：'horizontal' 水平排列；'vertical' 竖直排列
+         */
+        sortOrder: {
+            type: String,
+            default: 'horizontal'
+        },
+
+        /**
+         * 是否是通栏
+         */
+        rowTile: {
+            type: Boolean,
+            default: true
+        }
+    },
+    data: {
+        startX: 0,
+        startY: 0,
+        endX: 0,
+        endY: 0,
+        // iOS 版本
+        iOSVersion: null,
+        // better-scroll 的实例
+        bscroll: null
+    }
+}
+</script>
+
+<script>
+import UA from '@searchfe/user-agent';
+import BScroll from '@baidu/better-scroll';
+
+export default {
+    mounted() {
+        this.iOSVersion = UA.iOSVersion()[0];
+        // iOS 9 以下进行降级
+        if (this.iOSVersion <= 9) {
+            this.downGrade();
+        }
+    },
+    render() {
+        this.column = 0;
+        let vnodes = this.$slots.default;
+        if (vnodes && vnodes.length) {
+            vnodes.forEach((vnode, index) => {
+                // 放入指定 slot
+                this.$slots['slot' + index] = [vnode];
+            });
+            // 设置 slots 个数
+            this.slotsCount = vnodes.length;
+            this.column = Math.ceil(this.slotsCount / this.row);
+        }
+        return this.$super.render();
+    },
+    methods: {
+        // 降级处理
+        downGrade() {
+            this.$nextTick(() => {
+                // 计算出总宽度
+                let totalWidth = 0;
+                this.$refs.downGradeItem.forEach((item, index) => {
+                    totalWidth += item.offsetWidth;
+                });
+
+                // 手动设置 scroller 的宽度
+                let downGradeScroller = this.$refs.downGradeScroller;
+                downGradeScroller.style.width = totalWidth + 10 + 'px';
+
+                // 设置 better-scroll
+                let downGradeWrapper = this.$refs.downGradeWrapper;
+                this.bscroll = new BScroll(downGradeWrapper, {
+                    bindToWrapper: true, // 将 touchmove 事件绑定至 dom 而非全局
+                    scrollX: true,
+                    scrollY: false,
+                    momentum: true,
+                    disableMouse: true,
+                    disablePointer: true,
+                    eventPassthrough: true,
+                    scrollbars: false,
+                    snap: false
+                });
+
+                this.bscroll.on('scrollEnd', obj => {
+
+                    /**
+                     * 滑动结束事件
+                     *
+                     * @event scrollend
+                     */
+                    this.$emit('scrollend');
+                });
+            });
+        },
+        handleTouchStart(e) {
+            if (!e) {
+                return;
+            }
+            this.startX = e.touches[0].clientX;
+            this.startY = e.touches[0].clientY;
+            this.endX = e.touches[0].clientX;
+            this.endY = e.touches[0].clientY;
+        },
+        handleTouchMove(e) {
+            if (!e) {
+                return;
+            }
+            this.endX = e.touches[0].clientX;
+            this.endY = e.touches[0].clientY;
+        },
+        handleTouchEnd(e) {
+            if (Math.abs(this.endX - this.startX) > 30) {
+
+                /**
+                 * 滑动结束事件
+                 *
+                 * @event scrollend
+                 */
+                this.$emit('scrollend');
+            }
+        },
+        handleTouchCancel(e) {
+            this.handleTouchEnd(e);
+        }
+    },
+    computed: {
+        isDownGrade() {
+            this.iOSVersion = UA.iOSVersion()[0];
+            if (this.iOSVersion <= 9) {
+                return true;
+            }
+            return false;
+        }
+    }
+};
+</script>
+
+<script type="php">
+function render($ctx, $isXml = false) {
+    $vnodes = $ctx->slots['default'];
+    if ($vnodes && count($vnodes)) {
+        foreach ($vnodes as $index => $vnode) {
+            // 放入指定 slot
+            $ctx->slots['slot' . $index] = [$vnode];
+        }
+        // 设置 slots 个数
+        $ctx->_d['slotsCount'] = count($vnodes);
+        $ctx->_d['column'] = ceil($ctx->_d['slotsCount'] / $ctx->_d['row']);
+    }
+    return parent::render($ctx);
+}
+
+function computed_isDownGrade($ctx){
+    $ua = $_SERVER['HTTP_USER_AGENT'];
+    if (strpos($ua, 'iPhone') !== false) {
+        preg_match("/(?<=CPU iPhone OS )[\d\_]{1,}/", $ua, $version);
+        if ($version[0] <= 8) {
+            return true;
+        }
+    }
+    return false;
+}
+</script>
+
+<style module lang="less">
+.scroll-auto {
+    overflow: hidden;
+}
+.down-grade-scroller {
+    padding-left: .17rem;
+    padding-right: .17rem;
+    width: 2000px;
+}
+.down-grade-item {
+    display: inline-block;
+    box-sizing: border-box;
+    vertical-align: top;
+}
+.scroller {
+    overflow-x: auto;
+    // iOS 弹性滚动
+    -webkit-overflow-scrolling: touch;
+    // 这里一套组合技是为了隐藏水平滚动条
+    transform: translateY(.1rem);
+    margin-top: -.1rem;
+    padding-bottom: .1rem;
+}
+.row {
+    display: flex;
+    width: auto;
+    white-space: nowrap;
+}
+.item {
+    box-sizing: border-box;
+}
+</style>

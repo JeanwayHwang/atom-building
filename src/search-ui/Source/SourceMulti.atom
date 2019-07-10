@@ -1,0 +1,385 @@
+<template>
+    <!-- 只有一个元素时，顶部间距需要回缩 5px -->
+    <!-- 多个元素时，底部间距需要多 5px -->
+    <div
+        :style="{
+            marginTop: mList.length === 1 ? '-.05rem' : ''
+        }"
+        :class="{
+            'c-gap-inner-bottom-small': mList.length > 1
+        }"
+        class="source-multi"
+        data-click="{'clk_info':{}}"
+    >
+        <!-- 左边 -->
+        <div
+            class="left"
+        >
+            <!-- 单个 -->
+            <div
+                a-if="mList.length === 1"
+                class="single"
+            >
+                <!-- 图标 -->
+                <div
+                    :style="{
+                        backgroundImage: 'url(' + mList[0].icon + ')'
+                    }"
+                    class="icon c-gap-right-middle"
+                >
+                </div>
+                <!-- 文案 -->
+                <div
+                    class="c-color-gray c-gap-right"
+                >
+                    {{ mList[0].text }}
+                </div>
+            </div>
+            <!-- 多个 -->
+            <c-touchable-feedback
+                a-else
+                :right=".1"
+                border-radius="14px"
+                class="WA_LOG_BTN"
+            >
+                <!-- 图标加文字栏 -->
+                <div
+                    class="multi c-gap-inner-left c-gap-inner-right c-gap-right"
+                    @click="handleMultiClick"
+                >
+                    <!-- 图标栏 -->
+                    <div
+                        :style="{
+                            width: 7 * listReverse.length + 8 + 'px'
+                        }"
+                        class="icon-layout c-gap-right-small"
+                    >
+                        <!-- 图标 -->
+                        <!-- 这里是逆序遍历的，因为同一 z-index，后面的 dom 会遮挡前面的 dom -->
+                        <!-- 只有大图标在外层 dom 上显示图片，其余图片需要透明的，都在内层 dom 里显示 -->
+                        <div
+                            a-for="(item, itemIndex) in listReverse"
+                            :key="'icon' + itemIndex"
+                            :style="{
+                                backgroundImage: 'url(' + item.icon + ')',
+                                left: 7 * (listReverse.length - 1 - itemIndex) + 'px'
+                            }"
+                            :class="
+                                itemIndex !== listReverse.length - 1
+                                    ? $style.iconSmall
+                                    : ''
+                            "
+                            class="icon"
+                        >
+                            <!-- 这里主要是从第二个图片开始，图片需要透明，但是元素不能透明，所以使用了这样一种 dom 结构 -->
+                            <div
+                                a-if="itemIndex !== listReverse.length - 1"
+                                class="icon-inner"
+                            >
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 文案 -->
+                    <div>
+                        {{ mList[0].text }}
+                    </div>
+                </div>
+            </c-touchable-feedback>
+            <!-- 小程序标识，暂时写死 -->
+            <div
+                class="c-color-gray"
+            >
+                智能小程序
+            </div>
+            <!-- 反馈 -->
+            <c-tooltip-func-btn
+                a-if="(feedback && feedback.suggest && feedback.suggest.is_show == 1) || evaluate"
+                :feedback="feedback"
+                :evaluate="evaluate"
+                class="c-gap-left"
+            />
+        </div>
+        <!-- 右边箭头 -->
+        <div
+            a-if="more"
+            class="more c-color-gray"
+        >
+            <i class="c-icon">&#xe734;</i>
+        </div>
+        <!-- 弹层 -->
+        <c-touchable-stop
+            a-if="list.length > 1"
+        >
+            <c-popup
+                :is-open="showPopup"
+                title="选择智能小程序"
+                @close="handlePopupClose"
+            >
+                <!-- 这里用原数组遍历，因为这里的顺序不需要变化 -->
+                <div
+                    a-for="(item, index) in list"
+                    :key="'popup-inner' + index"
+                >
+                    <c-touchable-feedback
+                        :left="-.17"
+                        :right="-.17"
+                        class="WA_LOG_BTN"
+                        @click.native="handleItemClick({
+                            item,
+                            index
+                        })"
+                    >
+                        <div
+                            class="popup-inner-item c-gap-inner-top-large c-gap-inner-bottom-large"
+                        >
+                            <!-- 左侧 -->
+                            <div
+                                class="popup-inner-item-left"
+                            >
+                                <div
+                                    :style="{
+                                        backgroundImage: 'url(' + item.icon + ')'
+                                    }"
+                                    class="popup-inner-item-icon c-gap-right-middle"
+                                >
+                                </div>
+                                <div
+                                    class="text c-font-medium c-line-clamp1"
+                                >
+                                    {{ item.text }}
+                                </div>
+                            </div>
+                            <!-- 右侧图标 -->
+                            <div
+                                a-if="selectedIndex === index"
+                                class="right"
+                            >
+                                <i class="c-icon">
+                                    &#xe608;
+                                </i>
+                            </div>
+                        </div>
+                    </c-touchable-feedback>
+                    <!-- 分割线 -->
+                    <div
+                        :class="{
+                            'c-line-bottom': index !== list.length - 1
+                        }"
+                        class="c-row-tile"
+                    >
+                    </div>
+                </div>
+            </c-popup>
+        </c-touchable-stop>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 数组数据
+         *
+         * @property {string} icon 图标地址
+         * @property {string} text 文案
+         */
+        list: {
+            type: Array
+        },
+
+        /**
+         * 选项索引
+         */
+        selectedIndex: {
+            type: Number,
+            default: 0
+        },
+
+        /**
+         * 是否显示更多箭头
+         */
+        more: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 反馈参数；详情请参考：[Atom 卡片反馈功能开发规范](http://sfe.baidu.com:8188/standard/feedback.md)
+         */
+        feedback: Object,
+
+        /**
+         * 评价数据
+         *
+         * @property {string} url 评价跳转链接
+         * @property {Object} params 评价跳转链接的 urlParams
+         */
+        evaluate: {
+            type: Object
+        }
+
+    },
+    data: {
+        showPopup: false,
+        // 需要一个数组作为 data，因为要内部换顺序
+        mList: list
+    },
+    components: {
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback',
+        'c-touchable-stop': '../TouchableFeedback/TouchableStop',
+        'c-tooltip-func-btn': '../TooltipFuncBtn/TooltipFuncBtn',
+        'c-popup': '../Popup/Popup'
+    }
+}
+</script>
+
+<script type="php">
+function computed_listReverse($ctx) {
+    $list = $ctx->_d["list"];
+    // 策略，最多显示3个来源图标
+    $list = array_slice($list, 0, 3);
+    if(isset($list)) {
+        return array_reverse($list);
+    }
+    return [];
+}
+</script>
+
+<script>
+/**
+ * @file 来源 小程序们
+ * @author wangkai37 <wangkai37@baidu.com>
+ */
+export default {
+    mounted() {
+        // 需要浅复制，不能改变原数组
+        this.mList = this.list.slice(0);
+    },
+    methods: {
+        handleMultiClick() {
+            this.showPopup = true;
+        },
+        handlePopupClose() {
+            this.showPopup = false;
+        },
+        handleItemClick(obj) {
+
+            /**
+             * 项点击事件
+             *
+             * @event itemclick
+             * @property {Object} param1.item 点击项对象
+             * @property {number} param1.index 点击项索引
+             */
+            this.$emit('itemclick', obj);
+
+            /**
+             * 改变事件
+             *
+             * @event change
+             * @property {Object} param1.item 点击项对象
+             * @property {number} param1.index 点击项索引
+             */
+            this.$emit('change', obj);
+
+            // 浅复制原数组，要避免改变 props 的顺序
+            let tList1 = this.list.slice(0);
+            // 在原数组的基础上，改变数组顺序
+            let tList2 = tList1.splice(obj.index, 1);
+            this.mList = tList2.concat(tList1);
+
+            this.showPopup = false;
+        }
+    },
+    computed: {
+        // 逆序排列，为了实现 UE 效果
+        listReverse() {
+            // 策略，最多显示3个来源图标
+            let listCopy = this.mList.slice(0, 3);
+            listCopy.reverse();
+            return listCopy;
+        }
+    },
+    watch: {
+        list(newVal) {
+            this.mList = newVal.slice(0);
+        }
+    }
+};
+</script>
+
+<style lang="less" module>
+.source-multi {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .left {
+        display: flex;
+        align-items: center;
+        flex-grow: 1;
+    }
+    .icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 8px;
+        background-size: cover;
+        box-sizing: border-box;
+    }
+    .single {
+        display: flex;
+        align-items: center;
+        .icon {
+            border: 1px solid #eee;
+        }
+    }
+    .multi {
+        display: flex;
+        align-items: center;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        border-radius: 14px;
+        background-color: #f5f5f5;
+        .icon-layout {
+            display: flex;
+            align-items: center;
+            position: relative;
+            height: 16px;
+            overflow: hidden;
+            .icon {
+                position: absolute;
+                border: 1px solid #f5f5f5;
+            }
+            .icon-small {
+                width: 14px;
+                height: 14px;
+                border-radius: 7px;
+                background-color: #f5f5f5;
+                .icon-inner {
+                    width: 100%;
+                    height: 100%;
+                    background-size: cover;
+                    background-color: #fff;
+                    border-radius: 7px;
+                    opacity: .7;
+                }
+            }
+        }
+    }
+    .popup-inner-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .popup-inner-item-left {
+        display: flex;
+        align-items: center;
+    }
+    .popup-inner-item-icon {
+        width: 26px;
+        height: 26px;
+        background-size: cover;
+        border-radius: 13px;
+    }
+}
+</style>

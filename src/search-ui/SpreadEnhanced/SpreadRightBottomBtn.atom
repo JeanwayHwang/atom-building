@@ -1,0 +1,166 @@
+<!-- @ignore -->
+<template>
+    <c-touchable-feedback
+        :left=".1"
+        :right="-.08"
+    >
+        <div
+            class="spread-right-bottom-btn"
+        >
+            <!-- eslint-disable atom/attribute-object-format -->
+            <div
+                ref="before"
+                :style="[
+                    bgColor
+                        ? {
+                            background: '-webkit-gradient(linear,left top,right top,from(' + bgColorRgba + '),to('
+                                + bgColor
+                                + '))',
+                            background: '-webkit-linear-gradient(left,' + bgColorRgba + ',' + bgColor + ')',
+                            background: 'linear-gradient(to right,' + bgColorRgba + ',' + bgColor + ')'
+                        }
+                        : {}
+                ]"
+                class="before"
+            />
+            <!-- eslint-enable atom/attribute-object-format -->
+            <div
+                :style="[
+                    bgColor
+                        ? {
+                            backgroundColor: bgColor
+                        }
+                        : {}
+                ]"
+                :class="[
+                    logClass
+                        ? 'WA_LOG_BTN'
+                        : ''
+                ]"
+                class="spread-right-bottom-btn-wrapper"
+                @click="handleClick"
+            >
+                <span>
+                    {{
+                        spread
+                            ? foldText
+                            : spreadText
+                    }}
+                </span>
+                <c-arrow
+                    :direction="
+                        spread
+                            ? 2
+                            : 1
+                    "
+                    :fill-color="bgColor"
+                    :color="iconColor"
+                    class="c-gap-left-small"
+                />
+            </div>
+        </div>
+    </c-touchable-feedback>
+</template>
+
+<script type="config">
+{
+    props: {
+        // 用于设置初始状态，展开为 true，收起为 false
+        spread: {
+            type: Boolean,
+            default: false
+        },
+        // 收起状态时，展示内容文案配置
+        spreadText: {
+            type: String,
+            default: '展开'
+        },
+        // 展开状态时，收起内容文案配置
+        foldText: {
+            type: String,
+            default: '收起'
+        },
+        // 底部按钮文字方向
+        textAlign: {
+            type: String,
+            default: 'center'
+        },
+        // icon 颜色
+        iconColor: {
+            type: String,
+            default: '#555'
+        },
+        // 背景色
+        bgColor: String,
+        // 是否增加日志类
+        logClass: {
+            type: Boolean,
+            default: true
+        }
+    },
+    components: {
+        'c-arrow': '../AnimateIcon/Arrow',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleClick() {
+            this.$emit('click', {
+                spread: this.spread
+            });
+        }
+    },
+    computed: {
+        bgColorRgba() {
+            let bgColorRgba = this.bgColor;
+            if (!bgColorRgba) {
+                return;
+            }
+            if (bgColorRgba.indexOf('rgb') !== -1 && bgColorRgba.indexOf('rgba') === -1) {
+                bgColorRgba = bgColorRgba.replace('rgb', 'rgba');
+                bgColorRgba = bgColorRgba.replace(')', ' ,0)');
+            }
+            return bgColorRgba;
+        }
+    }
+};
+</script>
+
+<script type="php">
+function computed_bgColorRgba($ctx) {
+    $bgColorRgba = $ctx->_d["bgColor"];
+    if (empty($bgColorRgba)) {
+        return;
+    }
+    if (strpos($bgColorRgba, 'rgb') !== false && strpos($bgColorRgba, 'rgba') === false) {
+        $bgColorRgba = str_replace('rgb', 'rgba', $bgColorRgba);
+        $bgColorRgba = str_replace(')', ',0)', $bgColorRgba);
+    }
+    return $bgColorRgba;
+}
+</script>
+
+<style module lang="less">
+.spread-right-bottom-btn-wrapper {
+    position: relative;
+    display: inline-block;
+    padding-left: .2rem;
+    background: #fff;
+}
+
+.spread-right-bottom-btn {
+    .before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -50px;
+        width: 50px;
+        height: 24px;
+        background: linear-gradient(to right, rgba(255, 255, 255, 0), #ffffff);
+    }
+}
+</style>

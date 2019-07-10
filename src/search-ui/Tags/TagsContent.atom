@@ -1,0 +1,264 @@
+<!--@ignore-->
+<template>
+    <div
+        ref="contentWrapper"
+        :style="{height: wrapperHeight > 0 ? wrapperHeight + 'px' : 'auto'}"
+        :class="{'c-tags-content-wrapper-animation': !isDownGrade && !isResetAnimation}"
+        :inner-height="innerHeight"
+        class="c-tags-content-wrapper"
+    >
+        <transition-group
+            tag="div"
+            name="display"
+            @before-enter="beforeContentEnter"
+            @enter="contentEnter"
+        >
+            <div
+                a-for="(tag, index) in tagList"
+                a-show="index === selected"
+                ref="tags"
+                :class="{'c-tags-content-animation': contentPosition}"
+                :key="'_c_' + index"
+                :style="{height: (loadingDur[index] || tag.isLoading) && wrapperHeight > 0
+                ? wrapperHeight + 'px' : 'auto'}"
+                class="c-tags-content"
+            >
+                <transition
+                    name="display"
+                    @before-enter="beforeContentEnter"
+                    @enter="contentEnter"
+                >
+                    <c-loading
+                        a-if="loadingDur[index] || tag.isLoading"
+                        :key="'__loading__' + index"
+                        class="c-tags-loading"
+                    />
+                </transition>
+                <transition
+                    name="display"
+                    @enter="contentEnter"
+                    @before-enter="beforeContentEnter"
+                >
+                    <div
+                        a-if="!loadingDur[index] && !tag.isLoading"
+                        class="c-tags-content-inner"
+                    >
+                        <slot :name="'__c__' + index"/>
+                    </div>
+                </transition>
+            </div>
+        </transition-group>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        selected: {
+            type: [Number, String],
+            default: 0,
+            required: true
+        },
+        innerHeight: {
+            type: Number,
+            default: 0
+        },
+        loadingData: Array
+    },
+    data: {
+        animation: null,
+        contentPosition: false,
+        wrapperHeight: null,
+        // 留给改高度的时候 去掉css transition的标志位
+        isResetAnimation: true,
+        loadingDur: [],
+        isDownGrade: false
+    },
+    components: {
+        'c-loading': '../Loading/Loading'
+    }
+}
+</script>
+<script type="php">
+    function created($ctx) {
+        if (empty($ctx->_d["loadingData"])) {
+            $data = $ctx->getMessage('tag-content-item-data');
+            $ctx->_d["tagList"] = $data;
+        }
+        else {
+            $ctx->_d["tagList"] = $ctx->_d["loadingData"];
+        }
+    }
+    function render ($ctx, $isXml = false) {
+        $vnodes = $ctx->slots['default'];
+        foreach ($vnodes as $index => $vnode) {
+            $ctx->slots['__c__' . $index] = array($vnode);
+        }
+        return parent::render($ctx, $isXml);
+    }
+</script>
+
+<script>
+/**
+ * @file tagsContent
+ * @author zhangjingyuan02
+ */
+export default {
+    render(ctx) {
+        let vnodes = this.$slots.default;
+        this.tagList = vnodes.map((vnode, index) => {
+            this.$slots['__c__' + index] = [vnode];
+            let data = vnode.componentOptions.propsData;
+            let itemObj = {
+                isLoading: data.isLoading ? data.isLoading : false
+            };
+            return itemObj;
+        });
+        return this.$super.render();
+    },
+    watch: {
+        selected(newVal, oldVal) {
+            if (newVal === oldVal) {
+                return;
+            }
+            this.wrapperHeight = this.$refs.contentWrapper.offsetHeight;
+            // 设置最少 loading 时间
+            if (this.tagList[newVal].isLoading) {
+                setTimeout(() => {
+                    this.$set(this.loadingDur, newVal, false);
+                }, 640);
+            }
+            this.$nextTick(() => {
+                if (this.animation) {
+                    this.animation = null;
+                }
+            });
+        },
+        innerHeight(newVal, oldVal) {
+            if (newVal) {
+                this.$nextTick(() => {
+                    this.isResetAnimation = false;
+                    this.wrapperHeight = newVal;
+                });
+            }
+        }
+    },
+    mounted() {
+        this.isDownGrade = this.isIosSmall() || this.isLowChrome();
+        this.wrapperHeight = this.$refs.contentWrapper.offsetHeight;
+        this.contentPosition = true;
+        // this.loadingDur = this.tagData.isLoading;
+        this.loadingDur = this.tagList.map(value => value.isLoading);
+        this.$root.$on('attach', () => {
+            this.reset();
+        });
+        window.addEventListener('resize', this.reset);
+        window.addEventListener('orientationchange', this.reset);
+    },
+    destroyed() {
+        window.removeEventListener('resize', this.reset);
+        window.removeEventListener('orientationchange', this.reset);
+    },
+    methods: {
+        // 判断手机型号为iPhone 小屏机，包括4, 4s, 5, 5s, se 等
+        isIosSmall() {
+            let isIphone = /iphone/.test(navigator.userAgent.toLowerCase());
+            let width = window.innerWidth
+                || document.documentElement.clientWidth
+                || document.body.clientWidth;
+            return width < 321 && isIphone;
+        },
+        // 内核版本chrome/53以下的做动画降级
+        isLowChrome() {
+            let ua = navigator.userAgent.toLowerCase();
+            let isAndroid = /android/.test(ua);
+            if (isAndroid) {
+                let chromeReg = /chrome\/(\w*)/g;
+                let chromeos = ua.match(chromeReg);
+                if (chromeos && chromeos[0]) {
+                    chromeos = parseInt(chromeos[0].substring(7), 10);
+                    if (chromeos > 52) {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            return false;
+        },
+        beforeContentEnter(dom) {
+            this.isResetAnimation = false;
+        },
+        contentEnter(dom) {
+            if (this.tagList[this.selected].isLoading) {
+                this.wrapperHeight = this.wrapperHeight < 120 ? 120 : this.wrapperHeight;
+            }
+            else {
+                // 这里的 nextTick 是为了保证当 loading 结束时，只有 dom 完全渲染以后才开始取高度
+                this.$nextTick(() => {
+                    this.wrapperHeight = this.$refs.tags[this.selected].offsetHeight;
+                });
+            }
+            setTimeout(() => {
+                this.isResetAnimation = true;
+            }, 400);
+        },
+        reset() {
+            this.wrapperHeight = this.$refs.tags[this.selected].offsetHeight;
+        },
+        refresh() {
+            this.$nextTick(() => {
+                this.reset();
+            });
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.c-tags-content-wrapper {
+    position: relative;
+    margin: 0 -.17rem;
+    overflow: hidden;
+    -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+}
+.c-tags-content-wrapper-animation {
+    will-change: height;
+    -webkit-transition: height .3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: height .3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.c-tags-content {
+    position: relative;
+    overflow: hidden;
+}
+.c-tags-content-inner {
+    overflow: hidden;
+}
+.c-tags-content-animation {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+}
+.c-tags-loading {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    margin-top: -.43rem;
+}
+
+
+.display-enter-active {
+    transition: opacity .5s cubic-bezier(.18, 0, .26, 1);
+}
+.display-leave-active {
+    display: none;
+}
+
+.display-enter {
+    opacity: 0;
+}
+
+</style>

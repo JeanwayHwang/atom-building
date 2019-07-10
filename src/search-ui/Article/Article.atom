@@ -1,0 +1,331 @@
+<template>
+    <div
+        a-if="count >= 1 && count < 3"
+        :class="articleType == '1' ? 'c-article-one' : 'c-article-two'"
+    >
+        <c-link
+            :url="url"
+            :params="urlParams"
+        >
+            <c-img-content
+                :img-src="imgList[0].src"
+                :default-image-type="imgList[0].defaultImageType"
+                :img-type="imgType"
+                :img-col="imgCol"
+                :is-vertical-middle="imgCol === 2 && (!abstract || (!time && !readNum && !source))"
+            >
+                <c-line
+                    :class="[
+                        titleClass,
+                        {
+                            'c-article-title-clamp1': abstract || imgCol === 2
+                        }
+                    ]"
+                    :clamp="!abstract && imgCol !== 2 ? 2 : 1"
+                    color="link"
+                    class="c-article-title"
+                >
+                    <c-label
+                        a-if="labelText"
+                        :text="labelText"
+                        :type="labelType"
+                    />
+                    {{ title }}
+                </c-line>
+                <c-line
+                    a-if="abstract"
+                    :class="[
+                        {
+                            'c-article-abstract-clamp1': imgCol === 2
+                        }
+                    ]"
+                    :clamp="imgCol === 2 ? 1 : 2"
+                    class="c-color c-gap-bottom-zero"
+                >
+                    {{ abstract }}
+                </c-line>
+                <c-article-ext-info
+                    :time="time"
+                    :read-num="readNum"
+                    :source="source"
+                    :show-ext-info="showExtInfo"
+                    :class="{
+                        'c-article-ext-info-margintop': abstract
+                    }"
+                    role="text"
+                >
+                    <slot name="extInfo"/>
+                </c-article-ext-info>
+            </c-img-content>
+        </c-link>
+    </div>
+    <div
+        a-else
+        :class="articleType == '1' ? 'c-article-one' : 'c-article-two'"
+    >
+        <c-link
+            :url="url"
+            :params="urlParams"
+            class="c-gap-bottom-small"
+        >
+            <c-line
+                :class="titleClass"
+                :clamp="1"
+                color="link"
+                class="c-article-title c-article-title-clamp1"
+            >
+                <c-label
+                    a-if="labelText"
+                    :text="labelText"
+                    :type="labelType"
+                />
+                {{ title }}
+            </c-line>
+        </c-link>
+
+        <c-row a-if="count >=3">
+            <template
+                a-for="(img, index) in imgList"
+            >
+                <c-span
+                    a-if="index < 3"
+                    :key="index"
+                    :col="$platform === 'pc' ? '8' : ''"
+                >
+                    <c-link :url="url" :params="urlParams">
+                        <c-img
+                            :src="img.src"
+                            :default-image-type="img.defaultImageType"
+                            :type="img.type ? img.type : 'x'"
+                            :border-radius="
+                                index === 0
+                                    ? {
+                                        tl: true,
+                                        tr: false,
+                                        bl: true,
+                                        br: false
+                                    }
+                                    : index === 2
+                                        ? {
+                                            tl: false,
+                                            tr: true,
+                                            bl: false,
+                                            br: true
+                                        }
+                                        : {}
+                            "
+                        />
+                    </c-link>
+                </c-span>
+            </template>
+        </c-row>
+        <c-link
+            a-else-if="abstract"
+            :url="url"
+            :params="urlParams"
+        >
+            <c-line
+                clamp="2"
+                class="c-color c-gap-bottom-zero"
+            >
+                {{ abstract }}
+            </c-line>
+        </c-link>
+        <c-article-ext-info
+            a-if="source || readNum || time || showExtInfo"
+            :time="time"
+            :read-num="readNum"
+            :source="source"
+            :class="{
+                'c-article-ext-info-margintop': abstract && count < 3
+            }"
+            :show-ext-info="showExtInfo"
+        >
+            <!-- @slot 文章拓展信息，排序为：来源 > 时间 > 阅读数 > 拓展信息，即拓展信息在最右侧，多个拓展信息之间需要加间隔 -->
+            <slot name="extInfo"/>
+        </c-article-ext-info>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 标题的文本，支持高亮
+         */
+        title: {
+            type: String
+        },
+        /**
+         * 文章类别，一级 or 二级；目前只支持这两级，只有字体大小及行高的区别；2级用于结果页，1级用于情景页
+         */
+        articleType: {
+            // 用于区分结果页还是情景页
+            type: String,
+            default: '2'
+        },
+        /**
+         * 链接地址
+         */
+        url: {
+            type: String
+        },
+        /**
+         * 链接所需参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        urlParams: {
+            type: Object
+        },
+        /**
+         * 内容的文本，摘要
+         */
+        abstract: {
+            type: String
+        },
+        /**
+         * 图片比例，值有（s,l,w,x,y）
+         *
+         * @property {string} src 图片链接
+         * @property {string} defaultImageType 缺省图&加载图类型，具体可参考 [Image](./Image)
+         * @property {string} type 图片比例，值有（s,l,w,x,y），默认为 x，详见[栅格图片](http://pmd.baidu.com/doc/#image)
+         */
+        imgList: {
+            type: Array
+        },
+        /**
+         * 图片所占栅格，只有单图样式有效
+         *
+         * @see See [ImageContent](./ImageContent#API) `imgCol`
+         */
+        imgCol: {
+            type: Number
+        },
+        /**
+         * 文章来源
+         */
+        imgType: {
+            type: String,
+            default: 's'
+        },
+
+        /**
+         * 时间戳 单位：毫秒
+         */
+        time: {
+            type: [Number, String]
+        },
+
+        /**
+         * 文章阅读数
+         */
+        readNum: {
+            type: [Number, String]
+        },
+
+        /**
+         * 文章来源
+         */
+        source: {
+            type: String
+        },
+
+        /**
+         * 标签文案
+         */
+        labelText: {
+            type: String
+        },
+
+        /**
+         * 标签类型
+         *
+         * @see See [Label](./Label#API) `type`
+         */
+        labelType: {
+            type: String
+        },
+
+        /**
+         * 标题字号
+         */
+        titleFontSize: String,
+
+        /**
+         * 标题截断
+         */
+        titleClamp: String
+    },
+    computed: {
+        count: imgList && imgList.length
+            ? imgList.length
+            : 0,
+        titleClass: {
+            'c-title': articleType === '1',
+            'c-font-medium': articleType === '2'
+        }
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-img': '../Image/Image',
+        'c-link': '../Link/Link',
+        'c-line': '../Line/Line',
+        'c-label': '../Label/Label',
+        'c-img-content': '../ImgContent/ImgContent',
+        'c-article-ext-info': './ArticleExtInfo'
+    }
+}
+</script>
+
+<script type="php">
+function render ($ctx, $isXml = false) {
+    $vNodeExtInfo = $ctx->slots['extInfo'];
+    $ctx->_d['showExtInfo'] = !empty($vNodeExtInfo);
+    return parent::render($ctx, false);
+}
+</script>
+
+<script>
+/**
+ * @file 文章拓展信息
+ * @auth guoyong03
+ */
+export default {
+    render() {
+        let vNodeExtInfo = this.$slots.extInfo;
+        this.showExtInfo = !!vNodeExtInfo && vNodeExtInfo.length > 0;
+        return this.$super.render();
+    }
+};
+</script>
+
+<style scoped lang="less">
+.c-article-one,
+.c-article-two {
+    .c-article-title {
+        .c-text-box {
+            margin-right: .05rem;
+        }
+    }
+    .c-article-title.c-line-clamp2 {
+        margin-bottom: .03rem;
+    }
+}
+.c-article-ext-info-margintop {
+    margin-top: 3px;
+}
+.c-article-abstract-clamp1,
+.c-article-title-clamp1 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    -webkit-line-clamp: 1;
+}
+.c-article-title-clamp1 {
+    padding-bottom: .03rem;
+}
+</style>

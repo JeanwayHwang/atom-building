@@ -1,0 +1,24 @@
+{
+    "alias": [
+        "c-tabs"
+    ],
+    "type": "object",
+    "properties": {
+        "tabs": {
+            "type": "object",
+            "@ChineseName": "tabs 组件实例",
+            "description": "tabs 组件实例",
+            "properties": {
+                "selected": {
+                    "type": "number",
+                    "@ChineseName": "tabs 选中索引",
+                    "@Demo": 0,
+                    "description": "tabs 选中索引"
+                }
+            },
+            "propsData": [
+                "selected"
+            ]
+        }
+    }
+}

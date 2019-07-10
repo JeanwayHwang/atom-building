@@ -1,0 +1,52 @@
+<template>
+    <div
+        :class="['c-line-clamp' + clamp, color ? ('c-color-' + color) : '']"
+        :style="{
+            'text-align': align
+        }"
+        @click="$emit('click', $event)"
+    >
+        <!-- @slot 内容 -->
+        <slot/>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 显示行数，范围为1-5
+         */
+        clamp: {
+            type: [Number, String],
+            default: 1
+        },
+
+        /**
+         * 文案颜色，可选值参照`c-color-*`
+         *
+         * @see See [文字颜色](http://pmd.baidu.com/doc/#card)
+         */
+        color: String,
+
+        /**
+         * 文案对齐方式，可选值为：`left`、`center`、`right`
+         */
+        align: {
+            type: String,
+            default: 'left'
+        }
+    }
+}
+</script>
+
+<script>
+/**
+ * 点击事件
+ *
+ * @event click
+ * @property {Event} param1 透传事件对象
+ */
+</script>
+

@@ -1,0 +1,49 @@
+<!--@ignore-->
+<template>
+    <c-link :url="item.url" :params="item.params">
+        <!-- eslint-disable -->
+        <c-img
+            :img-src="item.src"
+            :src="item.src"
+            :type="item.type"
+            :title="item.title"
+            :titleClamp="item.titleClamp"
+            :subTitle="item.subTitle"
+            :subTitleClamp="item.subTitleClamp"
+            :titleAlign="item.titleAlign ? item.titleAlign : 'left'"
+            :subTitleAlign="item.subTitleAlign ? item.subTitleAlign : 'left'"
+            :showNum="item.imgNum"
+            :iconType="item.iconType"
+            :hackWhiteStroke="!!item.hackWhiteStroke"
+            class="c-color-link"
+            @click="onImgClick(item)"
+        >
+            <slot></slot>
+        </c-img>
+        <!-- eslint-enable -->
+        <slot :name="'c-page-scroll-imgs-ext'+idx"></slot>
+    </c-link>
+</template>
+
+<config>
+    /* eslint-disable */
+    {
+        props: [
+            'idx', 'col', 'item'
+        ],
+        components: {
+            'c-img': '../Image/Image',
+            'c-link': '../Link/Link'
+        }
+    }
+    /* eslint-enable */
+</config>
+<script>
+module.exports = {
+    methods: {
+        onImgClick(item) {
+            this.$emit('imgClick', item);
+        }
+    }
+};
+</script>

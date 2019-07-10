@@ -1,0 +1,47 @@
+{
+    "alias": [
+        "c-filter-simple"
+    ],
+    "type": "object",
+    "properties": {
+        "filterSimple": {
+            "type": "object",
+            "@ChineseName": "FilterSimple 组件实例",
+            "description": "FilterSimple 组件实例，FilterSimple 的基础相关数据",
+            "properties": {
+                "selectionList": {
+                    "type": "array",
+                    "@ChineseName": "筛选项列表",
+                    "description": "筛选项列表",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "label": {
+                                "type": "string",
+                                "@ChineseName": "筛选项的显示文案",
+                                "@Demo": "文案1",
+                                "description": "筛选项的显示文案"
+                            },
+                            "filterKey": {
+                                "type": "string",
+                                "@ChineseName": "筛选项的key",
+                                "@Demo": "key1",
+                                "description": "筛选项的key"
+                            }
+                        }
+                    }
+                },
+                "selectedIndex": {
+                    "type": "number",
+                    "@ChineseName": "当前选中项的索引，默认值-1表示不选中任何筛选项",
+                    "@Demo": 0,
+                    "description": "当前选中项的索引，默认值-1表示不选中任何筛选项"
+                }
+            },
+            "propsData": [
+                "selectionList",
+                "selectedIndex"
+            ]
+        }
+    }
+}

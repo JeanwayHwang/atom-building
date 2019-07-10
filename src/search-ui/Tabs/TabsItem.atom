@@ -1,0 +1,79 @@
+<template>
+    <div
+        :tab-data-module="tabDataModule"
+        :style="{padding: $platform === 'pc' ? '0 9px' : '0 .17rem'}"
+        class="c-tabs-item"
+    >
+        <!-- @slot 某个选项卡的内容区域 -->
+        <slot a-if="!isLoading"/>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 选项卡的标题
+         */
+        label: {
+            type: String
+        },
+        /**
+         * tabbar上的图标，宽高14px
+         */
+        icon: {
+            type: String,
+            default: ''
+        },
+        /**
+         * 是否为正在加载中，主要用于异步加载组件
+         */
+        isLoading: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 自定义日志内容,格式为{key, value}
+         */
+        logContent: {
+            type: Object,
+            default: {}
+        },
+        /**
+         * 携带参数
+         *
+         * @property {string} url 不为空点击头部可直接跳转，参数为跳转链接地址 默认值 ''
+         * @property {object} linkOption 跳转链接参数 默认值 ''
+         * @property {string} linkOption.type 链接的类型，sf 表示跳转情景页 可选 'normal' 'sf' 默认值 normal
+         * @property {string} linkOption.tsfUrl data-sf-href所需地址 默认值 ''
+         * @property {string} linkOption.toptions data-sf-options所需 默认值 ''
+         */
+        params: {
+            type: Object,
+            default: {}
+        },
+        /**
+         * 统计区块名称
+         */
+        tabDataModule: {
+            type: String,
+            default: ''
+        }
+    }
+}
+</script>
+
+<script type="php">
+    function created ($ctx) {
+        $ctx->dispatch('tab-item-data', $ctx->_d);
+        $ctx->dispatch('tab-content-item-data', array('isLoading' => $ctx->_d['isLoading']));
+    }
+</script>
+
+<style lang="less" scoped>
+.c-tabs-item {
+    padding: 0 .17rem;
+    background-color: #fff;
+    overflow: hidden;
+}
+</style>

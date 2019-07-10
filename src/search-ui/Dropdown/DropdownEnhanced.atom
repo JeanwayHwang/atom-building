@@ -1,0 +1,248 @@
+<!-- @ignore -->
+<template>
+    <div
+        :class="{
+            'dropdown-disable': disabled,
+            'c-gap-top-small': !label
+        }"
+        class="dropdown c-gap-bottom-small"
+        rl-type="stop"
+    >
+        <label
+            a-if="label"
+            class="dropdown-label"
+        >
+            {{ label }}
+        </label>
+        <!-- 选择框按钮 -->
+        <div
+            :style="[
+                direction !== 'ltr'
+                    ? {
+                        direction
+                    }
+                    : {},
+                noBorder
+                    ? {
+                        border: 'none'
+                    }
+                    : {},
+                focus
+                    ? {
+                        borderColor: '#000'
+                    }
+                    : {}
+            ]"
+            class="dropdown-btn"
+            @click="handleClick"
+        >
+            <span
+                :style="[
+                    innerValue === ''
+                        ? {
+                            color: '#999'
+                        }
+                        : {},
+                    disabled
+                        ? {
+                            color: '#dbdbdb'
+                        }
+                        : {},
+                    noBorder
+                        ? {
+                            color: '#555'
+                        }
+                        : {}
+                ]"
+            >
+                {{ innerValue === '' ? '请选择' : selectorOptions[selectedIndex].text }}
+            </span>
+        </div>
+        <!-- 箭头 -->
+        <c-arrow
+            :direction="focus
+                ? 2
+                : 1
+            "
+            :color="disabled
+                ? '#dbdbdb'
+                : '#555'
+            "
+            class="dropdown-arrow"
+            animation
+        />
+        <!-- 选择框组件 -->
+        <c-selector
+            :title="label"
+            :data="selectorOptions"
+            :open="showSelector"
+            @select="handleSelectorSelect"
+            @close="handleSelectorClose"
+        />
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        disabled: {
+            type: Boolean,
+            default: false
+        },
+        value: {
+            type: [Number, String],
+            default: ''
+        },
+        options: {
+            type: Array,
+            default: []
+        },
+        label: {
+            type: String,
+            default: ''
+        },
+        direction: {
+            type: String,
+            default: 'ltr'
+        },
+        noBorder: {
+            type: Boolean,
+            default: false
+        },
+        silent: {
+            type: Boolean,
+            default: false
+        }
+    },
+    data: {
+        focus: false,
+        innerValue: value,
+        showSelector: false,
+        selectorOptions: options
+    },
+    components: {
+        'c-arrow': '../AnimateIcon/Arrow',
+        'c-selector': '../Selector/Selector'
+    }
+}
+</script>
+
+<script>
+export default {
+    computed: {
+        selectedIndex: {
+            get() {
+                return this.getSelectedIndex(this.innerValue);
+            }
+        }
+    },
+    watch: {
+        value(v) {
+            this.innerValue = v;
+        }
+    },
+    mounted() {
+        // 深拷贝一份选项
+        this.selectorOptions = JSON.parse(JSON.stringify(this.options));
+    },
+    methods: {
+        getSelectedIndex(v) {
+            for (let i = 0, len = this.options.length; i < len; i++) {
+                if (this.options[i].value === v) {
+                    return i;
+                }
+            }
+        },
+        handleClick(e) {
+            if (this.disabled) {
+                return;
+            }
+            this.focus = true;
+            // 处理默认选中
+            for (let i = 0, len = this.selectorOptions.length; i < len; i++) {
+                if (this.selectorOptions[i].value === this.innerValue) {
+                    this.selectorOptions[i].selected = true;
+                }
+                else {
+                    this.selectorOptions[i].selected = false;
+                }
+            }
+            // 调用选择框组件
+            this.showSelector = true;
+        },
+        handleSelectorSelect(e) {
+            if (this.innerValue === e.value) {
+                return;
+            }
+            this.innerValue = e.value;
+            if (!this.silent) {
+                this.$emit('change', {
+                    target: this,
+                    value: e.value,
+                    selectedIndex: e.index
+                });
+            }
+        },
+        handleSelectorClose(e) {
+            this.showSelector = false;
+            this.focus = false;
+        }
+    }
+};
+</script>
+
+<script type="php">
+function computed_selectedIndex($ctx) {
+    $options = $ctx->_d["options"];
+    $value = $ctx->_d["value"];
+
+    foreach ($options as $index => $option) {
+        if ($option["value"] === $value) {
+            return $index;
+        }
+    }
+}
+</script>
+
+<style module>
+.dropdown {
+    position: relative;
+    background-color: inherit;
+}
+.dropdown-disable > .dropdown-btn {
+    border-color: #f1f1f1;
+}
+.dropdown-label {
+    position: relative;
+    display: block;
+    z-index: 1;
+    width: 100%;
+    height: .26rem;
+    color: #999;
+}
+.dropdown-btn {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 38px;
+    /* csshint-disable */
+    line-height: 38px;
+    /* csshint-enable */
+    padding: 0 .29rem 0 .08rem;
+    border: 1px solid #eee;
+    outline: none;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    border-radius: 5px;
+}
+.dropdown-btn > span {
+    color: #000;
+    font: 14px/24px Arial, Helvetica, sans-serif;
+}
+.dropdown-arrow {
+    position: absolute;
+    right: .08rem;
+    bottom: 7px;
+}
+</style>

@@ -1,0 +1,390 @@
+<template>
+    <div class="c-news-article-item">
+        <c-touchable-feedback
+            :open="!!(url || (params && params.tcUrl))"
+            :url="url"
+            :url-params="params"
+            border-radius="3px"
+            is-jump
+            expand
+        >
+            <!-- 上半部分 -->
+            <div class="top">
+                <c-link
+                    a-if="title"
+                    :url="url"
+                    :params="params"
+                >
+                    <!-- 标题 -->
+                    <!-- eslint-disable atom/max-len -->
+                    <c-line
+                        clamp="2"
+                        role="text"
+                        class="title c-font-medium c-color-link c-gap-top c-gap-bottom c-gap-inner-left-middle c-gap-inner-right-middle"
+                    >
+                        <!-- 标签 -->
+                        <c-label
+                            a-if="label"
+                            :text="label"
+                            :type="labelType"
+                            class="c-gap-right-small"
+                        />
+                        <!-- 是否作为 html；标题飘红需求时使用 -->
+                        <span
+                            a-if="isTitleHtml"
+                            a-html="title"
+                        >
+                        </span>
+                        <!-- 普通 text -->
+                        <span
+                            a-else
+                        >
+                            {{ title }}
+                        </span>
+                    </c-line>
+                    <!-- eslint-enable atom/max-len -->
+                </c-link>
+                <c-line
+                    a-if="avatar || source || time || extra"
+                    class="abstract c-color-gray c-gap-top-small c-gap-inner-left-middle c-gap-inner-right-middle"
+                    clamp="1"
+                    role="text"
+                >
+                    <!-- 动态组件；描述；当熊掌号链接存在时，这行单独可点 -->
+                    <c-touchable-feedback
+                        :open="!!(avatarUrl || (avatarUrlParams && avatarUrlParams.tcUrl))"
+                        :left="-.08"
+                        class="avatar-link-wrapper"
+                        is-jump
+                        background-color="rgba(0, 0, 0, .08)"
+                    >
+                        <c-link
+                            :url="avatarUrl ? avatarUrl : null"
+                            :params="avatarUrlParams ? avatarUrlParams : null"
+                            class="avatar-link"
+                        >
+                            <!-- icon -->
+                            <span
+                                a-if="avatar"
+                                :style="{
+                                    'background-image': 'url(' + avatar + ')'
+                                }"
+                                class="icon c-gap-right-small"
+                            >
+                            </span>
+                            <!-- 来源 -->
+                            <span
+                                a-if="source"
+                                class="source c-gap-right-middle c-color-gray"
+                            >
+                                {{ source }}
+                            </span>
+                        </c-link>
+                    </c-touchable-feedback>
+                    <!-- 时间 -->
+                    <span
+                        a-if="time"
+                        class="time c-gap-right-middle"
+                    >
+                        <!-- 如果是数字使用 timespan -->
+                        <c-timespan
+                            a-if="isTimeNumber"
+                            :time="time"
+                        />
+                        <!-- 如果是其他类型，直接显示 -->
+                        <span
+                            a-else
+                        >
+                            {{ time }}
+                        </span>
+                    </span>
+                    <!-- 其他信息 -->
+                    <span
+                        a-if="extra"
+                        class="extra"
+                    >
+                        {{ extra }}
+                    </span>
+                </c-line>
+                <!-- 分割 -->
+                <div
+                    class="c-gap-inner-bottom"
+                />
+                <!-- 为了对齐纯文字，有图的项需要加 1px -->
+                <div
+                    a-if="imgSrc"
+                    style="height: 1px"
+                />
+            </div>
+            <!-- 下半部分；图片 -->
+            <c-link
+                a-if="content || imgSrc"
+                :url="url"
+                :params="params"
+                role="text"
+            >
+                <!-- 图片在前内容在后 -->
+                <!-- 图片 -->
+                <c-img
+                    a-if="imgSrc"
+                    :src="imgSrc"
+                    :type="imgType"
+                    :border-radius="{
+                        tl: false,
+                        tr: false,
+                        bl: true,
+                        br: true
+                    }"
+                    class="c-gap-bottom-zero c-gap-top-zero"
+                    hack-white-stroke
+                />
+                <!-- 内容 -->
+                <div
+                    a-else-if="content"
+                    class="content-wrapper"
+                >
+                    <!-- 加这个是为了在移动设备上与图片对齐 -->
+                    <!-- <div style="height: 1px"/> -->
+                    <div
+                        class="content bottom-border"
+                    />
+                    <c-line
+                        class="content-text c-gap-inner-left-middle c-gap-inner-right-middle c-color"
+                        clamp="4"
+                    >
+                        {{ content }}
+                    </c-line>
+                </div>
+            </c-link>
+        </c-touchable-feedback>
+    </div>
+</template>
+
+<style lang="less" scoped>
+.c-news-article-item {
+    position: relative;
+    box-sizing: border-box;
+    border-radius: 3px;
+
+    .top,
+    .bottom-border {
+        border: 1px solid #f1f1f1;
+    }
+
+    .top {
+        border-bottom: none;
+        border-top-left-radius: 3px;
+        border-top-right-radius: 3px;
+        // fix border bug in baidubox app, iphone6p
+        transform: translate3d(0, 0, 0);
+    }
+
+    .bottom-border {
+        border-top: none;
+        border-bottom-left-radius: 3px;
+        border-bottom-right-radius: 3px;
+        transform: translate3d(0, 0, 0);
+    }
+
+    .title {
+        // 相当于 c-text-line 组件的 fixHeight 属性；这里写 47px 而不是 52px 是为了解决部分 Android 手机手百上，两行截断后，依然出现半截第三行的问题
+        line-height: 1.5;
+        height: 3em;
+    }
+
+    .abstract {
+        position: relative;
+        display: box;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+
+        .avatar-link-wrapper {
+            display: inline-block;
+        }
+
+        .avatar-link {
+            display: box;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+
+            .icon {
+                -webkit-box-flex: 1;
+                -webkit-flex: 1 0 auto;
+                position: relative;
+                top: 3px;
+                display: inline-block;
+                background: center no-repeat;
+                background-size: cover;
+                width: .16rem;
+                height: .16rem;
+                border: 1px solid #eee;
+                border-radius: .08rem;
+            }
+
+            .source {
+                display: inline-block;
+                overflow: hidden;
+                max-width: 135px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+
+            @media screen and (max-width:330px) {
+                .source {
+                    max-width: 42px;
+                }
+            }
+
+            @media screen and (min-width:330px) and (max-width:374px) {
+                .source {
+                    max-width: 58px;
+                }
+            }
+
+            @media screen and (min-width:375px) and (max-width:414px) {
+                .source {
+                    max-width: 60px;
+                }
+            }
+        }
+
+        .time,
+        .extra {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    }
+
+    // 为了防止文字被截断，需要使用这样的 dom 结构，content 与 content-text 平级，否则会出现 content-text 被截断的问题
+    .content-wrapper {
+        position: relative;
+
+        // 这里 content 的高度也要和图片(3：2)保持一致，所以使用了 padding-bottom: 66.66666667%
+        .content {
+            height: 0;
+            padding-bottom: 66.66666667%;
+            box-sizing: border-box;
+        }
+
+        .content-text {
+            position: absolute;
+            // 文字顶部需要与图片对齐，所以需要往上移 0.05rem
+            top: -.05rem;
+            font-size: .14rem;
+            line-height: .24rem;
+        }
+    }
+}
+</style>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 跳转的 url
+         */
+        url: String,
+        /**
+         * 跳转 url 的 params
+         */
+        params: Object,
+        /**
+         * 标题的标签文案
+         */
+        label: String,
+        /**
+         * 标题的标签类型，可参考Label 组件
+         */
+        labelType: String,
+        /**
+         * 标题
+         */
+        title: String,
+        /**
+         * 标题是否作为 innerHtml 插入到 dom 中；标题飘红需求时使用，默认为 false
+         */
+        isTitleHtml: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 熊掌号头像地址
+         */
+        avatar: String,
+        /**
+         * 熊掌号跳转 url
+         */
+        avatarUrl: String,
+        /**
+         * 熊掌号 urlParams
+         */
+        avatarUrlParams: Object,
+        /**
+         * 来源字段
+         */
+        source: String,
+        /**
+         * 来源字段
+         */
+        time: [String, Number],
+        /**
+         * 除了来源、时间之外的其他信息
+         */
+        extra: String,
+        /**
+         * 图片地址
+         */
+        imgSrc: String,
+        /**
+         * 段落文字内容
+         */
+        content: String,
+        /**
+         * 当图片和内容数据同时存在的时候优先显示的类型；默认为图片优先
+         */
+        showFirstType: {
+            type: String,
+            default: 'img'
+        }
+    },
+    data: {
+        // 图片类型
+        imgType: 'y'
+    },
+    components: {
+        'c-title': '../Title/Title',
+        'c-line': '../Line/Line',
+        'c-link': '../Link/Link',
+        'c-img': '../Image/Image',
+        'c-label': '../Label/Label',
+        'c-timespan': '../Timespan/Timespan',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script type="php">
+    function computed_isTimeNumber($ctx) {
+        if(isset($ctx->_d["time"])) {
+            return is_numeric($ctx->_d["time"]);
+        }
+        return false;
+    }
+</script>
+
+<script>
+export default {
+    computed: {
+        isTimeNumber() {
+            if (this.time) {
+                return typeof this.time === 'number';
+            }
+            return false;
+        }
+    }
+};
+</script>

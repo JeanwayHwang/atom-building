@@ -1,0 +1,38 @@
+{
+    "alias": [
+        "c-line"
+    ],
+    "type": "object",
+    "properties": {
+        "line": {
+            "type": "object",
+            "@ChineseName": "line 组件实例",
+            "description": "line 组件实例，line 的基础相关数据",
+            "properties": {
+                "clamp": {
+                    "type": "number",
+                    "@ChineseName": "显示行数",
+                    "@Demo": 2,
+                    "description": "显示行数，范围为1-5"
+                },
+                "color": {
+                    "type": "string",
+                    "@ChineseName": "文案颜色",
+                    "@Demo": "c-color-orange",
+                    "description": "文案颜色，可选值参照`c-color-*`"
+                },
+                "align": {
+                    "type": "string",
+                    "@ChineseName": "文案对齐方式",
+                    "@Demo": "left",
+                    "description": "文案对齐方式，可选值为`text-align`可选值"
+                }
+            },
+            "propsData": [
+                "clamp",
+                "color",
+                "align"
+            ]
+        }
+    }
+}

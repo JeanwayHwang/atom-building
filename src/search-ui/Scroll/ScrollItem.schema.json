@@ -1,0 +1,17 @@
+{
+    "alias": [
+        "c-scroll-item"
+    ],
+    "type": "object",
+    "properties": {
+        "scrollItems": {
+            "type": "array",
+            "@ChineseName": "scroll 组件内容结构",
+            "description": "scroll 组件内容结构，一般情况下为一维数组",
+            "items": {
+                "type": "object",
+                "isContainer": true
+            }
+        }
+    }
+}

@@ -1,0 +1,53 @@
+{
+    "alias": [
+        "c-tag-group"
+    ],
+    "type": "object",
+    "properties": {
+        "tagGroup": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "@ChineseName": "标签数组",
+                    "description": "标签数组",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "@ChineseName": "标签名",
+                                "description": "标签文案",
+                                "@Demo": "标签1"
+                            },
+                            "number": {
+                                "type": "number",
+                                "@ChineseName": "数量",
+                                "description": "数量",
+                                "@Demo": 99
+                            },
+                            "selected": {
+                                "type": "boolean",
+                                "@ChineseName": "初始选中状态",
+                                "description": "初始选中状态",
+                                "@Demo": false
+                            }
+                        }
+                    }
+                },
+                "type": {
+                    "type": "string",
+                    "enum": ["radio", "checkbox"],
+                    "@ChineseName": "标签类型",
+                    "description": "拥有单选和多选两种类型，默认为单选",
+                    "@Demo": "radio"
+                }
+            },
+            "propsData": [
+                "list",
+                "type"
+            ]
+        }
+    }
+}

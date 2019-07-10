@@ -1,0 +1,91 @@
+<template>
+    <div class="c-filter-normal-tag" @click="change">
+        <div class="c-filter-normal-span c-filter-normal-span-block c-line-clamp1">
+            {{ dataSec.defaultText && dataSec.defaultText !== '' ? dataSec.defaultText : dataSec.label }}
+        </div>
+        <div class="c-filter-normal-span-block c-gap-left-small">
+            <template a-for="(item, idx) in dataSec.values">
+                <div :class="[{'c-filter-normal-icon-up' : item.text === 'up'}, {'c-filter-normal-icon-down c-gap-top-small' : item.text === 'down'}, {'c-filter-nlrmal-icon-selected' : item.value === dataSec.default}]"></div> 
+            </template>
+        </div>
+    </div>
+</template>
+<style scoped>
+    .c-filter-normal-span-block {
+        display: inline-block;
+        vertical-align: middle;
+    }
+    .c-filter-normal-span {
+        max-width: 75%;
+        font-size: 15px;
+    }
+    .c-filter-normal-icon-down,
+    .c-filter-normal-icon-up {
+        width: 0;
+        height: 0;
+        border-width: 4px 4px 0;
+        border-style: solid;
+        border-color: #999 transparent transparent;
+    }
+    .c-filter-normal-icon-up {
+        -webkit-transform: rotate(180deg);
+        transform: rotate(180deg);
+    }
+    .c-filter-nlrmal-icon-selected {
+        border-color: #333 transparent transparent;
+    }
+</style>
+<config>
+    {
+        props: [
+            'sec'
+        ],
+        data: {
+            flagStyle: '',
+            upIdx: -1,
+            downIdx: -1,
+            selIndex : {},
+            dataSec: sec
+        }
+    }
+</config>
+
+<script>
+    module.exports = {
+        mounted() {
+            for (let i = 0; i < this.dataSec.values.length; i++) {
+                let val = this.dataSec.values[i].value;
+                let txt = this.dataSec.values[i].text;
+                if (txt === 'up') {
+                    this.upIdx = i;
+                }
+                if (txt === 'down') {
+                    this.downIdx = i;
+                }
+                if (this.dataSec.default === val) {
+                    this.flagStyle = txt;
+                }
+            }
+        },
+        methods: {
+            change() {
+                let filterKey = this.dataSec.filterKey;
+                if (this.flagStyle === '' || this.flagStyle === 'down') {
+                    this.dataSec.default = this.dataSec.values[this.upIdx].value;
+                    this.flagStyle = 'up';
+                }
+                else {
+                    this.dataSec.default = this.dataSec.values[this.downIdx].value;
+                    this.flagStyle = 'down';
+                }
+                let keyVal = {
+                    [filterKey]: this.dataSec.default
+                };
+                // keyVal[filterKey] = this.dataSec.default;
+                this.selIndex.key = keyVal;
+                this.selIndex.type = 'normal';
+                this.$emit('itemChanged', this.selIndex);
+            }
+        }
+    };
+</script>

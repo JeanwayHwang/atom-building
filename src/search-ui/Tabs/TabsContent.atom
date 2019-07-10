@@ -1,0 +1,335 @@
+<template>
+    <div
+        ref="contentWrapper"
+        :style="{
+            height: wrapperHeight > 0 ? wrapperHeight + 'px' : 'auto',
+            margin: $platform === 'pc' ? '0 -9px' : '0 -.17rem'
+        }"
+        :class="{
+            'c-tabs-content-wrapper-animation': (!isDownGrade && !isResetAnimation) || forceHeightTransition
+        }"
+        :inner-height="innerHeight"
+        class="c-tabs-content-wrapper"
+        @transitionend="handleContentWrapperTransitionEnd"
+        @webkitTransitionEnd="handleContentWrapperTransitionEnd"
+    >
+        <transition-group
+            :name="animation"
+            tag="div"
+            @before-enter="beforeContentEnter"
+            @enter="contentEnter"
+        >
+            <div
+                a-for="(tab, index) in tabList"
+                a-show="index === selected"
+                ref="tabs"
+                :class="{'c-tabs-content-animation': contentPosition}"
+                :key="'_c_' + index"
+                :style="{
+                    height: (loadingDur[index] || tab.isLoading) && wrapperHeight
+                        ? wrapperHeight + 'px'
+                        : 'auto'
+                }"
+                class="c-tabs-content"
+            >
+                <transition
+                    @before-enter="beforeContentEnter"
+                    @enter="contentEnter"
+                >
+                    <c-loading
+                        a-show="loadingDur[index] || tab.isLoading"
+                        :key="'__loading__' + index"
+                        class="c-tabs-loading"
+                    />
+                </transition>
+                <transition
+                    name="display"
+                    @enter="contentEnter"
+                    @before-enter="beforeContentEnter"
+                >
+                    <div
+                        a-show="!loadingDur[index] && !tab.isLoading"
+                        :class="{'c-gap-top-small': contentGapTop}"
+                        class=" c-tabs-content-inner"
+                    >
+                        <!-- @slot:default 某个选项卡的内容区域 -->
+                        <slot :name="'__c__' + index"/>
+                    </div>
+                </transition>
+            </div>
+        </transition-group>
+    </div>
+</template>
+<script type="config">
+{
+    props: {
+        /**
+         * 需要显示的 tab 序号
+         */
+        selected: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * 内容区切换是否带过渡效果，默认没有过渡效果
+         */
+        hasSlideAnimation: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 当 tab 内容高度发生变化时（如 tab 中套展开收起），需要将变化后的高度传入 inner-height 字段
+         */
+        innerHeight: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * 设置 tab 内容上方是否自带5px间距，默认有
+         */
+        contentGapTop: {
+            type: Boolean,
+            default: true
+        },
+        loadingData: Array,
+        /**
+         * 强制开启高度 transition
+         */
+        forceHeightTransition: Boolean
+    },
+    data: {
+        animation: null,
+        contentPosition: false,
+        wrapperHeight: null,
+        // 留给改高度的时候 去掉css transition的标志位
+        isResetAnimation: true,
+        loadingDur: [],
+        isDownGrade: false
+    },
+    components: {
+        'c-loading': '../Loading/Loading'
+    }
+}
+</script>
+<script type="php">
+    function created($ctx) {
+        if (empty($ctx->_d["loadingData"])) {
+            $data = $ctx->getMessage('tab-content-item-data');
+            $ctx->_d["tabList"] = $data;
+        }
+        else {
+            $ctx->_d["tabList"] = $ctx->_d["loadingData"];
+        }
+    }
+    function render ($ctx, $isXml = false) {
+        $vnodes = $ctx->slots['default'];
+        foreach ($vnodes as $index => $vnode) {
+            $ctx->slots['__c__' . $index] = array($vnode);
+        }
+        return parent::render($ctx, $isXml);
+    }
+</script>
+<script>
+/**
+ * @file TabsContent
+ * @author yaochang(yaochang@baidu.com)
+ */
+export default {
+    render(ctx) {
+        let vnodes = this.$slots.default;
+        this.tabList = vnodes.map((vnode, index) => {
+            this.$slots['__c__' + index] = [vnode];
+            let data = vnode.componentOptions.propsData;
+            let itemObj = {
+                isLoading: data.isLoading ? data.isLoading : false
+            };
+            return itemObj;
+        });
+        return this.$super.render();
+    },
+    watch: {
+        selected(newVal, oldVal) {
+            if (newVal === oldVal) {
+                return;
+            }
+            this.wrapperHeight = this.$refs.contentWrapper.offsetHeight;
+            // 设置最少 loading 时间
+            if (this.tabList[newVal].isLoading) {
+                setTimeout(() => {
+                    this.$set(this.loadingDur, newVal, false);
+                }, 640);
+            }
+            this.setSlideAnimation(newVal, oldVal);
+            this.$nextTick(() => {
+                if (this.animation) {
+                    this.animation = null;
+                }
+            });
+        },
+        innerHeight(newVal, oldVal) {
+            if (newVal) {
+                this.$nextTick(() => {
+                    this.isResetAnimation = false;
+                    this.wrapperHeight = newVal;
+                });
+            }
+        }
+    },
+    mounted() {
+        this.isDownGrade = this.isIosSmall() || this.isLowChrome();
+        this.wrapperHeight = this.$refs.contentWrapper.offsetHeight;
+        this.contentPosition = true;
+        this.loadingDur = this.tabList.map(value => value.isLoading);
+        this.$root.$on('attach', () => {
+            this.reset();
+        });
+        window.addEventListener('resize', this.reset);
+        window.addEventListener('orientationchange', this.reset);
+    },
+    destroyed() {
+        window.removeEventListener('resize', this.reset);
+        window.removeEventListener('orientationchange', this.reset);
+    },
+    methods: {
+        // 判断手机型号为iPhone 小屏机，包括4, 4s, 5, 5s, se 等
+        isIosSmall() {
+            let isIphone = /iphone/.test(navigator.userAgent.toLowerCase());
+            let width = window.innerWidth
+                || document.documentElement.clientWidth
+                || document.body.clientWidth;
+            return width < 321 && isIphone;
+        },
+        isLowChrome() {
+            let ua = navigator.userAgent.toLowerCase();
+            let isAndroid = /android/.test(ua);
+            if (isAndroid) {
+                let chromeReg = /chrome\/(\w*)/g;
+                let chromeos = ua.match(chromeReg);
+                if (chromeos && chromeos[0]) {
+                    chromeos = parseInt(chromeos[0].substring(7), 10);
+                    if (chromeos > 52) {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            return false;
+        },
+        setSlideAnimation(value, old) {
+            if (!this.hasSlideAnimation) {
+                return;
+            }
+            if (value < old) {
+                this.animation = 'c-tabs-left';
+            }
+            else {
+                this.animation = 'c-tabs-right';
+            }
+        },
+        beforeContentEnter(dom) {
+            if (this.hasSlideAnimation) {
+                this.isResetAnimation = false;
+            }
+        },
+        contentEnter(dom) {
+            if (this.tabList[this.selected].isLoading) {
+                this.wrapperHeight = this.wrapperHeight < 120 ? 120 : this.wrapperHeight;
+            }
+            else {
+                // 这里的 nextTick 是为了保证当 loading 结束时，只有 dom 完全渲染以后才开始取高度
+                this.$nextTick(() => {
+                    this.wrapperHeight = this.$refs.tabs[this.selected].offsetHeight;
+                });
+            }
+            setTimeout(() => {
+                this.isResetAnimation = true;
+            }, 400);
+        },
+        reset() {
+            this.wrapperHeight = this.$refs.tabs[this.selected].offsetHeight;
+        },
+        refresh() {
+            this.$nextTick(() => {
+                this.reset();
+            });
+        },
+        handleContentWrapperTransitionEnd() {
+
+            /**
+             * transitionend event.
+             *
+             * @event transitionend
+             */
+            this.$emit('transitionend');
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.c-tabs-content-wrapper {
+    position: relative;
+    margin: 0 -.17rem;
+    overflow: hidden;
+    -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+}
+.c-tabs-content-wrapper-animation {
+    will-change: height;
+    -webkit-transition: height .3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: height .3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.c-tabs-content {
+    position: relative;
+    overflow: hidden;
+
+    .display-enter-active,
+    .display-leave-active {
+        transition: opacity .24s cubic-bezier(0, 0, 1, 1);
+    }
+
+    .display-enter,
+    .display-leave-to {
+        opacity: 0;
+    }
+}
+.c-tabs-content-inner {
+    overflow: hidden;
+}
+.c-tabs-content-animation {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+}
+.c-tabs-loading {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    margin-top: -.43rem;
+}
+
+.c-tabs-right-enter-active,
+.c-tabs-right-leave-active {
+    transition: transform .24s cubic-bezier(.18, .74, .78, .96), opacity .5s cubic-bezier(.18, 0, .26, 1);
+}
+.c-tabs-left-enter-active,
+.c-tabs-left-leave-active {
+    transition: transform .24s cubic-bezier(.18, .74, .78, .96), opacity .5s cubic-bezier(.18, 0, .26, 1);
+}
+.c-tabs-right-enter,
+.c-tabs-left-leave-to {
+  transform: translate3d(100%, 0, 0);
+}
+.c-tabs-right-enter,
+.c-tabs-left-enter {
+    opacity: 0;
+}
+.c-tabs-left-enter,
+.c-tabs-right-leave-to {
+  transform: translate3d(-100%, 0, 0);
+}
+
+
+</style>

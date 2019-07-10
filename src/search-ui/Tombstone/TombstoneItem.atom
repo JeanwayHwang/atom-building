@@ -1,0 +1,285 @@
+ <!--@ignore-->
+ <template>
+    <div
+        class="c-info-tombstone-item c-gap-inner-top-large"
+    >
+        <!-- 咨讯 -->
+        <div a-if="type === 2">
+            <!-- row1 -->
+            <c-row>
+                <c-span
+                    col="5"
+                >
+                    <div
+                        :style="{
+                            'background-color': color,
+                            'height': '.17rem'
+                        }"
+                    />
+                </c-span>
+                <c-span col="7"/>
+            </c-row>
+            <!-- row2 -->
+            <c-row
+                :style="{
+                    'margin-bottom': '.4rem'
+                }"
+                class="c-gap-top-large"
+            >
+                <c-span
+                    a-for="(item, index) in 3"
+                    :key="index"
+                    col="4"
+                >
+                    <div
+                        :style="[
+                            {
+                                'background-color': color,
+                                'height': 0,
+                                'padding-bottom': '66.66666667%'
+                            },
+                            index === 0
+                                ? {
+                                    'border-top-left-radius': '3px',
+                                    'border-bottom-left-radius': '3px'
+                                }
+                                : {},
+                            index === 2
+                                ? {
+                                    'border-top-right-radius': '3px',
+                                    'border-bottom-right-radius': '3px'
+                                }
+                                : {}
+                        ]"
+                    />
+                </c-span>
+            </c-row>
+        </div>
+        <!-- 问答 -->
+        <div a-if="type === 3">
+            <!--row1 -->
+            <c-row>
+                <c-span
+                    col="5"
+                >
+                    <div
+                        :style="{
+                            'background-color': color,
+                            'height': '.17rem'
+                        }"
+                    />
+                </c-span>
+                <c-span col="7"/>
+            </c-row>
+            <!--row2 -->
+            <c-row class="c-gap-top-large">
+                <c-span col="12">
+                    <div
+                        :style="{
+                            'background-color': color,
+                            'height': '.13rem'
+                        }"
+                    />
+                </c-span>
+            </c-row>
+            <!--row3 -->
+            <c-row
+                :style="{
+                    'margin-bottom': '.4rem'
+                }"
+                class="c-gap-top"
+            >
+                <c-span col="10">
+                    <div
+                        :style="{
+                            'background-color': color,
+                            'height': '.13rem'
+                        }"
+                    />
+                </c-span>
+                <c-span col="2"/>
+            </c-row>
+        </div>
+        <!-- 图文 -->
+        <div a-if="type === 4">
+            <!--row1 -->
+            <c-row
+                :style="{
+                    'margin-bottom': '.3rem'
+                }"
+            >
+                <c-span col="4">
+                    <div
+                        :style="{
+                            height: 'auto'
+                        }"
+                    >
+                        <div
+                            :style="{
+                                'background-color': color,
+                                'height': '0',
+                                'padding-bottom': '66.66666667%',
+                                'border-radius': '3px'
+                            }"
+                        />
+                    </div>
+                </c-span>
+                <c-span col="8">
+                    <div
+                        :style="{
+                            'background-color': color,
+                            'height': '.13rem'
+                        }"
+                    />
+                    <c-row class="c-gap-top">
+                        <c-span col="6">
+                            <div
+                                :style="{
+                                    'background-color': color,
+                                    'height': '.13rem'
+                                }"
+                            />
+                        </c-span>
+                        <c-span col="2"/>
+                    </c-row>
+                </c-span>
+            </c-row>
+        </div>
+        <!-- 浏览态 -->
+        <div a-if="type === 5">
+            <!--row1 -->
+            <c-row
+                :style="{
+                    'margin-top': '.09rem'
+                }"
+            >
+                <c-span
+                    col="10"
+                >
+                    <div
+                        :style="{
+                            'background-color': color,
+                            'height': '.17rem'
+                        }"
+                    />
+                </c-span>
+                <c-span col="2"/>
+            </c-row>
+            <!--row2 -->
+            <c-row
+                :style="{
+                    'margin-top': '.16rem'
+                }"
+            >
+                <c-span
+                    col="10"
+                >
+                    <div
+                        :style="{
+                            'background-color': color,
+                            'height': '4.2rem',
+                            'border-radius': '3px'
+                        }"
+                    />
+                </c-span>
+                <c-span col="2"/>
+            </c-row>
+            <!--row3 -->
+            <c-row
+                :style="{
+                    'margin-top': '.2rem',
+                    'margin-bottom': '.29rem'
+                }"
+            >
+                <c-span
+                    col="12"
+                >
+                    <div
+                        :style="{
+                            'background-color': color,
+                            'height': '.13rem'
+                        }"
+                    />
+                </c-span>
+            </c-row>
+        </div>
+        <!-- 分割线 -->
+        <div
+            :style="{
+                'height': '1px',
+                'background-color': color
+            }"
+        />
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        // 类型；1：图片；2：资讯；3：问答列表；4：图文列表
+        type: {
+            type: Number,
+            default: 1
+        },
+        color: {
+            type: String,
+            default: '#f4f2f2'
+        },
+        index: {
+            type: Number,
+            default: 0
+        },
+
+        /**
+         * 动效类型；'vertical' 竖直动效
+         */
+        animationType: {
+            type: String
+        }
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span'
+    }
+}
+</script>
+
+<script>
+export default {
+    mounted() {
+        if (this.animationType === 'vertical') {
+            // 因为 iOS animation-delay 只支持负数，所以从上往下的效果就用 js 进行延时
+            setTimeout(() => {
+                this.$el.className += ' ' + this.$style.cItemAnimationVertical;
+            }, 200 * this.index);
+        }
+    }
+};
+</script>
+
+<style module>
+.c-info-tombstone-item {
+    border-radius: 3px;
+}
+.c-item-animation-vertical {
+    animation-duration: .6s;
+    animation-name: fadeInOut;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    animation-direction: alternate;
+}
+@keyframes fadeInOut {
+    from {
+        opacity: 1;
+    }
+
+    30% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: .1;
+    }
+}
+</style>
+

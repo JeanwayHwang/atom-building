@@ -1,0 +1,24 @@
+{
+    "alias": [
+        "c-content"
+    ],
+    "type": "object",
+    "properties": {
+        "content": {
+            "type": "object",
+            "@ChineseName": "Content 组件实例",
+            "description": "Content 组件实例，Content 的基础相关数据",
+            "properties": {
+                "selectedIndex": {
+                    "type": "number",
+                    "@ChineseName": "当前显示项的索引",
+                    "@Demo": 0,
+                    "description": "当前显示项的索引；改变时会触发相应的内容区变化"
+                }
+            },
+            "propsData": [
+                "selectedIndex"
+            ]
+        }
+    }
+}

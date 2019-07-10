@@ -1,0 +1,43 @@
+<template>
+    <div 
+        class="c-image-viewer-ad-wrapper"
+        @click="onclick"
+        a-html="adData.ad_place_data"
+    >
+    </div>
+</template>
+<style>
+    .c-image-viewer-ad-wrapper {
+        height: 100%;
+        width: 100%;
+    }
+
+</style>
+<script type="config">
+    {
+        props: {
+            adData: {
+                type: Object,
+                required: true
+            }
+        }
+    }
+</script>
+<script>
+    export default {
+        mounted() {
+            // 插入广告css
+
+            this.style = document.createElement('STYLE');
+            this.style.type = 'text/css';
+            this.style.innerHTML = this.adData.ad_place_css;
+            this.$el.appendChild(this.style);
+
+            // 插入广告js
+            this.script = document.createElement('SCRIPT');
+            this.script.type = 'text/javascript';
+            this.script.innerHTML = this.adData.ad_place_js;
+            this.$el.appendChild(this.script);
+        }
+    };
+</script>

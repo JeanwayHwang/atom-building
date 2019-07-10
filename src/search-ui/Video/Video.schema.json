@@ -1,0 +1,133 @@
+{
+    "alias": [
+        "c-video"
+    ],
+    "type": "object",
+    "properties": {
+        "video": {
+            "type": "object",
+            "@ChineseName": "Video 组件实例",
+            "description": "Video 组件实例，Video 的基础相关数据",
+            "properties": {
+                "video": {
+                    "type": "object",
+                    "@ChineseName": "视频相关数据",
+                    "description": "视频相关数据",
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "@ChineseName": "跳转连接",
+                            "description": "跳转连接",
+                            "@Demo": "https://m.baidu.com"
+                        },
+                        "urlType": {
+                            "enum": [
+                                "normal",
+                                "sf",
+                                "mip"
+                            ],
+                            "@ChineseName": "链接类型",
+                            "description": "链接类型",
+                            "@Demo": "normal"
+                        },
+                        "poster": {
+                            "type": "string",
+                            "@ChineseName": "图片缩略图地址",
+                            "description": "图片缩略图地址",
+                            "@Demo": "https://m.baidu.com/static/index/plus/homepage-newlogo.png"
+                        },
+                        "title": {
+                            "type": "string",
+                            "@ChineseName": "标题",
+                            "description": "标题",
+                            "@Demo": "震惊！！这是一个标题"
+                        },
+                        "source": {
+                            "type": "string",
+                            "@ChineseName": "来源",
+                            "description": "来源",
+                            "@Demo": "汽车之家"
+                        },
+                        "duration": {
+                            "type": "number",
+                            "@ChineseName": "视频的显示时长(单位秒)",
+                            "description": "视频的显示时长(单位秒)",
+                            "@Demo": 80
+                        },
+                        "pubtime": {
+                            "type": "number",
+                            "@ChineseName": "发布时间",
+                            "description": "发布时间，标准时间戳",
+                            "@Demo": 1503314822000
+                        },
+                        "playtime": {
+                            "type": "number",
+                            "@ChineseName": "已播放次数",
+                            "description": "已播放次数",
+                            "@Demo": 234
+                        },
+                        "score": {
+                            "type": "number",
+                            "@ChineseName": "评分",
+                            "description": "评分",
+                            "@Demo": 8.5
+                        },
+                        "text": {
+                            "type": "string",
+                            "@ChineseName": "描述文案",
+                            "description": "描述文案",
+                            "@Demo": "据报道，我市明天白天到夜间晴转多云...."
+                        },
+                        "showTxt": {
+                            "type": [
+                                "string",
+                                "number"
+                            ],
+                            "@ChineseName": "描述图片右下角遮罩内自定义文案及数字，与video.duration互斥，优先显示video.showTxt",
+                            "description": "描述图片右下角遮罩内自定义文案及数字，与video.duration互斥，优先显示video.showTxt",
+                            "@Demo": "2"
+                        }
+                    }
+                },
+                "showConfig": {
+                    "type": "object",
+                    "@ChineseName": "展现配置",
+                    "description": "展现配置",
+                    "properties": {
+                        "imgType": {
+                            "type": "string",
+                            "@ChineseName": "图片比例，默认为y，3:2",
+                            "description": "图片比例，默认为y，3:2",
+                            "@Demo": "y"
+                        },
+                        "titleClamp": {
+                            "type": [
+                                "number",
+                                "string"
+                            ],
+                            "@ChineseName": "描述截断，默认为1行截断",
+                            "description": "描述截断，默认为1行截断",
+                            "@Demo": "2"
+                        },
+                        "textColor": {
+                            "type": "string",
+                            "@ChineseName": "描述的字体颜色",
+                            "description": "描述的字体颜色",
+                            "@Demo": "#000"
+                        },
+                        "feedType": {
+                            "type": "boolean",
+                            "@ChineseName": "是否是 feed，feed 特有的样式，标题字号不同",
+                            "description": "是否是 feed，feed 特有的样式，标题字号不同",
+                            "@Demo": false
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "video",
+                "showConfig"
+            ]
+        }
+    }
+}

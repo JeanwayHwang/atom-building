@@ -1,0 +1,489 @@
+<template>
+    <div
+        class="tooltip"
+    >
+        <c-touchable-stop
+            :style="{
+                visibility: mShow ? 'visible' : 'hidden'
+            }"
+        >
+            <!-- 蒙层 -->
+            <div
+                a-if="mask"
+                ref="mask"
+                :style="{
+                    zIndex
+                }"
+                class="mask"
+                @click="onMaskClick"
+                @touchmove.prevent
+            />
+            <!-- 提示气泡框 -->
+            <div
+                ref="inner"
+                :style="[
+                    {
+                        width: mWidth + 'px',
+                        zIndex: zIndex + 1,
+                        top: vDirection === 'up'
+                            ? top - height - triangleArrow.height - gap.top + 'px'
+                            : top + triggerDom.height + triangleArrow.height + gap.top + 'px',
+                        left: hDirection === 'left'
+                            ? rowTileGap + 'px'
+                            : '',
+                        right: hDirection === 'right'
+                            ? rowTileGap + 'px'
+                            : '',
+                        transformOrigin: transformOrigin,
+                        webkitTransformOrigin: transformOrigin
+                    },
+                    hDirectionEnd === 'right' && vDirection === 'down'
+                        ? {
+                            borderTopRightRadius: 0
+                        }
+                        : {},
+                    hDirectionEnd === 'right' && vDirection === 'up'
+                        ? {
+                            borderBottomRightRadius: 0
+                        }
+                        : {},
+                    hDirectionEnd === 'left' && vDirection === 'down'
+                        ? {
+                            borderTopLeftRadius: 0
+                        }
+                        : {},
+                    hDirectionEnd === 'left' && vDirection === 'up'
+                        ? {
+                            borderBottomLeftRadius: 0
+                        }
+                        : {}
+                ]"
+                class="inner"
+                @touchmove.prevent
+            >
+                <!-- @slot 气泡内的自定义区域 -->
+                <slot/>
+                <!-- 三角箭头 上 -->
+                <div
+                    a-if="vDirection === 'down'"
+                    :style="[
+                        {
+                            left: triangleArrow.left + 'px'
+                        },
+                        hDirectionEnd === 'right'
+                            ? {
+                                left: null,
+                                right: '0',
+                                borderWidth: '0 0 7px 7px'
+                            }
+                            : {},
+                        hDirectionEnd === 'left'
+                            ? {
+                                left: 0,
+                                borderWidth: '0 7px 7px 0'
+                            }
+                            : {}
+                    ]"
+                    class="triangle-up"
+                />
+                <!-- 三角箭头 下 -->
+                <div
+                    a-if="vDirection === 'up'"
+                    :style="[
+                        {
+                            left: triangleArrow.left + 'px'
+                        },
+                        hDirectionEnd === 'right'
+                            ? {
+                                left: null,
+                                right: '0',
+                                borderWidth: '7px 0 0 7px'
+                            }
+                            : {},
+                        hDirectionEnd === 'left'
+                            ? {
+                                left: 0,
+                                borderWidth: '7px 7px 0 0'
+                            }
+                            : {}
+                    ]"
+                    class="triangle-down"
+                />
+            </div>
+        </c-touchable-stop>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 控制是否显示
+         */
+        show: {
+            type: Boolean,
+            default: false,
+            required: true
+        },
+        /**
+         * 当前点击位置距离网页顶部的距离
+         */
+        top: {
+            type: Number,
+            required: true
+        },
+        /**
+         * 当前点击位置距离网页左侧的距离
+         */
+        left: {
+            type: Number,
+            required: true
+        },
+        /**
+         * 间距对象
+         */
+        gap: {
+            type: Object,
+            default: {
+                top: 0
+            }
+        },
+        /**
+         * 气泡提示层的宽度；单位：像素
+         */
+        width: {
+            type: Number,
+            default: 200
+        },
+        /**
+         * 触发的 dom 的相关数据
+         *
+         * @property {number} width 触发的 dom 的宽度
+         * @property {number} height 触发的 dom 的高度
+         */
+        triggerDom: {
+            type: Object,
+            default: {
+                width: 0,
+                height: 0
+            }
+        },
+        /**
+         * 是否有蒙层，默认为有
+         */
+        mask: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * Tooltip 的 z 轴层级，默认为 501
+         */
+        zIndex: {
+            type: [Number, String],
+            default: 501
+        },
+        /**
+         * 是否加动效
+         */
+        animate: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 动效配置
+         * @ignore
+         */
+        transitionOpts: {
+            type: Object,
+            default: {
+                // 气泡显示动效
+                tooltipShowTransition: 'opacity .2s cubic-bezier(.4,.2,.6,1),transform .2s cubic-bezier(.4,.2,.6,1)',
+                // 气泡隐藏动效
+                tooltipHideTransition: 'opacity .26s cubic-bezier(.4,.2,.6,1), transform .26s cubic-bezier(.4,.2,.6,1)',
+                // 蒙层显示动效
+                maskShowTransition: 'opacity .2s cubic-bezier(.42,0,.52,1)',
+                // 蒙层隐藏动效
+                maskHideTransition: 'opacity .3s cubic-bezier(0,0,.3,1)'
+            }
+        }
+    },
+    data: {
+        // 内部维护的 show 状态
+        mShow: show,
+        // 内部维护的气泡弹层宽度
+        mWidth: width,
+        // 屏幕宽高
+        screenWidth: 0,
+        screenHeight: 0,
+        // 栅格边距
+        rowTileGap: 17,
+        // 提升层的高度
+        height: 0,
+        // 三角形箭头
+        triangleArrow: {
+            // 高度
+            height: 7,
+            // 宽度
+            width: 14,
+            // 距离网页左侧的距离
+            left: 0
+        },
+        // 竖直方向：'up' 在上方；'down' 在下方；默认为在下方
+        vDirection: 'down',
+        // 水平方向：'left' 在左边；'right' 在右边；默认为在右边
+        hDirection: 'left',
+        // 水平方向顶端
+        hDirectionEnd: ''
+    },
+    components: {
+        'c-touchable-stop': '../TouchableFeedback/TouchableStop'
+    }
+}
+</script>
+
+<script>
+
+// dom 操作
+import {
+    getScreenWidth,
+    getScreenHeight,
+    addDomTransition,
+    clearDomTransition
+} from '../util/domUtil';
+
+// 横竖屏切换监听 mixin
+import orientationMixin from '../util/orientationMixin';
+
+export default {
+    mixins: [
+        orientationMixin
+    ],
+    mounted() {
+        this.calculateWidthHeight();
+    },
+    activated() {
+        // 这里的延迟是为了计算出准确的翻转手机后的 width、height
+        setTimeout(() => {
+            this.calculateWidthHeight();
+        }, 500);
+    },
+    deactivated() {
+        this.hideFunc(false);
+    },
+    methods: {
+        // 横竖屏切换监听
+        mediaQueryOrientationListenerMixin(mediaQueryList) {
+            // 如果对话框还显示
+            if (this.mShow) {
+                // 触发关闭事件，保持内部和外部 visible 状态一致
+                this.$emit('close');
+                // 这里用 $nextTick 是因为 $emit('close') 以后会触发 watch show 的变化，就会触发 this.hideFunc() 带动效，为了避免带动效关闭，所以这里要在 nextTick 以后再无动效的关闭一次
+                this.$nextTick(() => {
+                    // 先关闭对话框（不带动效），避免在横竖屏切换时出现奇怪的问题
+                    this.hideFunc(false);
+                });
+            }
+            // 这里的延迟是为了计算出准确的翻转手机后的 width、height
+            setTimeout(() => {
+                this.calculateWidthHeight();
+            }, 500);
+        },
+        // 计算宽高
+        calculateWidthHeight() {
+            this.screenWidth = getScreenWidth();
+            this.screenHeight = getScreenHeight();
+            this.height = this.$refs.inner.offsetHeight;
+            if (this.screenWidth <= 360) {
+                // this.rowTileGap = this.rowTileGap * .9;
+            }
+            // 这里是为了处理当页面宽度超过 Tooltip 宽度（默认为 200） 的时候，箭头和提示气泡分离，所以将提示气泡加宽的处理
+            let diff = this.screenWidth / 2 - (this.width - this.triangleArrow.width / 2);
+            if (diff > 0) {
+                this.mWidth = this.width + diff + this.triangleArrow.width / 2;
+            }
+        },
+        onMaskClick() {
+            this.$emit('close');
+        },
+        showFunc(isAnimation = true) {
+            this.domShowOrHide(true, isAnimation);
+        },
+        hideFunc(isAnimation = true) {
+            this.domShowOrHide(false, isAnimation);
+        },
+        // 元素动画
+        domShowOrHide(isShow, isAnimation) {
+            let maskDom = this.$refs.mask;
+            let tooltipDom = this.$refs.inner;
+            clearDomTransition(maskDom);
+            clearDomTransition(tooltipDom);
+            // 显示
+            if (isShow) {
+                this.mShow = true;
+                if (isAnimation) {
+                    // 缩放从 0.83 到 1
+                    tooltipDom.style.transform = 'scale(0.83)';
+                    tooltipDom.style.webkitTransform = 'scale(0.83)';
+                    // 透明度从 0 到 1
+                    maskDom.style.opacity = 0;
+                    tooltipDom.style.opacity = 0;
+                    // 强制更新 dom
+                    maskDom.offsetHeight;
+                    addDomTransition(maskDom, this.transitionOpts.maskShowTransition);
+                    addDomTransition(tooltipDom, this.transitionOpts.tooltipShowTransition);
+                    // 只有有动画的时候才做缩放
+                    tooltipDom.style.transform = 'scale(1)';
+                    tooltipDom.style.webkitTransform = 'scale(1)';
+                }
+                maskDom.style.opacity = 1;
+                tooltipDom.style.opacity = 1;
+            }
+            // 隐藏
+            else {
+                if (isAnimation) {
+                    // 透明度从 1 到 0
+                    maskDom.style.opacity = 1;
+                    tooltipDom.style.opacity = 1;
+                    // 缩放从 1 到 0.83
+                    tooltipDom.style.transform = 'scale(1)';
+                    tooltipDom.style.webkitTransform = 'scale(1)';
+                    // 强制更新 dom
+                    maskDom.offsetHeight;
+                    addDomTransition(maskDom, this.transitionOpts.maskHideTransition);
+                    addDomTransition(tooltipDom, this.transitionOpts.tooltipHideTransition);
+                    // 只有有动画的时候才做缩放
+                    tooltipDom.style.transform = 'scale(0.83)';
+                    tooltipDom.style.webkitTransform = 'scale(0.83)';
+                }
+                maskDom.style.opacity = 0;
+                tooltipDom.style.opacity = 0;
+                // 这里的延时设置为 mShow = false 是因为需要同步状态，延时是因为需要在动画做完以后再设置状态
+                setTimeout(() => {
+                    this.mShow = false;
+                }, 300);
+            }
+        }
+    },
+    computed: {
+        transformOrigin() {
+            let h = '';
+            let v = '';
+            if (this.hDirection === 'left') {
+                h = this.triangleArrow.left + 'px';
+            }
+            else {
+                h = this.triangleArrow.left + 'px';
+            }
+            if (this.vDirection === 'up') {
+                v = 'bottom';
+            }
+            else {
+                v = 'top';
+            }
+            return h + ' ' + v;
+        }
+    },
+    watch: {
+        show(newVal, oldVal) {
+            if (newVal) {
+                this.showFunc(this.animate);
+            }
+            else {
+                this.hideFunc(this.animate);
+            }
+        },
+        top(newVal, oldVal) {
+            if (newVal > this.screenHeight / 2) {
+                this.vDirection = 'up';
+            }
+            else {
+                this.vDirection = 'down';
+            }
+        },
+        left(newVal, oldVal) {
+            // 屏幕的宽度减去 rowTile 的宽度，再减去三角形箭头的宽度，再减去边框的弧度
+            let rowTileGapTemp = this.rowTileGap;
+            if (window.innerWidth <= 360) {
+                rowTileGapTemp = Math.floor(rowTileGapTemp * .9);
+            }
+            // 箭头顶到左侧
+            if (newVal >= rowTileGapTemp && newVal < rowTileGapTemp + this.triangleArrow.width / 2  + 5) {
+                this.hDirectionEnd = 'left';
+            }
+            // 箭头顶到右侧
+            else if (newVal > this.screenWidth - rowTileGapTemp - this.triangleArrow.width - 5) {
+                this.hDirectionEnd = 'right';
+            }
+            // 箭头哪也没顶，就在中间
+            else {
+                this.hDirectionEnd = '';
+            }
+            if (newVal > this.screenWidth / 2) {
+                this.hDirection = 'right';
+                let innerRight = this.screenWidth - this.mWidth - this.rowTileGap * 2;
+                /* eslint-disable max-len */
+                this.triangleArrow.left = this.left - this.rowTileGap - (this.triangleArrow.width / 2 - this.triggerDom.width / 2) - innerRight;
+                /* eslint-enable max-len */
+            }
+            else {
+                this.hDirection = 'left';
+                /* eslint-disable max-len */
+                this.triangleArrow.left = this.left - this.rowTileGap - (this.triangleArrow.width / 2 - this.triggerDom.width / 2);
+                /* eslint-enable max-len */
+            }
+        }
+    }
+};
+</script>
+
+<script type="php">
+function computed_transformOrigin($ctx) {
+    return '';
+}
+</script>
+
+<style lang="less" module>
+.tooltip {
+    position: relative;
+    width: 0;
+    height: 0;
+    .inner-wrapper {
+        position: absolute;
+    }
+    .inner {
+        position: fixed;
+        padding: .1rem .15rem;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 3px 4px 0 rgba(0, 0, 0, .05);
+        box-sizing: border-box;
+        transform-origin: center bottom;
+        .triangle-up {
+            position: absolute;
+            top: -6px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 7px 7px 7px;
+            border-color: transparent transparent #fff transparent;
+        }
+        .triangle-down {
+            position: absolute;
+            bottom: -6px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 7px 7px 0 7px;
+            border-color: #fff transparent transparent transparent;
+        }
+    }
+    .mask {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, .3);
+    }
+}
+</style>

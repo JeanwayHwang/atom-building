@@ -1,0 +1,148 @@
+<template>
+    <c-link
+        :url="video.url"
+        :params="params"
+        class="c-video"
+        @click="$emit('click', $event)"
+    >
+        <c-row>
+            <c-span
+                :col="showCol"
+            >
+                <c-video-thumbnail
+                    :img="video.poster"
+                    :img-type="imgType"
+                    :duration="math_round(video.duration)"
+                    :icontype-defined="video.icontypeDefined"
+                    :icontxt="video.icontxt"
+                    :show-col-defined="video.showColDefined"
+                    :mask-icon-type="video.maskIconType"
+                    :img-border-radius="video.imgBorderRadius"
+                    :show-txt="video.showTxt"
+                    :default-image-type="video.defaultImageType"
+                />
+            </c-span>
+
+            <c-span
+                a-if="(showCol != 12 && $platform !== 'pc') || (showCol != 24 && $platform === 'pc')"
+                :col="($platform === 'pc' ? 24 : 12 )- showCol"
+            >
+
+                <c-text-line
+                    :clamp="titleClamp"
+                    :class="{'c-video-single-title-feed': feedType}"
+                    :size="feedType ? 't1' : 't2'"
+                    :text="video.title"
+                    :fix-height="showConfig.titleFixHeight"
+                    color="link"
+                    role="text"
+                    aria-roledescription="视频"
+                />
+
+                <c-text-line
+                    :text="video.text"
+                    :color="showConfig.textColor"
+                    :fix-height="showConfig.textFixHeight"
+                    :clamp="showConfig.textClamp ? showConfig.textClamp : 2"
+                    role="text"
+                />
+
+                <c-line :clamp="1" class="c-color-gray c-video-scroll-tips" role="text">
+                    <template a-if="video.source">
+                        {{ video.source }}
+                        <i class="c-gap-left-small c-video-scroll-split"/>
+                    </template>
+
+                    <template a-if="video.pubtime && video.pubtime !== '0'">
+                        <c-timespan a-if="video.pubtime" :time="math_round(video.pubtime)"/>
+                        <i class="c-gap-left-small c-video-scroll-split"/>
+                    </template>
+
+                    <template a-if="video.playtime && video.playtime !== '0'">
+                        {{ video.playtime }}次播放
+                        <i class="c-gap-left-small c-video-scroll-split"/>
+                    </template>
+                </c-line>
+
+                <!-- @slot 默认 slot -->
+                <slot/>
+            </c-span>
+        </c-row>
+    </c-link>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 视频参数
+         *
+         * @property {string} url 跳转连接，最小长度1个字符，最大长度1024个字符
+         * @property {string} title 标题，最小长度1个字符 最大长度200个字符
+         * @property {string} poster 图片缩略图地址，最小长度1个字符 最大长度1024个字符
+         * @property {string} source 来源，最小长度1个字符 最大长度100个字符
+         * @property {number} duration 播放时长，单位：秒，最小长度1个字符 最大长度10个字符
+         * @property {number} pubtime 发布时间，标准时间戳，最小长度1个字符 最大长度10个字符
+         * @property {number} playtime 播放次数，最小值为（包含）0，最大值为（包含）99999999
+         * @property {number} score 评分
+         * @property {string} text 描述文案，最小长度1个字符，最大长度200个字符
+         * @property {string | number} showTxt 描述图片右下角遮罩内自定义文案及数字，与video.duration互斥，优先显示video.showTxt
+         * @property {string} maskIconType 描述图片右下角遮罩内自定义icon图标
+         * @property {string} icontypeDefined 描述图片居中遮罩自定义icon, 不传时，默认值为 ‘video_play3'
+         * @property {string} icontxt 描述文案，最小长度1个字符，最大长度200个字符
+         * @property {string | number} showColDefined 描述图片右下角遮罩内自定义文案及数字，与video.duration互斥，优先显示video.showTxt
+         * @property {object} imgBorderRadius 图片边线设置
+         */
+        video: {
+            type: Object,
+            default: {}
+        },
+        /**
+         * 展现配置
+         *
+         * @property {string} imgType 图片比例，默认为y，3:2
+         * @property {string} titleClamp 标题截断，默认为1行截断
+         * @property {string} textClamp 描述截断，默认为1行截断
+         * @property {string} textColor 描述的字体颜色
+         * @property {number} feedType feed 特有的样式，标题字号不同
+         */
+        showConfig: {
+            type: Object,
+            default: {}
+        },
+        /**
+         * 链接所带的参数，可参考Link
+         */
+        params: Object
+    },
+    computed: {
+        showCol: video.showColDefined ? video.showColDefined : 4,
+        imgType: showConfig.imgType ? showConfig.imgType : 'y',
+        feedType: showConfig.feedType,
+        titleClamp: showConfig.titleClamp ? showConfig.titleClamp : 1
+    },
+    components: {
+        'c-line': '../Line/Line',
+        'c-link': '../Link/Link',
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-video-thumbnail': '../Video/VideoThumbnail',
+        'c-timespan': '../Timespan/Timespan',
+        'c-text-line': '../TextLine/TextLine'
+    }
+    /**
+     * click event.
+     *
+     * @event click
+     */
+}
+</script>
+
+<style>
+    .c-video-single-title-feed {
+        margin-bottom: 0;
+    }
+    .c-video-scroll-tips .c-video-scroll-split:last-child {
+        display: none;
+    }
+</style>

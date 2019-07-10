@@ -1,0 +1,89 @@
+{
+    "alias": [
+        "c-input"
+    ],
+    "type": "object",
+    "properties": {
+        "input": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "@ChineseName": "input 的name",
+                    "@Demo": "name",
+                    "description": "input 的name"
+                },
+                "value": {
+                    "type": "string",
+                    "@ChineseName": "input 的value",
+                    "@Demo": "baidu",
+                    "description": "input 的value"
+                },
+                "type": {
+                    "type": "string",
+                    "@ChineseName": "input 类型，支持text，button，password，reset，submit，hidden",
+                    "@Demo": "password",
+                    "description": "input 类型，支持text，button，password，reset，submit，hidden"
+                },
+                "disabled": {
+                    "type": "boolean",
+                    "@ChineseName": "input是否可编辑",
+                    "@Demo": "false",
+                    "description": "input是否可编辑"
+                },
+                "placeholder": {
+                    "type": "string",
+                    "@ChineseName": "占位文案",
+                    "@Demo": "请输入文字",
+                    "description": "占位文案"
+                },
+                "message": {
+                    "type": "string",
+                    "@ChineseName": "input 错误信息",
+                    "@Demo": "请输入正确的内容",
+                    "description": "input 错误信息"
+                },
+                "leftText": {
+                    "type": "string",
+                    "@ChineseName": " 左侧文字",
+                    "@Demo": "城市",
+                    "description": "左侧文字"
+                },
+                "rightText": {
+                    "type": "string",
+                    "@ChineseName": "右侧文字",
+                    "@Demo": "元",
+                    "description": "右侧文字"
+                },
+                "leftColor": {
+                    "type": "string",
+                    "@ChineseName": " 左侧文字颜色",
+                    "@Demo": "#999",
+                    "description": "左侧文字颜色"
+                },
+                "rightColor": {
+                    "type": "string",
+                    "@ChineseName": "右侧文字颜色",
+                    "@Demo": "#999",
+                    "description": "右侧文字颜色"
+                },
+                "isFocus": {
+                    "type": "boolean",
+                    "@ChineseName": "focus状态",
+                    "@Demo": "fasle",
+                    "description": "focus状态"
+                }
+            },
+            "propsData": [
+                "name",
+                "value",
+                "type",
+                "disabled",
+                "placeholder",
+                "message",
+                "rightText",
+                "isFocus"
+            ]
+        }
+    }
+}

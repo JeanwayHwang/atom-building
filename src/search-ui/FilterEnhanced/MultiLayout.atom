@@ -1,0 +1,279 @@
+<!-- @ignore -->
+<!-- 复合布局栏 -->
+<template>
+    <section
+        ref="filterMultiLayout"
+        class="c-filter-multi-layout c-gap-inner-top-small"
+    >
+        <!-- list -->
+        <section
+            a-if="data && data.type === 'multi'"
+            ref="filterMultiListLayout"
+            class="c-filter-multi-list-layout"
+        >
+            <section
+                a-for="(item, index) in data.options"
+                :key="index"
+                class="c-filter-multi-list-item"
+            >
+                <!-- 多选 && 单选；type === checkbox || radio -->
+                <multi-checkbox
+                    a-if="(item.type === 'radio' || item.type === 'checkbox') && item.options"
+                    :item="item"
+                    :transition="transition"
+                    :primary-color="primaryColor"
+                    :store="store"
+                />
+                <!-- 范围输入框；type === rangeInput -->
+                <multi-range-input
+                    a-if="item.type === 'rangeInput' && item.input"
+                    :item="item"
+                    :transition="transition"
+                    :primary-color="primaryColor"
+                    :store="store"
+                />
+            </section>
+        </section>
+        <!-- 底部按钮栏 -->
+        <div
+            a-if="data && data.type === 'multi'"
+            ref="filterMultiBottomBtnLayout"
+            class="c-filter-multi-bottom-btn-layout c-line-top"
+        >
+            <c-row
+                :style="transition
+                    ? {
+                        'padding-left': '0',
+                        'padding-right': '0'
+                    }
+                    : null
+                "
+            >
+                <c-span>
+                    <c-btn
+                        :style="{
+                            'color': primaryColor,
+                            'border-color': primaryColor
+                        }"
+                        text="重置"
+                        class="c-filter-multi-bottom-btn-reset WA_LOG_BTN"
+                        @click="handleResetBtnClick"
+                    />
+                </c-span>
+                <c-span>
+                    <c-btn
+                        :style="{
+                            'background-color': primaryColor,
+                            'border-color': primaryColor
+                        }"
+                        text="确定"
+                        class="c-filter-multi-bottom-btn-confirm WA_LOG_BTN"
+                        @click="handleConfirmBtnClick"
+                    />
+                </c-span>
+            </c-row>
+        </div>
+    </section>
+</template>
+
+<script type="config">
+    {
+        props: {
+            // store
+            store: {
+                type: Object
+            },
+            // 数据
+            data: {
+                type: Object
+            },
+            // 主颜色
+            primaryColor: {
+                type: String
+            },
+            // 是否增加动画
+            transition: Boolean
+        },
+        data: {
+            // 按钮栏至顶部的绝对距离
+            btnLayoutTop: 0,
+            // 按钮栏的高度
+            btnLayoutHeight: 0
+        },
+        components: {
+            'multi-checkbox': './MultiCheckbox',
+            'multi-range-input': './MultiRangeInput',
+            'c-row': '../Row/Row',
+            'c-span': '../Row/Span',
+            'c-btn': '../Button/Button'
+        }
+    }
+</script>
+
+<script>
+    export default {
+        methods: {
+            // 重置按钮点击
+            handleResetBtnClick() {
+                if (!this.data) {
+                    return;
+                }
+                if (!this.data.options) {
+                    return;
+                }
+                for (let i = 0; i < this.data.options.length; i++) {
+                    const item = this.data.options[i];
+                    if (item.input) {
+                        // 重置错误提示
+                        this.$set(item.input, 'isShowErrorTips', false);
+                    }
+                    this.$set(item, 'defaultValue', '');
+                }
+                // 重置完成后立即关闭
+                // this.store.closeBottomLayoutAction(false);
+            },
+            // 确定按钮点击
+            handleConfirmBtnClick() {
+                const vm = this;
+                if (!this.data) {
+                    return;
+                }
+                if (!this.data.options) {
+                    return;
+                }
+                // 错误提示校验
+                for (let i = 0; i < this.data.options.length; i++) {
+                    const item = this.data.options[i];
+                    // 范围输入时
+                    if (item.type === 'rangeInput') {
+                        if (!item.defaultValue) {
+                            // 如果范围输入没有默认值，置为 ','，因为范围输入需要有两个值
+                            item.defaultValue = ',';
+                        }
+                        // 生成数组
+                        let defaultValueArray = item.defaultValue.split(',');
+                        defaultValueArray = defaultValueArray.map(item => item.trim());
+                        // 判断是否为数字
+                        if (isNaN(defaultValueArray[0]) || isNaN(defaultValueArray[1])) {
+                            this.$set(item.input, 'isShowErrorTips', true);
+                            // 存入错误信息
+                            vm.store.setErrorInfoAction({
+                                errObj: item,
+                                errno: 2,
+                                errTips: '不是数字'
+                            });
+                            return;
+                        }
+                        if (defaultValueArray && defaultValueArray[0] && defaultValueArray[1]) {
+                            const number0 = parseFloat(defaultValueArray[0]);
+                            const number1 = parseFloat(defaultValueArray[1]);
+                            // 负数错误
+                            if (number0 < 0 || number1 < 0) {
+                                this.$set(item.input, 'isShowErrorTips', true);
+                                // 存入错误信息
+                                vm.store.setErrorInfoAction({
+                                    errObj: item,
+                                    errno: 3,
+                                    errTips: '负数错误'
+                                });
+                                return;
+                            }
+                            // 最小值大于最大值错误
+                            if (number0 > number1) {
+                                this.$set(item.input, 'isShowErrorTips', true);
+                                // 存入错误信息
+                                vm.store.setErrorInfoAction({
+                                    errObj: item,
+                                    errno: 4,
+                                    errTips: '最小值大于最大值错误'
+                                });
+                                return;
+                            }
+                        }
+                    }
+                }
+                // 当前改变项的数据
+                const currentChange = {
+                    type: this.data.type,
+                    index: this.data.index,
+                    result: {}
+                };
+                // 把每列的键值都装进去
+                this.data.options.forEach(optionItem => {
+                    currentChange.result[optionItem.key] = optionItem.defaultValue;
+                });
+                // 确定
+                vm.store.closeBottomLayoutAction(true, currentChange);
+            }
+        }
+    };
+</script>
+
+<style lang="less" scoped>
+    .c-filter-multi-layout {
+        height: 100%;
+        width: 100%;
+        background: #fff;
+    }
+    .c-filter-multi-layout.v-enter-active {
+        -webkit-transform: translate3d(0, 0, 0);
+                transform: translate3d(0, 0, 0);
+        -webkit-transition: height .32s cubic-bezier(0, 0, 0.4, 1);
+                transition: height .32s cubic-bezier(0, 0, 0.4, 1);
+    }
+    .c-filter-multi-layout.v-leave-active {
+        -webkit-transform: translate3d(0, 0, 0);
+                transform: translate3d(0, 0, 0);
+        -webkit-transition: height .24s cubic-bezier(0.4, 0, 1, 1);
+                transition: height .24s cubic-bezier(0.4, 0, 1, 1);
+    }
+    .c-filter-multi-list-layout {
+        position: relative;
+        // 预留出底部按钮栏的距离
+        padding: 0 .17rem 1rem .17rem;
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        background: #fff;
+        // iOS 弹性滚动
+        -webkit-overflow-scrolling: touch;
+
+        &::-webkit-scrollbar {
+            width: 3px;
+        }
+        &::-webkit-scrollbar-thumb:vertical {
+            background-color: #e0e0e0;
+            border-radius: 3px;
+        }
+        &::-webkit-scrollbar-track-piece:vertical:decrement,
+        &::-webkit-scrollbar-track-piece:vertical:increment {
+            background-color: rgba(255, 255, 255, 0);
+        }
+    }
+    .c-filter-multi-bottom-btn-layout {
+        // 这里设置为 relative 是为了动画时从 tag 下方划出
+        position: relative;
+        padding: .1rem .17rem;
+        width: 100%;
+        bottom: .69rem;
+        left: 0;
+        background-color: #fff;
+        -webkit-box-sizing: border-box;
+                box-sizing: border-box;
+        z-index: 1;
+
+        .c-filter-multi-bottom-btn-confirm {
+            background-color: #555;
+            border-color: #555;
+            color: #fff;
+
+            &:active {
+                background-color: #333;
+                border-color: #555;
+                color: #fff;
+            }
+        }
+    }
+</style>

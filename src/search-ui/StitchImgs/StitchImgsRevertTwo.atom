@@ -1,0 +1,102 @@
+<!-- @ignore -->
+<template>
+    <c-row>
+        <c-span :col="8">
+            <c-touchable-feedback
+                :open="!!(imgList[0].url || (imgList[0].params && imgList[0].params.tcUrl))"
+                :top="-.05"
+                :bottom="-.05"
+                :left="-.04"
+                :right="-.04"
+                is-jump
+            >
+                <c-link
+                    :url="imgList[0].url"
+                    :params="imgList[0].params" 
+                    @click="onImgClick(imgList[0])"
+                >
+                    <c-img 
+                        :img-src="imgList[0].src" 
+                        :src="imgList[0].src" 
+                        :type="imgList[0].type"
+                        :padding-bottom="leftHeight"
+                        :show-num="imgList[0].imgNum"
+                        :icon-type="imgList[0].imgNum?'imgs':''"
+                        class=" c-color-link"
+                        @click="onImgClick(imgList[0])"
+                    />
+                    <slot></slot>
+                </c-link>
+            </c-touchable-feedback>
+        </c-span>
+        <c-span :col="4">
+            <c-touchable-feedback
+                :open="!!(imgList[1].url || (imgList[1].params && imgList[1].params.tcUrl))"
+                :top="-.05"
+                :bottom="-.05"
+                :left="-.04"
+                :right="-.04"
+                is-jump
+            >
+                <c-link    
+                    :url="imgList[1].url"
+                    :params="imgList[1].params"
+                >
+                    <c-img 
+                        :img-src="imgList[1].src" 
+                        :src="imgList[1].src" 
+                        :type="imgList[1].type"
+                        :show-num="imgList[1].imgNum"
+                        :icon-type="imgList[1].imgNum?'imgs':''"
+                        class="c-color-link"
+                        @click="onImgClick(imgList[1])"
+                    />
+                </c-link>
+            </c-touchable-feedback>
+        </c-span>
+    </c-row>
+</template>
+
+<script type="config">
+{
+    props: {
+        imgList: {
+            type: Array,
+            default: []
+        }
+    },
+    data: {
+        imgs: 'imgs',
+        rightHeight: {
+            's': 100,
+            'l': 133.33333333,
+            'v': 33.33333333,
+            'w': 56.25,
+            'x': 75,
+            'y': 66.66666667,
+            'z': 40
+        }
+    },
+    computed: {
+        leftHeight: (31.271477653 * rightHeight[imgList[0].type]) / 64.60481099
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-link': '../Link/Link',
+        'c-img': '../Image/Image',
+        'c-icon': '../Icon/Icon',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+module.exports = {
+    methods: {
+        onImgClick(item) {
+            this.$emit('imgClick', item);
+        }
+    }
+};
+</script>

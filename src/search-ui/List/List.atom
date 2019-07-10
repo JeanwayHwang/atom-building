@@ -1,0 +1,6 @@
+<template>
+    <div class="c-list">
+        <!-- @slot 内容，多个`c-list-item` -->
+        <slot/>
+    </div>
+</template>

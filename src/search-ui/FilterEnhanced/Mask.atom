@@ -1,0 +1,77 @@
+<!-- @ignore -->
+<template>
+    <component
+        :is="transition ? 'transition' : 'div'"
+        name="c-mask"
+    >
+        <section
+            :style="{
+                'top': top,
+                'z-index': maskZIndex
+            }"
+            class="c-mask"
+            @touchmove.prevent
+            @click="handleMaskClick"
+        >
+        </section>
+    </component>
+</template>
+
+<style lang="less" scoped>
+    .c-mask {
+        position: fixed;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, .5);
+    }
+    // 遮罩入场
+    .c-mask-enter-active {
+        // 开启硬件加速
+        -webkit-transform: translate3d(0, 0, 0);
+                transform: translate3d(0, 0, 0);
+        transition: opacity .3s cubic-bezier(0.42, 0, 0.52, 1);
+    }
+    // 遮罩离场
+    .c-mask-leave-active {
+        // 开启硬件加速
+        -webkit-transform: translate3d(0, 0, 0);
+                transform: translate3d(0, 0, 0);
+        transition: opacity .3s cubic-bezier(0, 0, 0.3, 1);
+    }
+    .c-mask-enter,
+    .c-mask-leave-to {
+        opacity: 0;
+    }
+</style>
+
+<script type="config">
+    {
+        props: {
+            // fixed top
+            top: {
+                type: String
+            },
+            // 是否添加动效，默认关闭；这里主要是为了兼容线上已使用的用法
+            transition: {
+                type: Boolean,
+                default: false
+            },
+            // 蒙层的 z-index
+            maskZIndex: {
+                type: Number,
+                default: 299
+            }
+        }
+    }
+</script>
+
+<script>
+    export default {
+        methods: {
+            handleMaskClick() {
+                this.$emit('click');
+            }
+        }
+    };
+</script>

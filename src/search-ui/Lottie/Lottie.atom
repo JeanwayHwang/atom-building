@@ -1,0 +1,94 @@
+<template>
+    <div>
+        <!-- @slot 自定义区域 -->
+        <slot/>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 动效配置，文档请参考：[Getting started Lottie](https://airbnb.io/lottie/#/web)
+         *
+         * @property {string} path 动画 json 文件的路径
+         * @property {object} animationData 动画 json 数据
+         * @property {boolean} [loop=false] 是否循环播放
+         * @property {boolean} [autoplay=true] 是否自动播放
+         */
+        option: {
+            type: Object,
+            required: true
+        }
+    },
+    data: {
+        // lottie-web 实例
+        lottie: null,
+        // the animation instance, you can control with play, pause, setSpeed, etc.
+        animationIns: null
+    }
+}
+</script>
+
+<script>
+/**
+ * @file Lottie
+ * @author wangkai37
+ * @doc https://airbnb.io/lottie/#/web
+ */
+export default {
+    mounted() {
+        this.init(this.option);
+    },
+    methods: {
+
+        /**
+         * 初始化，返回 animation instance
+         *
+         * @public
+         * @param {Object} option 动效配置
+         */
+        init(option) {
+            // 异步加载 lottie js，因为 mounted 才能拿到 dom，所以没有必要一开始就加载
+            /* eslint-disable fecs-no-require */
+            require(['lottie-web'], lottie => {
+                this.lottie = lottie;
+                option.container = this.$el;
+                this.animationIns = this.lottie.loadAnimation(option);
+
+                /**
+                 * 动画实例加载完成事件，在这里可以拿到动画实例 animationIns
+                 *
+                 * @event ready
+                 * @property {object} param1 参数1
+                 * @property {object} param1.animationIns 动画实例
+                 */
+                this.$emit('ready', {
+                    animationIns: this.animationIns
+                });
+            });
+            /* eslint-enable fecs-no-require */
+        },
+
+        /**
+         * 得到 animation instance
+         *
+         * @public
+         * @return {Object} animationIns
+         */
+        getAnimationIns() {
+            return this.animationIns;
+        },
+
+        /**
+         * 得到 lottie 对象
+         *
+         * @public
+         * @return {Object} lottie
+         */
+        getLottie() {
+            return this.lottie;
+        }
+    }
+};
+</script>

@@ -1,0 +1,52 @@
+{
+    "alias": [
+        "c-tags-wrapper"
+    ],
+    "type": "object",
+    "properties": {
+        "tagsWrapper": {
+            "type": "object",
+            "@ChineseName": "复合标签组件",
+            "description": "复合tags组件包含头部和下方内容，有联动动画",
+            "properties": {
+                "tagLabelList": {
+                    "type": "array",
+                    "@ChineseName": "标签数组",
+                    "description": "标签数组",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "@ChineseName": "标签名称",
+                                "description": "展示的标签文字",
+                                "@Demo": "新闻"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "default",
+                                    "negative"
+                                ],
+                                "@ChineseName": "标签类型",
+                                "description": "有默认和反向两种样式",
+                                "@Demo": "default"
+                            }
+                        }
+                    }
+                },
+                "selected": {
+                    "type": "number",
+                    "@ChineseName": "选中的标签索引",
+                    "description": "选中的标签索引",
+                    "@Demo": 0
+                }
+            },
+            "propsData": [
+                "labelList",
+                "selected"
+            ]
+        }
+    }
+}

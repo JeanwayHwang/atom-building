@@ -1,0 +1,639 @@
+<template>
+    <div class="content-wrapper">
+        <div
+            ref="content"
+            :style="[
+                {
+                    height: contentHeight === 'auto'
+                        ? contentHeight
+                        : contentHeight + 'px'
+                }
+            ]"
+            class="content"
+            @transitionend="handleContentTransitionEnd"
+        >
+            <template
+                a-for="(i, index) in slotsCount"
+            >
+                <!-- 首屏 -->
+                <div
+                    a-if="firstSelectedIndex === index"
+                    ref="contentItem"
+                    :key="index"
+                    class="content-item"
+                >
+                    <!-- 加载中 -->
+                    <div
+                        a-show="list[index] && list[index].loading"
+                        :style="{
+                            'padding-top': loadingOpts.paddingTop
+                        }"
+                    >
+                        <c-loading/>
+                    </div>
+                    <!-- 加载完成 -->
+                    <div
+                        a-show="!(list[index] && list[index].loading)"
+                    >
+                        <!-- @slot:default 内容区域，可以传多个 -->
+                        <slot :name="'contentItem' + index"/>
+                    </div>
+                </div>
+                <!-- 其他；在 mounted 之后再加载，减少服务端渲染内容 -->
+                <div
+                    a-else-if="mounted"
+                    ref="contentItem"
+                    :key="index"
+                    :style="[
+                        {
+                            'position': 'absolute',
+                            'top': 0,
+                            'left': 0,
+                            'opacity': 0,
+                            'z-index': -1
+                        }
+                    ]"
+                    class="content-item"
+                >
+                    <!-- 加载中 -->
+                    <div
+                        a-if="list[index] && list[index].loading"
+                        :style="{
+                            'padding-top': loadingOpts.paddingTop
+                        }"
+                    >
+                        <c-loading/>
+                    </div>
+                    <!-- 加载完成 -->
+                    <div
+                        a-else
+                    >
+                        <!-- @slot:default 内容区域，可以传多个 -->
+                        <slot :name="'contentItem' + index"/>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 当前显示项的索引，改变时会触发相应的内容区变化
+         */
+        selectedIndex: {
+            type: Number,
+            default: 0
+        },
+
+        /**
+         * 数据列表，这里主要是为了拿到每一个内容区的 loading 状态
+         *
+         * @property {boolean} loading 用来表示异步加载
+         */
+        list: {
+            type: Array,
+            default: []
+        },
+
+        /**
+         * 上下滑动动效，`selectedIndex`改变时触发（从-1到x或从x到-1）
+         */
+        verticalTransition: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 左右滑动动效，`selectedIndex`改变时触发（从x到x）
+         */
+        horizontalTransition: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 透明度动效
+         */
+        opacityTransition: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 加载中配置
+         *
+         * @property {string} [paddingTop=.15rem] loading距离顶部的距离
+         */
+        loadingOpts: {
+            type: Object,
+            default: {
+                // padding-top
+                paddingTop: '.15rem'
+            }
+        },
+
+        /**
+         * 动效配置
+         *
+         * @ignore
+         * @property {string} downTransition 下滑动效参数
+         * @property {string} upTransition 上滑动效参数
+         * @property {string} heightTransition 高度变化动效参数
+         * @property {string} horizontalTransition 左右动效参数
+         * @property {string} horizontalTransition 透明度渐变动效参数
+         */
+        transitionOpts: {
+            type: Object,
+            default: {
+                downTransition: 'all .3s cubic-bezier(0.42, 0, 0.52, 1)',
+                upTransition: 'all .16s cubic-bezier(0.46, 0, 1, 1)',
+                heightTransition: 'height .3s cubic-bezier(0.4, 0.0, 0.2, 1)',
+                horizontalTransition: 'left .24s cubic-bezier(.18,.74,.78,.96),opacity .5s cubic-bezier(.18,0,.26,1)',
+                opacityTransition: 'opacity .24s cubic-bezier(0,0,1,1)'
+            }
+        }
+    },
+    data: {
+        // 首屏选中项的索引
+        firstSelectedIndex: !verticalTransition && selectedIndex === -1
+            ? 0
+            : selectedIndex,
+        // 当前选中项的索引；如果 selectedIndex 是 -1，则保持不变
+        // 如果没有垂直动效，并且 selectedIndex 为 -1 时，默认改为 0
+        curSelectedIndex: !verticalTransition && selectedIndex === -1
+            ? 0
+            : selectedIndex,
+        // 内容项数组
+        contentItemList: [],
+        // 是否首屏渲染完成
+        mounted: false,
+        // content 高度
+        contentHeight: 'auto'
+    },
+    components: {
+        'c-loading': '../Loading/Loading',
+        'c-transition': '../Motion/Transition'
+    }
+}
+</script>
+
+<script>
+// dom 操作
+import {
+    addDomTransition,
+    clearDomTransition,
+    getScreenWidth,
+    getScreenHeight
+} from '../util/domUtil';
+
+// 设备信息
+import {
+    isIosSmall,
+    isLowChrome
+} from '../util/deviceUtil';
+
+import orientationMixin from '../util/orientationMixin';
+
+export default {
+    mixins: [orientationMixin],
+    // render
+    render() {
+        let vnodes = this.$slots.default;
+        if (vnodes && vnodes.length) {
+            vnodes.forEach((vnode, index) => {
+                // 放入指定 slot
+                this.$slots['contentItem' + index] = vnode;
+            });
+            // 设置 slots 长度
+            this.slotsCount = vnodes.length;
+        }
+        return this.$super.render();
+    },
+    mounted() {
+        // 设置 mounted 标志位
+        this.mounted = true;
+        this.init();
+    },
+    methods: {
+        init() {
+            // 备份高度动效
+            this.transitionOpts.heightTransitionBak = this.transitionOpts.heightTransition;
+            // 动效降级
+            if (isIosSmall() || isLowChrome()) {
+                // 高度动效降级
+                this.transitionOpts.heightTransition = '';
+            }
+            // 在 mounted 为 true 之后重新渲染，完成之后，再去计算高度
+            this.$nextTick(() => {
+                // 为了避免外部调用 init() 方法时一直给数组里 push 东西，这里每次调用 init 的时候需要清空一下
+                this.contentItemList = [];
+                // 遍历内容项
+                for (let i = 0; i < this.$refs.contentItem.length; i++) {
+                    // 这里可以初始化一些值
+                    this.contentItemList.push({});
+                }
+                // 如果首屏渲染的不是第一个 slot
+                if (this.firstSelectedIndex > 0) {
+                    // 手动调整 $refs 数组排序为正确顺序
+                    let item = this.$refs.contentItem[0];
+                    this.$refs.contentItem.splice(0, 1);
+                    this.$refs.contentItem.splice(this.firstSelectedIndex, 0, item);
+                }
+                this.attach();
+                // 如果首屏是 -1，并且竖直方向打开动效开关
+                if (this.selectedIndex === -1 && this.verticalTransition) {
+                    // 手动把每一项的 left 移动到左边；避免 UIWebview 上滑动不流畅的问题
+                    this.$refs.contentItem.forEach((contentItem, index) => {
+                        contentItem.style.left = -this.screenWidth + 'px';
+                    });
+                }
+            });
+        },
+        attach() {
+            // 获取屏幕宽高
+            this.screenWidth = getScreenWidth(this);
+            this.screenHeight = getScreenHeight();
+            // 计算所有内容 item 的高度
+            this.calculateAllContentItemHeight();
+        },
+        mediaQueryOrientationListenerMixin(mediaQueryList) {
+            // 重新计算横滑的宽高；这里的延迟是为了计算出准确的翻转手机后的 width、height
+            setTimeout(() => {
+                // 获取屏幕宽高
+                this.screenWidth = getScreenWidth(this);
+                this.screenHeight = getScreenHeight();
+                this.calculateAllContentItemHeight();
+            }, 500);
+        },
+        // 计算所有内容 item 的高度
+        calculateAllContentItemHeight() {
+            // 遍历内容项
+            for (let i = 0; i < this.$refs.contentItem.length; i++) {
+                // 计算内容项的高度 content item height
+                let contentItemHeight = this.$refs.contentItem[i].offsetHeight;
+                this.contentItemList[i].height = contentItemHeight;
+            }
+        },
+        // 重置所有 content item 位置
+        resetAllContentItemPosition() {
+            // 遍历所有 content item
+            this.contentItemList.forEach((contentItem, contentItemIndex) => {
+                // 如果位置改变了，重置位置
+                if (contentItem.positionChange === undefined || contentItem.positionChange) {
+                    // 获得 dom
+                    let domContentItem = this.$refs.contentItem[contentItemIndex];
+                    // 清除动画
+                    clearDomTransition(domContentItem);
+                    domContentItem.style.top = 0;
+                    domContentItem.style.left = -this.screenWidth + 'px';
+                    domContentItem.style.opacity = 0;
+                    domContentItem.style.zIndex = -1;
+                    // 清空标志位
+                    contentItem.positionChange = false;
+                }
+            });
+        },
+        // 判断滑动方向
+        judgeSlideDirection(newVal, oldVal) {
+            // 判断滑动方向
+            // 下滑
+            if (oldVal === -1 && newVal !== -1) {
+                // 如果开启上下滑开关
+                if (this.verticalTransition) {
+                    this.contentSlideDirection = 'down';
+                    this.slideDown(newVal, oldVal);
+                }
+                // 不开启上下滑开关
+                else {
+                    // 左滑
+                    if (newVal < this.curSelectedIndex) {
+                        this.contentSlideDirection = 'left';
+                        this.slideHorizontal(newVal, this.curSelectedIndex, 'left');
+                        // 记录当前选中项的索引
+                        this.curSelectedIndex = newVal;
+                    }
+                    // 右滑
+                    else if (newVal > this.curSelectedIndex) {
+                        this.contentSlideDirection = 'right';
+                        this.slideHorizontal(newVal, this.curSelectedIndex, 'right');
+                        // 记录当前选中项的索引
+                        this.curSelectedIndex = newVal;
+                    }
+                }
+            }
+            // 上滑
+            else if (oldVal !== -1 && newVal === -1) {
+                // 如果开启上下滑开关
+                if (this.verticalTransition) {
+                    this.contentSlideDirection = 'up';
+                    this.slideUp(newVal, oldVal);
+                }
+                // 不开启上下滑开关
+                else {
+                }
+            }
+            // 水平横滑
+            else if (oldVal !== -1 && newVal !== -1) {
+                // 记录当前选中项的索引；如果 selected 是 -1，则保持不变
+                this.curSelectedIndex = newVal;
+                // 左滑
+                if (newVal < oldVal) {
+                    this.contentSlideDirection = 'left';
+                    this.slideHorizontal(newVal, oldVal, 'left');
+                }
+                // 右滑
+                else if (newVal > oldVal) {
+                    this.contentSlideDirection = 'right';
+                    this.slideHorizontal(newVal, oldVal, 'right');
+                }
+            }
+        },
+        // 下滑
+        slideDown(newVal, oldVal) {
+            // 重置所有位置
+            this.resetAllContentItemPosition();
+
+            // 获得 content dom
+            let domContent = this.$refs.content;
+            if (domContent.style.height === 'auto') {
+                // 设置初始高度
+                domContent.style.height = 0;
+                // 强制触发重绘
+                domContent.offsetWidth;
+            }
+
+            // 获得 vnode 项
+            let contentItem = this.contentItemList[newVal];
+            // 设置标志位
+            contentItem.positionChange = true;
+            // 获得 dom
+            let domContentItem = this.$refs.contentItem[newVal];
+            // 垂直：挪到上方
+            domContentItem.style.top = -contentItem.height + 'px';
+            // 水平：挪到中央
+            domContentItem.style.left = 0;
+            // 设置透明度
+            domContentItem.style.opacity = 1;
+            // 设置 z-index
+            domContentItem.style.zIndex = '';
+            // 强制触发重绘
+            domContentItem.offsetWidth;
+
+            // 添加 content 动效
+            addDomTransition(this.$refs.content, this.transitionOpts.downTransition);
+            // 添加 content item 动效
+            addDomTransition(domContentItem, this.transitionOpts.downTransition);
+            // 从上方挪到中央
+            domContentItem.style.top = 0;
+
+            // 修改 content 高度
+            this.contentHeight = this.contentItemList[this.selectedIndex].height;
+        },
+        // 上滑
+        slideUp(newVal, oldVal) {
+            // 获得 vnode 项
+            let contentItem = this.contentItemList[oldVal];
+            // 设置标志位
+            contentItem.positionChange = true;
+            // 获得 content item dom
+            let domContentItem = this.$refs.contentItem[oldVal];
+            // 添加 content wraper 动效
+            addDomTransition(this.$refs.content, this.transitionOpts.upTransition);
+            // 添加 content item 动效
+            addDomTransition(domContentItem, this.transitionOpts.upTransition);
+            // 垂直：挪到上方
+            domContentItem.style.top = -contentItem.height + 'px';
+
+            // 修改 content 高度
+            this.contentHeight = 0;
+        },
+        // 水平横滑
+        slideHorizontal(newVal, oldVal, direction = 'left') {
+            // 获得 content
+            let domContent = this.$refs.content;
+            // 清除动画
+            clearDomTransition(domContent);
+            // 设置初始高度
+            domContent.style.height = domContent.offsetHeight + 'px';
+
+            // 获得新的 vnode 项
+            let contentItemNew = this.contentItemList[newVal];
+            // 设置标志位
+            contentItemNew.positionChange = true;
+            // 获得 dom
+            let domContentItemNew = this.$refs.contentItem[newVal];
+            this.domContentItemNew = domContentItemNew;
+            // 清除动画
+            clearDomTransition(domContentItemNew);
+            // 新项 zIndex 设为 'auto'
+            domContentItemNew.style.zIndex = 'auto';
+            // 水平动画
+            if (this.horizontalTransition) {
+                // 垂直：挪到中央
+                domContentItemNew.style.top = 0;
+                // 水平：挪到左边
+                domContentItemNew.style.left = -this.screenWidth + 'px';
+                // 右滑
+                if (direction === 'right') {
+                    // 水平：挪到右边
+                    domContentItemNew.style.left = this.screenWidth + 'px';
+                }
+            }
+            // 不加水平动画
+            else {
+                // 水平：归为0
+                domContentItemNew.style.left = 0;
+            }
+
+            // 获得当前的 vnode 项
+            let contentItem = this.contentItemList[oldVal];
+            // 设置标志位
+            contentItem.positionChange = true;
+            // 获得 dom
+            let domContentItem = this.$refs.contentItem[oldVal];
+            // 清除动画
+            clearDomTransition(domContentItem);
+            // 旧项定位方式改为绝对定位
+            domContentItem.style.position = 'absolute';
+            domContentItem.style.top = '0';
+            domContentItem.style.left = '0';
+            // 透明度动效
+            if (this.opacityTransition) {
+                // 新项透明度置为0
+                domContentItemNew.style.opacity = 0;
+                // 旧项透明度置为1
+                domContentItem.style.opacity = 1;
+            }
+            // 不加透明度动效
+            else {
+                // 新项透明度置为0
+                domContentItemNew.style.opacity = 1;
+                // 旧项透明度置为1
+                domContentItem.style.opacity = 0;
+            }
+
+            // 强制触发重绘
+            domContentItemNew.offsetWidth;
+
+            // 添加 content 动效
+            addDomTransition(domContent, this.transitionOpts.heightTransition);
+            // 添加新项动效
+            addDomTransition(domContentItemNew, this.transitionOpts.horizontalTransition);
+            // 如果有左右横滑动效
+            if (this.horizontalTransition) {
+                // 添加当前动效
+                addDomTransition(domContentItem, this.transitionOpts.horizontalTransition);
+            }
+            // 如果没有左右横滑动效
+            else {
+                // 添加透明度动效
+                addDomTransition(domContentItem, this.transitionOpts.opacityTransition);
+            }
+
+            // 如果有左右横滑动效
+            if (this.horizontalTransition) {
+                // 新项透明度置为1
+                domContentItemNew.style.opacity = 1;
+            }
+            // 如果没有左右横滑动效
+            else {
+                // 旧项透明度置为0
+                domContentItem.style.opacity = 0;
+                setTimeout(() => {
+                    // 添加新项透明度动效
+                    addDomTransition(domContentItemNew, this.transitionOpts.opacityTransition);
+                    // 新项透明度置为1
+                    domContentItemNew.style.opacity = 1;
+                }, 240);
+            }
+            // 水平动画
+            if (this.horizontalTransition) {
+                // 把新项挪到中间
+                domContentItemNew.style.left = 0;
+                // 把中间的挪到右边
+                domContentItem.style.left = this.screenWidth + 'px';
+                // 右滑
+                if (direction === 'right') {
+                    // 把中间的挪到左边
+                    domContentItem.style.left = -this.screenWidth + 'px';
+                }
+            }
+
+            // 修改 contentWrapper 高度
+            this.contentHeight = this.contentItemList[this.selectedIndex].height;
+
+            // 水平横滑动效完成后，将老元素的 zIndex 设为 -1
+            setTimeout(() => {
+                domContentItem.style.zIndex = -1;
+            }, 240);
+        },
+        // content 动效结束；这里会触发5次
+        handleContentTransitionEnd() {
+        },
+
+        /**
+         * 设置 Content 高度
+         *
+         * @param {number} height 高度
+         */
+        setHeight(height) {
+            let domContent = this.$refs.content;
+            // 清除动效
+            clearDomTransition(domContent);
+            domContent.style.height = domContent.offsetHeight + 'px';
+            domContent.offsetHeight;
+            // 高度动效恢复
+            addDomTransition(domContent, this.transitionOpts.heightTransitionBak);
+            if (isIosSmall() || isLowChrome()) {
+                setTimeout(() => {
+                    // 高度动效降级
+                    addDomTransition(this.$refs.content, '');
+                }, 300);
+            }
+            // 更新内容区高度
+            this.contentHeight = height;
+            // 数组里高度也要更新
+            this.contentItemList[this.selectedIndex].height = height;
+        }
+    },
+    watch: {
+        // 观察 selectedIndex 改变
+        selectedIndex(newVal, oldVal) {
+            // 如果只有一个 slot，并且竖直方向的动效切换开关为关，直接返回，节省开销
+            if (this.slotsCount === 1 && !this.verticalTransition) {
+                return;
+            }
+            this.judgeSlideDirection(newVal, oldVal);
+        },
+        // 这里 deep watch list 的变化；为的是实现异步 loading 的效果
+        list: {
+            deep: true,
+            handler(newVal, oldVal) {
+                this.$nextTick(() => {
+                    // 计算所有内容 item 的高度
+                    this.calculateAllContentItemHeight();
+                    // 设置高度
+                    this.contentHeight = this.contentItemList[this.selectedIndex].height;
+                    // 获得 dom
+                    let domContentItem = this.$refs.contentItem[this.selectedIndex];
+                    // 清除动画
+                    clearDomTransition(domContentItem);
+                    // 显示
+                    domContentItem.style.display = 'inline-block';
+                    // 透明度设为0
+                    domContentItem.style.opacity = 0;
+                    // 强制触发重绘
+                    domContentItem.offsetWidth;
+                    // 添加动效
+                    addDomTransition(domContentItem, this.transitionOpts.horizontalTransition);
+                    // 透明度设为1
+                    domContentItem.style.opacity = 1;
+                });
+            }
+        }
+    }
+};
+</script>
+
+<script type="php">
+function render($ctx, $isXml = false) {
+    $vnodes = $ctx->slots['default'];
+    if ($vnodes && count($vnodes)) {
+        foreach ($vnodes as $index => $vnode) {
+            // 放入指定 slot
+            $ctx->slots['contentItem' . $index] = $vnode;
+        }
+        // 设置 slots 长度
+        $ctx->_d['slotsCount'] = count($vnodes);
+    }
+    return parent::render($ctx);
+}
+</script>
+
+<style module>
+.content-wrapper {
+    /* width: 100%; */
+    margin-left: -.17rem;
+    margin-right: -.17rem;
+}
+.content {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+.content-item {
+    width: 100%;
+    padding-left: .17rem;
+    padding-right: .17rem;
+    box-sizing: border-box;
+    -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+    -webkit-transform-style: preserve-3d;
+    -webkit-perspective: 1000;
+}
+</style>

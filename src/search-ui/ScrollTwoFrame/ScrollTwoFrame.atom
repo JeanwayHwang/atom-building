@@ -1,0 +1,427 @@
+<template>
+    <div>
+        <!-- 自适应样式 -->
+        <div
+            a-if="type === 'auto'"
+            class="scroll-auto"
+            @touchstart="touchstart"
+            @touchmove="touchmove"
+            @touchend="touchend"
+            @touchcancel="touchend"
+        >
+            <div
+                class="wrapper"
+            >
+                <div
+                    :style="[
+                        {
+                            width: width + '%'
+                        }
+                    ]"
+                    class="scroller"
+                >
+                    <!-- 行 -->
+                    <div
+                        a-for="(i, rowIndex) in 2"
+                        :key="rowIndex"
+                        class="row"
+                    >
+                        <!-- 项 -->
+                        <div
+                            a-for="(j, columnIndex) in column"
+                            :key="columnIndex"
+                            :style="[
+                                {
+                                    width: col * rate / width * 100 + '%',
+                                    paddingRight: right / allCols + '%'
+                                }
+                            ]"
+                            class="item"
+                        >
+                            <!-- @slot:c-scroll-two-frame-slot{{index}} 自定义item项 -->
+                            <slot
+                                :name="'c-scroll-two-frame-slot' + (orientation === 'horizontal'
+                                    ? (columnIndex + rowIndex * column)
+                                    : (rowIndex + columnIndex * 2)
+                                )"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 默认样式 -->
+        <c-scroll
+            a-else
+            ref="scroll"
+            :bounce="bounce"
+            :probe-type="probeType"
+            :snap="snap"
+            :snap-step-x="snapStepX"
+            scroller-flex
+            @beforescrollstart="handleBeforeScrollStart"
+            @scrollstart="handleScrollStart"
+            @scroll="handleScroll"
+            @touchend="handleTouchEnd"
+            @scrollend="handleScrollEnd"
+        >
+            <!-- 水平排列，需多传一个列数，默认为数组长度的一半，进一取整 -->
+            <c-scroll-item
+                a-for="(item, index) in column"
+                :key="index"
+                :col="col"
+            >
+                <div
+                    a-for="(item2, index2) in 2"
+                    :class="[
+                        'c-scroll-two-item',
+                        index2 ? 'c-gap-top' : ''
+                    ]"
+                    :key="index2"
+                    @click="handleItemClick(
+                        orientation === 'horizontal'
+                            ? (index + index2 * column)
+                            : (index2 + index * 2)
+                    )"
+                >
+                    <!-- @slot:c-scroll-two-frame-slot{{index}} 自定义item项 -->
+                    <slot
+                        :name="'c-scroll-two-frame-slot' + (orientation === 'horizontal'
+                            ? (index + index2 * column)
+                            : (index2 + index * 2)
+                        )"
+                    />
+                </div>
+            </c-scroll-item>
+            <!-- 加载更多 -->
+            <c-scroll-item
+                a-if="moreUrl"
+                :col="4"
+            >
+                <!-- 使用定位来解决 iOS 10.1 及以下高度 100% 填充问题 -->
+                <!-- In Safari 10.1 and below, the height of (non flex) children are not recognized in percentages -->
+                <!-- https://bugs.webkit.org/show_bug.cgi?id=137730 -->
+                <c-touchable-feedback
+                    :open="!!(moreUrl || (moreUrlParams && moreUrlParams.tcUrl))"
+                    :url="moreUrl"
+                    :url-params="moreUrlParams"
+                    is-jump
+                    expand
+                    style="position: absolute; top: .05rem; bottom: 0; left: 0; right: 0"
+                >
+                    <c-more
+                        :url="moreUrl"
+                        :params="moreUrlParams"
+                        @showMore="showMore"
+                    />
+                </c-touchable-feedback>
+            </c-scroll-item>
+            <c-scroll-item
+                a-if="rightSlotCol"
+                :col="rightSlotCol"
+            >
+                <!-- @slot 右侧 slot 自定义区域；需要通过 rightSlotCol 传栅格数，不传则会隐藏（弹性滑动至最右边时可出现） -->
+                <slot
+                    name="right"
+                />
+            </c-scroll-item>
+        </c-scroll>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 排列方式，有水平排列（'horizontal'）和竖直排列（'vertical'）两种
+         */
+        orientation: {
+            type: String,
+            default: 'horizontal'
+        },
+
+        /**
+         * 数据长度
+         */
+        length: {
+            type: Number
+        },
+
+        /**
+         * 栅格数
+         */
+        col: {
+            type: Number,
+            default: 4
+        },
+
+        /**
+         * 查看更多跳转链接
+         */
+        moreUrl: {
+            type: String
+        },
+
+        /**
+         * 查看更多跳转链接所需参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        moreUrlParams: {
+            type: Object
+        },
+
+        /**
+         * 弹性滚动
+         */
+        bounce: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 滚动设置
+         *
+         * @see See [Scroll](./Scroll#API) `probeType`
+         */
+        probeType: {
+            type: Number,
+            default: 0
+        },
+
+        /**
+         * 右侧 slot 自定义区的栅格数，不传则会隐藏（弹性滑动至最右边时可出现）
+         */
+        rightSlotCol: Number,
+
+        /**
+         * 是否是snap
+         */
+        snap: Boolean,
+
+        /**
+         * snap 滑动的距离（为 itemWidth 的倍数）
+         */
+        snapStepX: Number,
+
+        /**
+         * 类型：'normal' 正常类型；'auto' 自适应类型
+         */
+        type: {
+            type: String,
+            default: 'normal'
+        }
+    },
+    data: {
+        // 列数；这里向下取整是因为双排横滑如果是奇数项的话要舍去最后一个
+        column: length === 1
+            ? 1
+            : math_floor(length / 2),
+        // 比率
+        rate: 97 / 1140 * 100,
+        // padding-right
+        right: 24 / 97 * 100
+    },
+    components: {
+        'c-scroll': '../Scroll/Scroll',
+        'c-scroll-item': '../Scroll/ScrollItem',
+        'c-more': '../More/More',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+export default {
+    mounted() {
+        this.navControl = this.navControl = navigator.control || {};
+        this.direcObj = {};
+    },
+    methods: {
+        showMore() {
+
+            /**
+             * 当最后一项展示『查看更多』并且需要有特殊操作时，可在组件外层调用的地方绑定该事件
+             *
+             * @event showmore
+             */
+            this.$emit('showmore');
+        },
+        handleItemClick(index) {
+
+            /**
+             * 当点击项不做url跳转有特殊操作时，可在组件外层调用的地方绑定该事件
+             *
+             * @event itemclick
+             * @property {number} param1 索引
+             */
+            this.$emit('itemclick', index);
+        },
+        handleBeforeScrollStart() {
+
+            /**
+             * 滚动开始之前，同[Scroll](./Scroll#API)
+             *
+             * @event beforescrollstart
+             */
+            this.$emit('beforescrollstart');
+        },
+        handleScrollStart() {
+
+            /**
+             * 滚动开始，同[Scroll](./Scroll#API)
+             *
+             * @event scrollstart
+             */
+            this.$emit('scrollstart');
+        },
+        handleScroll(obj) {
+
+            /**
+             * 滚动中，同[Scroll](./Scroll#API)
+             *
+             * @event scroll
+             */
+            this.$emit('scroll', obj);
+        },
+        handleTouchEnd(obj) {
+
+            /**
+             * 触摸结束，同[Scroll](./Scroll#API)
+             *
+             * @event touchend
+             */
+            this.$emit('touchend', obj);
+        },
+        handleScrollEnd(pageIndex, obj) {
+
+            /**
+             * 滚动结束，同[Scroll](./Scroll#API)
+             *
+             * @event scrollend
+             */
+            this.$emit('scrollend', pageIndex, obj);
+        },
+
+        /**
+         * 得到 better-scroll 的实例
+         *
+         * @public
+         * @return {Object} better-scroll 的实例
+         */
+        getBScrollIns() {
+            return this.$refs.scroll.getBScrollIns();
+        },
+
+        // 浏览器原生滑动
+        touchstart(e) {
+            if (this.navControl.gesture) {
+                this.navControl.gesture(false);
+            }
+            this.direcObj.sx = e.touches[0].clientX;
+            this.direcObj.ex = e.touches[0].clientX;
+            this.direcObj.sy = e.touches[0].clientY;
+        },
+        touchmove(e) {
+            this.direcObj.ex = e.touches[0].clientX;
+            this.direcObj.ey = e.touches[0].clientY;
+        },
+        touchend(e) {
+            // 只考虑横滑,纵向滑动忽略
+            if (this.navControl.gesture) {
+                this.navControl.gesture(true);
+            }
+            if (Math.abs(this.direcObj.ex - this.direcObj.sx) > 30) {
+                // 符合规范的事件名
+                this.$emit('scrollend');
+            }
+        }
+    },
+    computed: {
+        width() {
+            let width = 0;
+            for (let i = 0; i < this.column; i++) {
+                width += this.col * this.rate;
+            }
+            return width;
+        },
+        allCols() {
+            let allCols = 0;
+            for (let i = 0; i < this.column; i++) {
+                allCols += this.col;
+            }
+            return allCols;
+        }
+    },
+    watch: {
+        // 监听 length 变化
+        length(newVal, oldVal) {
+            if (!newVal) {
+                return;
+            }
+            // 重新设置列数
+            this.column = (newVal === 1)
+                ? 1
+                : Math.floor(newVal / 2)
+            ;
+        }
+    }
+};
+</script>
+
+<script type="php">
+function computed_width($ctx){
+    $column = $ctx->_d['column'];
+    $col = $ctx->_d['col'];
+    $rate = $ctx->_d['rate'];
+    $width = 0;
+    for ($i = 0; $i < $column; $i++) {
+        $width = $width + $col * $rate;
+    }
+    return $width;
+}
+function computed_allCols($ctx){
+    $column = $ctx->_d['column'];
+    $col = $ctx->_d['col'];
+    $allCols = 0;
+    for ($i = 0; $i < $column; $i++) {
+        $allCols = $allCols + $col;
+    }
+    return $allCols;
+}
+</script>
+
+<style lang="less" module>
+.scroll-auto {
+    margin-left: -.17rem;
+    margin-right: -.17rem;
+    // 这里一套组合技是为了隐藏水平滚动条
+    overflow: hidden;
+}
+.wrapper {
+    position: relative;
+    padding-left: .17rem;
+    padding-right: .17rem;
+    overflow-x: auto;
+    // iOS 弹性滚动
+    -webkit-overflow-scrolling: touch;
+    // 这里一套组合技是为了隐藏水平滚动条
+    transform: translateY(.1rem);
+    margin-top: -.1rem;
+    padding-bottom: .1rem;
+    .scroller {
+        padding-right: .09rem;
+    }
+    .row {
+        display: flex;
+        // padding-right: .09rem;
+        white-space: nowrap;
+        word-wrap: normal;
+        word-break: normal;
+        .item {
+            box-sizing: border-box;
+        }
+    }
+}
+</style>

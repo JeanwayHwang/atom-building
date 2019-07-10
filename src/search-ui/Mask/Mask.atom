@@ -1,0 +1,155 @@
+<template>
+    <div
+        ref="mask"
+        :style="{
+            'width': width,
+            'height': 0,
+            'background-color': backgroundColor,
+            'z-index': -1,
+            'opacity': 0
+        }"
+        class="mask"
+        @click="handleClick"
+        @touchmove="handleMaskTouchmove"
+    >
+        <!-- @slot 默认slot -->
+        <slot/>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 蒙层显示时的 z-index
+         */
+        zIndex: {
+            type: [Number, String],
+            default: -1
+        },
+        /**
+         * 蒙层的宽度
+         */
+        width: {
+            type: String,
+            default: '100%'
+        },
+        /**
+         * 蒙层的高度
+         */
+        height: {
+            type: String,
+            default: '1500px'
+        },
+        /**
+         * 蒙层的高度
+         */
+        backgroundColor: {
+            type: String,
+            default: 'rgba(0, 0, 0, .5)'
+        },
+        /**
+         * 动效配置
+         */
+        transitionOpts: {
+            type: Object,
+            default: {
+                // 显示动效
+                showTransition: 'height,opacity .3s cubic-bezier(0.42, 0, 0.52, 1)',
+                // 隐藏动效
+                hideTransition: 'height,opacity .3s cubic-bezier(0, 0, 0.3, 1)'
+            }
+        },
+        /**
+         * 是否阻止默认滑动事件
+         */
+        preventDefaultTouchmove: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * touchmove 事件
+         */
+        touchmove: Function,
+        /**
+         * 点击事件
+         */
+        click: Function
+    },
+    data: {
+        // 内部维护的 mZIndex
+        mZIndex: -1
+    },
+    components: {
+        'c-transition': '../Motion/Transition'
+    }
+}
+</script>
+
+<script>
+// dom 操作
+import {
+    addDomTransition,
+    clearDomTransition
+} from '../util/domUtil';
+
+export default {
+    methods: {
+        handleClick() {
+            this.$emit('click');
+        },
+        handleMaskTouchmove(e) {
+            this.$emit('touchmove', e);
+            if (this.preventDefaultTouchmove) {
+                e.cancelable && e.preventDefault();
+            }
+        },
+
+        /**
+         * show event.
+         *
+         * @event show
+         */
+        show() {
+            let dom = this.$refs.mask;
+            clearDomTransition(dom);
+            dom.style.zIndex = this.zIndex;
+            dom.style.opacity = 0;
+            dom.style.height = this.height;
+            dom.offsetHeight;
+            addDomTransition(dom, this.transitionOpts.showTransition);
+            dom.style.opacity = 1;
+        },
+
+        /**
+         * hide event.
+         *
+         * @event hide
+         * @param {boolean} animation 默认为true
+         */
+        hide(animation = true) {
+            let dom = this.$refs.mask;
+            clearDomTransition(dom);
+            if (animation) {
+                dom.style.opacity = 1;
+                dom.offsetHeight;
+                addDomTransition(dom, this.transitionOpts.hideTransition);
+            }
+            dom.style.opacity = 0;
+            setTimeout(() => {
+                dom.style.zIndex = -1;
+                dom.style.height = 0;
+            }, 300);
+        }
+    }
+};
+</script>
+
+<style module>
+.mask {
+    position: absolute;
+    -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+    -webkit-transform-style: preserve-3d;
+}
+</style>

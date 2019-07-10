@@ -1,0 +1,354 @@
+<!-- @ignore -->
+<template>
+    <div
+        :style="{'background-color': backgroundColor}"
+        :class="{
+            'c-navs-scroll-container-zindex': hasMask,
+            'c-navs-scroll-container-open': isOpen,
+            'c-navs-scroll-container-close': !isOpen
+        }"
+        class ="c-navs-scroll-container"
+    >
+        <div
+            ref="scrollWrapper"
+            :class="{'c-navs-sub-scroll-wrapper': type === 'navSub'}"
+            :style="{'margin-right': gapRight + 'rem'}"
+            class="c-navs-scroll-wrapper"
+        >
+            <div ref="scroll" class="c-navs-scroll-content">
+                <ul
+                    voice-action="switch"
+                    voice-tag="导航"
+                    role="tablist"
+                >
+                    <c-link
+                        a-for="(label, index) in labelList"
+                        ref="items"
+                        :key="index"
+                        :data-nolog="!isOpenLog"
+                        :data-log="logContent.logList && logContent.logList[index] ? logContent.logList[index] : null"
+                        :voice-config="'switch.item:' + label.txt"
+                        :url="label.url"
+                        :params="label.params"
+                        :style="{
+                            display: 'block'
+                        }"
+                        :class="{
+                            'c-navs-scroll-selected': index === selectedIndex,
+                            'c-navs-scroll-select-bottom': index === selectedIndex && !bottomAnimation,
+                            'WA_LOG_TAB': !label.url
+                        }"
+                        :aria-checked="index === selectedIndex"
+                        role="tab"
+                        class="c-color-gray-a li"
+                        @click="itemClick(index)"
+                    >
+                        <span
+                            :style="index === selectedIndex
+                                ? {
+                                    'color': selectedColor,
+                                    'border-color': selectedColor
+                                }
+                                : {
+                                    color: itemStyle.color,
+                                    opacity: itemStyle.opacity
+                                }
+                            "
+                        >
+                            {{ label.txt }}
+                        </span>
+                    </c-link>
+                </ul>
+            </div>
+            <!-- 为了实现下划线 动画 -->
+            <div
+                ref="bottomBar"
+                :style="bottomStyle"
+                class="c-navs-scroll-bottom"
+            />
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        labelList: {
+            type: Array,
+            required: true
+        },
+        selectedIndex: {
+            type: Number,
+            default: 0
+        },
+        itemStyle: {
+            type: Object,
+            default: {
+                color: '#666',
+                opacity: '1'
+            }
+        },
+        selectedColor: {
+            type: String,
+            default: '#333'
+        },
+        backgroundColor: {
+            type: String,
+            default: '#fff'
+        },
+        type: {
+            type: String,
+            default: 'nav'
+        },
+        isOpenLog: {
+            type: Boolean,
+            default: true
+        },
+        logContent: {
+            type: Object,
+            default: {}
+        },
+        gapRight: {
+            type: Number,
+            default: 0.34
+        },
+        hasMask: {
+            type: Boolean,
+            default: false
+        },
+        isOpen: {
+            type: Boolean,
+            default: false
+        }
+    },
+    data: {
+        position: {
+            left: 0,
+            right: 0
+        },
+        isDownGrade: false,
+        // 下划线动画状态，TRUE为正在滑动中，FALSE为静止状态
+        bottomAnimation: false
+    },
+    components: {
+        'c-link': '../Link/Link'
+    }
+}
+</script>
+
+<script>
+// 动画原理实现 初始化时使用的为选项的 border-bottom 显示下划线 改变初始化时下划线闪烁现象
+// 更改选定选项时，使用的是 bottom div 来生成动画效果， 当单纯的scroll 滑动时bottom div 隐藏，选项border-bottom出现
+import IScroll from '@baidu/better-scroll';
+export default {
+    methods: {
+        itemClick(index) {
+            this.$emit('clickItem', index);
+        },
+        getPosition(dom) {
+            if (dom === undefined) {
+                return {left: 0, right: 0};
+            }
+            let transform = this.$refs.scroll.style.transform || this.$refs.scroll.style.webkitTransform;
+            let parentLeft = transform.match(/\d+/g)[0];
+            let left = dom.offsetLeft - parentLeft + this.$refs.scroll.offsetLeft;
+            let right = left + dom.offsetWidth;
+            return {left, right};
+        },
+        // 判断具体手机型号是否进行降级处理
+        supportAnimation() {
+            let ua = navigator.userAgent.toLowerCase();
+            let version = ua.match(/zte\sn939st/);
+            if (version) {
+                return false;
+            }
+            return true;
+        },
+        animationInit(old) {
+            let {left, right} = this.position;
+            this.bottomAnimation = true;
+            this.$refs.bottomBar && this.$refs.bottomBar.setAttribute('style', `
+                height: 2px;
+                background-color: ${this.selectedColor};
+                left: ${left}px;
+                width: ${right - left}px;
+            `);
+        },
+        animation(value) {
+            let {left: oldLeft, right: oldRight} = this.position;
+            this.position = this.getPosition(this.$refs.items[value].$el);
+            let {left, right} = this.position;
+            this.$nextTick(function () {
+                let scaleX = (right - left) / (oldRight - oldLeft);
+                let tranX = (right + left - oldRight - oldLeft) / 2;
+                this.$refs.bottomBar && this.$refs.bottomBar.setAttribute('style', `
+                    height: 2px;
+                    background-color: ${this.selectedColor};
+                    left: ${oldLeft}px;
+                    width: ${oldRight - oldLeft}px;
+                    transition: transform .24s cubic-bezier(0.4, 0, 0.2, 1);
+                    -webkit-transition: -webkit-transform .24s cubic-bezier(0.4, 0, 0.2, 1);
+                    transform: translate3d(${tranX}px, 0, 0) scaleX(${scaleX}) ;
+                    -webkit-transform: translate3d(${tranX}px, 0, 0) scaleX(${scaleX}) ;
+                    transform-origin: 50% 0 0;
+                    -webkit-transform-origin: 50% 0 0;
+                `);
+            });
+        },
+        animationDone() {
+            this.bottomAnimation = false;
+            this.$nextTick(() => {
+                this.$refs.bottomBar && this.$refs.bottomBar.setAttribute('style', '');
+            });
+        }
+    },
+    watch: {
+        selectedIndex(value, oldValue) {
+            // 滑动动画
+            this.$nextTick(function () {
+                if (value  <= 1 && value >= 0) {
+                    this.iScroll.scrollToElement(this.$refs.items[0].$el, 240);
+                }
+                if (value > 1 && value < this.labelList.length) {
+                    this.iScroll.scrollToElement(this.$refs.items[value - 1].$el, 240);
+                }
+                if (this.type === 'navSub' || this.isDownGrade) {
+                    return;
+                }
+                this.animationInit(oldValue);
+                this.animation(value);
+            });
+        },
+        labelList() {
+            this.$nextTick(function () {
+                // 更新滑动框
+                this.iScroll.refresh();
+            });
+        }
+    },
+    mounted() {
+        let scrollOpt = {
+            bindToWrapper: true, // 将 touchmove 事件绑定至 dom 而非全局
+            scrollX: true,
+            scrollY: false,
+            disableMouse: true,
+            disablePointer: true,
+            eventPassthrough: true,
+            scrollbars: false
+        };
+
+        this.iScroll = new IScroll(this.$refs.scrollWrapper, scrollOpt);
+        this.$nextTick(function () {
+            let value = this.selectedIndex;
+            this.iScroll.scrollToElement(this.$refs.items[Math.max(0, value - 1)].$el, 240);
+        });
+
+        let me = this;
+        this.iScroll.on('scrollEnd', function () {
+            me.$emit('scrollEnd');
+        });
+
+        if (this.type === 'navSub') {
+            return;
+        }
+
+        this.isDownGrade = !this.supportAnimation();
+
+        this.iScroll.on('scrollStart', function () {
+            me.position = me.getPosition(me.$refs.items[me.selectedIndex].$el);
+            me.animationDone();
+        });
+        this.iScroll.on('scrollEnd', function () {
+            me.position = me.getPosition(me.$refs.items[me.selectedIndex].$el);
+        });
+        this.position = this.getPosition(this.$refs.items[this.selectedIndex].$el);
+        this.$refs.bottomBar && this.$refs.bottomBar.addEventListener('transitionend', this.animationDone, false);
+        this.$root.$on('attach', () => {
+            this.iScroll.refresh();
+        });
+    },
+    destroyed() {
+        this.iScroll && this.iScroll.destroy();
+        this.iScroll = null;
+    }
+};
+</script>
+
+<style lang="less" scoped>
+@navs-height: 2.6667em;
+.c-navs-scroll-container {
+    overflow: hidden;
+}
+.c-navs-scroll-container-zindex {
+    position: relative;
+    z-index: 10;
+}
+.c-navs-scroll-container-open {
+    transition: all .08s;
+    opacity: 0;
+    z-index: 9;
+}
+.c-navs-scroll-container-close {
+    transition: all .08s;
+    opacity: 1;
+    z-index: 10;
+}
+.c-navs-scroll-wrapper {
+    position: relative;
+    height: @navs-height;
+    box-sizing: border-box;
+    margin: 0 .34rem 0 .17rem;
+    font-size: 15px;
+    .c-navs-scroll-content {
+        position: absolute;
+        margin: 0 -.17rem;
+        height: 100%;
+    }
+    ul {
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        transform: translate(0, 0);
+    }
+    .li {
+        display: block;
+        margin: 0 .17rem;
+        white-space: nowrap;
+        text-align: center;
+        height: 100%;
+        line-height: 2.6667;
+        position: relative;
+        span {
+            display: inline-block;
+            height: 100%;
+            box-sizing: border-box;
+        }
+    }
+    .c-navs-scroll-select-bottom {
+        span {
+            border-bottom: solid 2px #333;
+        }
+    }
+    .c-navs-scroll-selected {
+        font-weight: bold;
+        color: #333;
+    }
+    .c-navs-scroll-bottom {
+        position: absolute;
+        bottom: 0;
+    }
+}
+@navs-sub-height: 2.7143em;
+.c-navs-sub-scroll-wrapper {
+    height: @navs-sub-height;
+    font-size: 14px;
+    li {
+        line-height: 2.7143;
+    }
+    .c-navs-scroll-select-bottom {
+        span {
+            border: 0;
+        }
+    }
+}
+</style>

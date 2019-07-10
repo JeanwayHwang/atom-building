@@ -1,0 +1,16 @@
+<!-- @ignore -->
+<template>
+    <section
+        ref="carouselItem"
+        class="carousel-item"
+    >
+        <slot/>
+    </section>
+</template>
+
+<style module>
+.carousel-item {
+    display: inline-block;
+    width: 100%;
+}
+</style>

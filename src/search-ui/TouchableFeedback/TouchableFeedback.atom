@@ -1,0 +1,186 @@
+<template>
+    <!-- eslint-disable atom/attribute-object-format -->
+    <div
+        :data-aftclk="open && tcUrl ? '' : false"
+        :rl-node="open ? '' : null"
+        :rl-type="open && !isJump ? 'button': null"
+        :rl-highlight-position="open ? position : null"
+        :rl-highlight-background="open ? backgroundColor : null"
+        :rl-highlight-radius="open ? borderRadius : null"
+        :rl-highlight-self="open && self ? '' : null"
+        :rl-link-href="open ? tcUrl : null"
+        :rl-link-data-sf-href="(open && urlParams && urlParams.sfUrl) ? urlParams.sfUrl : null"
+        :rl-link-data-sf-options="(open && urlParams && urlParams.options) ? urlParams.options : null"
+        :rl-link-data-url="(open && urlParams && urlParams.originUrl) ? urlParams.originUrl : null"
+        :rl-link-data-log="(open && urlParams && urlParams.log) ? urlParams.log : null"
+        :rl-link-data-click="(open && urlParams && urlParams.clickData) ? urlParams.clickData : null"
+        :rl-link-data-tc-redirect="(open && urlParams && urlParams.tcRedirect) ? urlParams.tcRedirect : null"
+        :rl-link-rt-disable="(open && urlParams && urlParams.rtDisable) ? '' : null"
+        :rl-link-origin-url="(open && urlParams && urlParams.fastUrl) ? urlParams.fastUrl : null"
+        :rl-link-data-xcx="(open && urlParams && urlParams.type === 'xcx') ? urlParams.options : false | json"
+        :rl-link-data-ivk="(open && urlParams && urlParams.ivkParams) ? urlParams.ivkParams : false | json"
+        :rl-link-data-light="(open && urlParams && urlParams.type === 'easybrowse') ? urlParams.options : false | json"
+        :class="{
+            'WA_LOG_SF': open && urlParams && urlParams.type === 'sf',
+            'WA_LOG_XCX': open && urlParams && urlParams.type === 'xcx',
+            'WA_LOG_LIGHT': open && urlParams && urlParams.type === 'easybrowse'
+        }"
+        class="c-touchable-feedback c-touchable-feedback-no-default"
+    >
+        <!-- eslint-enable atom/attribute-object-format -->
+        <!-- expand 的时候需要保证 expand 占位 div 在 slot 的底层, 需要将 slot 包一层通过 z-index 来实现 -->
+        <template a-if="!expand">
+            <!-- @slot 默认 slot -->
+            <slot/>
+        </template>
+        <div a-else class="c-touchable-feedback-content">
+            <slot/>
+        </div>
+        <div
+            a-if="open && expand"
+            :style="{
+                top: cTop,
+                right: cRight,
+                bottom: cBottom,
+                left: cLeft
+            }"
+            class="c-touchable-feedback-expand"
+        />
+    </div>
+</template>
+
+<style lang="less">
+/* lesslint-disable vendor-prefixes-sort */
+.c-touchable-feedback {
+    position: relative;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -khtml-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+
+    &-no-default {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+        * {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+        }
+    }
+    &-expand {
+        position: absolute;
+        z-index: 0;
+    }
+    &-content {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+    }
+}
+</style>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 是否添加点击态
+         */
+        open: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 基于被包裹容器 absolute 定位，top 值
+         */
+        top: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * 基于被包裹容器 absolute 定位，right 值
+         */
+        right: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * 基于被包裹容器 absolute 定位，bottom 值
+         */
+        bottom: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * 基于被包裹容器 absolute 定位，left 值
+         */
+        left: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * 设置 borderRadius
+         */
+        borderRadius: {
+            type: String,
+            default: '0'
+        },
+        /**
+         * 设置点击态的颜色，透明度取值为 .05, .08, .12 其中之一
+         */
+        backgroundColor: {
+            type: String,
+            default: 'rgba(0, 0, 0, .05)'
+        },
+        /**
+         * 是否是跳转类型 跳转类型会保持点击态到跳转 并具备块级跳转功能
+         */
+        isJump: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 是否扩展点击跳转响应区域，区域大小同点击态的区域
+         */
+        expand: {
+            type: Boolean,
+            default: false
+        },
+        self: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 点击态区域块级跳转链接的 url 地址
+         */
+        url: {
+            type: String,
+            default: ''
+        },
+        /**
+         * 点击态区域块级跳转链接的 urlParams
+         */
+        urlParams: {
+            type: Object,
+            default: {}
+        },
+        /**
+         * 点击态区域块级跳转链接的 title
+         */
+        title: {
+            type: String,
+            default: ''
+        }
+    },
+    computed: {
+        cTop: top + 'rem',
+        cRight: right + 'rem',
+        cBottom: bottom + 'rem',
+        cLeft: left + 'rem',
+        position: `${top}rem,${right}rem,${bottom}rem,${left}rem`,
+        tcUrl: (urlParams && urlParams.tcUrl) ? urlParams.tcUrl : url,
+        isBlockJump: open && isJump && ((urlParams && urlParams.tcUrl) || url)
+    },
+    components: {
+        'c-link': '../Link/Link'
+    }
+}
+</script>

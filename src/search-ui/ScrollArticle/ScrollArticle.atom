@@ -1,0 +1,197 @@
+<template>
+    <c-scroll
+        :count="count"
+        scroller-flex
+        role="listbox"
+        class="c-scroll-article"
+        @scrollEnd="handleScrollEnd"
+    >
+        <c-scroll-item
+            a-for="idx in count"
+            :col="col"
+            :key="idx"
+            role="option"
+        >
+            <div
+                a-if="idx <= count && articleList[idx - 1]"
+                @click="itemClick(idx, articleList[idx - 1])"
+            >
+                <c-scroll-article-item
+                    :idx="idx - 1"
+                    :item="articleList[idx - 1]"
+                    :show-ext="showExt"
+                >
+                    <!-- @slot:c-scroll-article-ext{{index}} 自定义拓展信息，只支持1行显示-->
+                    <slot :name="'c-scroll-article-ext' + (idx - 1)"/>
+                </c-scroll-article-item>
+            </div>
+        </c-scroll-item>
+        <c-scroll-item
+            a-if="moreUrl"
+            :col="4"
+            class="c-scroll-article-more-box"
+        >
+            <!-- 使用定位来解决 iOS 10.1 及以下高度 100% 填充问题 -->
+            <!-- In Safari 10.1 and below, the height of (non flex) children are not recognized in percentages -->
+            <!-- https://bugs.webkit.org/show_bug.cgi?id=137730 -->
+            <c-touchable-feedback
+                :open="!!(moreUrl || (moreUrlParams && moreUrlParams.tcUrl))"
+                :url="moreUrl"
+                :url-params="moreUrlParams"
+                expand
+                is-jump
+                style="position: absolute; top: 0; bottom: 0; left: 0; right: 0"
+            >
+                <c-link
+                    :url="moreUrl"
+                    :params="moreUrlParams"
+                    class="c-color c-scroll-article-box"
+                    @click="showMore"
+                >
+                    <div class="c-scroll-article-more">
+                        <c-icon type="right_arrow" class="c-scroll-article-icon"/>
+                        <div>查看更多</div>
+                    </div>
+                </c-link>
+            </c-touchable-feedback>
+        </c-scroll-item>
+    </c-scroll>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 栅格列数
+         */
+        col: {
+            type: Number,
+            default: 6
+        },
+
+        /**
+         * 文章列表数据
+         *
+         * @property {string} url 跳转链接
+         * @property {Object} params 跳转链接所需的参数，参考[Link](./Link#API) `params`
+         * @property {string} src 图片链接
+         * @property {string} title 文章标题
+         * @property {string} type item类型,支持 'video' 和 'image'
+         * @property {string} content 文章内容
+         * @property {string} labelText 标签文案
+         * @property {string} labelType 标签类型
+         * @property {string} source 文章来源
+         * @property {number} time 时间戳，单位ms
+         * @property {string} source 文章来源
+         * @property {string} duration 视频的显示时长
+         * @property {string} defaultImageType 缺省图&加载图类型，具体可参考[Image](./Image#API)
+         */
+        articleList: {
+            type: Array
+        },
+
+        /**
+         * 查看更多跳转的url
+         */
+        moreUrl: {
+            type: String
+        },
+
+        /**
+         * 查看更多跳转的url所需的参数
+         */
+        moreUrlParams: {
+            type: Object
+        },
+
+        /**
+         * 当只是用extslot时需要设置为true
+         */
+        showExt: {
+            type: Boolean,
+            default: false
+        }
+    },
+    data: {
+        count: articleList.length ? articleList.length : 0
+    },
+    components: {
+        'c-scroll': '../Scroll/Scroll',
+        'c-scroll-item': '../Scroll/ScrollItem',
+        'c-scroll-article-item': './ScrollArticleItem',
+        'c-span': '../Row/Span',
+        'c-link': '../Link/Link',
+        'c-icon': '../Icon/Icon',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        showMore() {
+
+            /**
+             * 点击『查看更多』
+             *
+             * @event showMore
+             */
+            this.$emit('showMore');
+        },
+        handleScrollEnd() {
+
+            /**
+             * 滚动事件结束
+             *
+             * @event scrollEnd
+             */
+            this.$emit('scrollEnd');
+        },
+        itemClick(idx, item) {
+
+            item.idx = idx - 1;
+
+            /**
+             * 点击文章
+             *
+             * @event itemClick
+             * @property {number} idx 当前文章index，从0开始，其他同上表 imgList 中各字段
+             */
+            this.$emit('itemClick', item);
+        }
+    }
+};
+</script>
+
+<style scoped lang="less">
+.c-scroll-article {
+    .c-scroll-scroller {
+        padding-bottom: 1px;
+    }
+    .c-scroll-article-box {
+        position: absolute;
+        top: 50%;
+        width: 100%;
+        text-align: center;
+    }
+}
+.c-scroll-article-more {
+    text-align: center;
+    height: 62px;
+    margin-top: -31px;
+}
+.c-scroll-article-icon {
+    font-size: 42px;
+    display: inline-block;
+    height: 42px;
+    line-height: 42px;
+}
+</style>
+
+<style>
+.c-scroll-article .c-scroll-scroller {
+    padding-bottom: 1px;
+}
+</style>

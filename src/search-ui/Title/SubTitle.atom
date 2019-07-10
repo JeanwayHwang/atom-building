@@ -1,0 +1,115 @@
+<template>
+    <c-link
+        :url="url"
+        :params="urlParams"
+        :voice-tag="text"
+        :visited="visited"
+        data-module="c-t-sub"
+        voice-action="click"
+        @click="onClick"
+    >
+        <c-row>
+            <c-span :col="$platform === 'pc' ? 22 : 10">
+                <h3
+                    class="c-title c-font-medium c-color-link c-line-clamp1"
+                    role="text"
+                >
+                    <span class="c-title-text">{{ text | rmHighlight }}</span>
+                </h3>
+            </c-span>
+            <!-- 右侧 -->
+            <c-span :col="rightCol" aria-hidden="true">
+                <div class="right-wrapper">
+                    <c-icon
+                        type="right"
+                        class="c-color c-gap-left-small"
+                    />
+                </div>
+            </c-span>
+        </c-row>
+    </c-link>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 标题的跳转链接
+         */
+        url: String,
+        /**
+         * 标题跳转链接的属性，sf 跳转需要，由 smarty 工具函数生成
+         */
+        urlParams: Object,
+        /**
+         * 标题文本，不支持传入 html。为了减少垂类兼容工作量，em标签会被过滤以去除飘红
+         */
+        text: String,
+        /**
+         * 访问后是否变灰
+         */
+        visited: {
+            type: Boolean,
+            default: true
+        }
+    },
+    components: {
+        'c-link': 'search-ui/Link/Link',
+        'c-row': 'search-ui/Row/Row',
+        'c-span': 'search-ui/Row/Span',
+        'c-icon': 'search-ui/Icon/Icon'
+    }
+}
+</script>
+
+<script type="php">
+    function filter_rmHighlight($text) {
+        if (empty($text)) {
+            return $text;
+        }
+        $text = str_replace('<em>', '', $text);
+        $text = str_replace('</em>', '', $text);
+        return $text;
+    }
+</script>
+
+<script>
+export default {
+    filters: {
+        rmHighlight(text) {
+            if (!text) {
+                return text;
+            }
+            text = text.replace(/<em>/g, '');
+            text = text.replace(/<\/em>/g, '');
+            return text;
+        }
+    },
+    methods: {
+        onClick(e) {
+
+            /**
+             * click event.
+             *
+             * @event click
+             */
+            this.$emit('click', e);
+        }
+    }
+};
+</script>
+
+<style lang="less" module>
+.right-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    text-align: right;
+}
+h3.c-font-medium {
+    font-size: .16rem;
+    line-height: 26px;
+    font-weight: 700;
+}
+</style>

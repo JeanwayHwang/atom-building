@@ -1,0 +1,115 @@
+{
+    "alias": [
+        "c-scroll-two"
+    ],
+    "type": "object",
+    "properties": {
+        "scrollTwo": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "@ChineseName": "数据列表",
+                    "description": "数据列表",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "@ChineseName": "每一项的跳转链接",
+                                "description": "每一项的跳转链接",
+                                "@Demo": "https://m.baidu.com"
+                            },
+                            "urlType": {
+                                "enum": [
+                                    "normal",
+                                    "sf",
+                                    "mip"
+                                ],
+                                "@ChineseName": "链接类型",
+                                "description": "链接类型",
+                                "@Demo": "normal"
+                            },
+                            "imgSrc": {
+                                "type": "string",
+                                "@ChineseName": "每一项的图片地址",
+                                "description": "每一项的图片地址",
+                                "@Demo": "https://m.baidu.com/static/index/plus/homepage-newlogo.png"
+                            },
+                            "title": {
+                                "type": "string",
+                                "@ChineseName": "文章标题",
+                                "description": "文章标题",
+                                "@Demo": "我是文章标题"
+                            },
+                            "showNum": {
+                                "type": [
+                                    "number",
+                                    "string"
+                                ],
+                                "@ChineseName": "展示图集个数或者视频时长",
+                                "description": "展示图集个数或者视频时长",
+                                "@Demo": "13"
+                            }
+                        }
+                    }
+                },
+                "orientation": {
+                    "type": "string",
+                    "enum": [
+                        "horizontal",
+                        "vertical"
+                    ],
+                    "@ChineseName": "排列方式",
+                    "description": "排列方式",
+                    "@Demo": "horizontal"
+                },
+                "col": {
+                    "type": "number",
+                    "@ChineseName": "栅格列数",
+                    "description": "栅格列数",
+                    "@Demo": "4"
+                },
+                "imgType": {
+                    "type": "string",
+                    "enum": [
+                        "s",
+                        "l",
+                        "w",
+                        "x",
+                        "y"
+                    ],
+                    "@ChineseName": "图片比例",
+                    "description": "图片比例",
+                    "@Demo": "s"
+                },
+                "moreUrl": {
+                    "type": "string",
+                    "@ChineseName": "查看更多跳转链接",
+                    "description": "查看更多跳转链接",
+                    "@Demo": "https://m.baidu.com"
+                },
+                "moreUrlType": {
+                    "type": "string",
+                    "enum": [
+                        "normal",
+                        "sf",
+                        "mip"
+                    ],
+                    "@ChineseName": "链接类型",
+                    "description": "链接类型",
+                    "@Demo": "normal"
+                }
+            },
+            "propsData": [
+                "list",
+                "moreUrl",
+                "moreUrlType",
+                "orientation",
+                "col",
+                "imgType"
+            ]
+        }
+    }
+}

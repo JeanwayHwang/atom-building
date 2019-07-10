@@ -1,0 +1,64 @@
+{
+    "alias": [
+        "c-strong-link"
+    ],
+    "type": "object",
+    "properties": {
+        "strongLink": {
+            "type": "object",
+            "@ChineseName": "强链接",
+            "description": "强链接",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "@ChineseName": "整行可点的链接",
+                    "@Demo": "https://m.baidu.com",
+                    "description": "整行可点的链接"
+                },
+                "urlType": {
+                    "type": "string",
+                    "enum": [
+                        "normal",
+                        "sf",
+                        "mip"
+                    ],
+                    "@ChineseName": "链接类型",
+                    "description": "链接类型",
+                    "@Demo": "normal"
+                },
+                "name": {
+                    "type": "string",
+                    "@ChineseName": "强链接名称",
+                    "@Demo": "美食",
+                    "description": "强链接名称"
+                },
+                "num": {
+                    "type": "string",
+                    "@ChineseName": "强链接数量",
+                    "@Demo": "2",
+                    "description": "强链接数量"
+                },
+                "text1": {
+                    "type": "string",
+                    "@ChineseName": "数量前文案",
+                    "@Demo": "共",
+                    "description": "数量前文案"
+                },
+                "text2": {
+                    "type": "string",
+                    "@ChineseName": "数量后文案",
+                    "@Demo": "个",
+                    "description": "数量后文案"
+                }
+            },
+            "propsData": [
+                "url",
+                "name",
+                "num",
+                "text1",
+                "text2",
+                "urlType"
+            ]
+        }
+    }
+}

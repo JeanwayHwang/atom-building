@@ -1,0 +1,206 @@
+<template>
+    <div data-module="c-kf">
+        <div
+            :style="[
+                {
+                    backgroundColor,
+                    borderTop,
+                    borderBottom
+                },
+                $platform === 'pc' ? {padding: '7px 0'} : {}
+            ]"
+            class="wa-onlyshow-kgbar-wrapper c-row-tile"
+        >
+            <c-touchable-feedback
+                :is-jump="!!(url || (urlParams && urlParams.tcUrl))"
+                :top="-.1"
+                :bottom="-.1"
+                :url="url"
+                :url-params="urlParams"
+                expand
+            >
+                <c-link
+                    :url="url"
+                    :params="urlParams"
+                    :voice-tag="text"
+                    voice-action="click"
+                    class="c-color"
+                >
+                    <span
+                        :style="{
+                            color: textColor
+                        }"
+                        class="wa-onlyshow-kgbar-text c-gap-right"
+                    >
+                        {{ text }}
+                    </span>
+                    <span aria-hidden="true" class="wa-onlyshow-kgbar-icon c-font-medium">
+                        <c-icon
+                            :style="{
+                                color: iconColor
+                            }"
+                            :type="iconType"
+                        />
+                    </span>
+                </c-link>
+            </c-touchable-feedback>
+            <!-- 反馈点击态 -->
+            <c-touchable-feedback
+                a-if="feedback && feedback.suggest && feedback.suggest.is_show == 1"
+                :left="-.05"
+                :right="-.05"
+                :style="$platform === 'pc' ? {padding: '8px 0'} : {}"
+                background-color="rgba(0, 0, 0, .08)"
+                expand
+                class="c-feedback-touchable WA_LOG_BTN"
+                @click.stop.native="handleFeedbackClick({
+                    feedback: feedback,
+                    event: $event
+                })"
+            >
+                <!-- 这里不能使用 feedback 类，因为 feedback 类会被捕捉，触发打开全局的反馈事件；所以使用了 c-feedback 事件 -->
+                <span class="c-feedback c-color-gray c-font-normal">
+                    反馈
+                </span>
+            </c-touchable-feedback>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 底部按钮的文案
+         */
+        text: {
+            type: String,
+            default: '查看更多'
+        },
+
+        /**
+         * 底部链接地址
+         */
+        url: String,
+
+        /**
+         * 底部链接需要的参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        urlParams: Object,
+
+        /**
+         * 底部按钮类型
+         */
+        iconType: {
+            type: String,
+            default: 'kg_right_arrow'
+        },
+
+        /**
+         * 底部文案的颜色
+         */
+        textColor: {
+            type: String,
+            default: '#000'
+        },
+
+        /**
+         * 底部按钮的颜色
+         */
+        iconColor: {
+            type: String,
+            default: '#000'
+        },
+
+        /**
+         * 反馈内容数据，用于控制是否展现反馈按钮及反馈内容
+         */
+        feedback: Object,
+
+        /**
+         * 背景色
+         */
+        backgroundColor: {
+            type: String,
+            default: '#f8f8f8'
+        },
+
+        /**
+         * 顶部边线样式
+         */
+        borderTop: {
+            type: String,
+            default: '1px solid #eee'
+        },
+
+        /**
+         * 底部边线样式
+         */
+        borderBottom: {
+            type: String,
+            default: '1px solid #e1e1e1'
+        }
+    },
+    components: {
+        'c-link': '../Link/Link',
+        'c-icon': '../Icon/Icon',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleFeedbackClick(obj) {
+
+            /**
+             * 反馈按钮点击事件
+             *
+             * @event feedbackclick
+             * @property {object} param1 事件参数
+             * @property {Event} param1.event 透传的事件
+             * @property {object} param1.feedback 反馈数据
+             */
+            this.$emit('feedbackclick', obj);
+
+            // 这里增加 try catch 是因为 openFeedBack 是在 ala-cli root 模板里的代码，在组件上线时不能保证模板里一定存在该方法
+            try {
+                this.$root.openFeedBack();
+            }
+            catch (e) {
+            }
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.wa-onlyshow-kgbar-wrapper {
+    position: relative;
+    padding-top: .09rem;
+    padding-bottom: .1rem;
+    text-align: center;
+    .c-feedback-touchable {
+        position: absolute;
+        top: 0;
+        right: .17rem;
+        // 这里是因为没有边线，所以相比于上边的 padding 要 +1
+        padding-top: .11rem;
+        padding-bottom: .11rem;
+        z-index: 1;
+        .c-feedback {
+            display: inline-block;
+            text-align: right;
+        }
+    }
+}
+.onlyshow-bar-wapper {
+    padding: .08rem 0;
+    background: #fff;
+    text-align: center;
+}
+</style>

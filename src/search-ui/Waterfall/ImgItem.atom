@@ -1,0 +1,197 @@
+<!--@ignore-->
+<template>
+    <!-- 异步 img 图片；真正的瀑布流 -->
+    <div
+        a-show="!data.error"
+        :style="[
+            {
+                'background-color': data.color,
+                'margin-bottom': marginBottom + 'px'
+            },
+            data.width && data.height
+                ? {
+                    'height': '0',
+                    'padding-bottom': math_floor(1 / (data.width / data.height) * 100) + '%'
+                }
+                : {
+                    'background-color': 'inherit'
+                }
+            ,
+            data.async
+                ? {
+                    'height': '0',
+                    'padding-bottom': 1 / data.whScale * 100 + '%'
+                }
+                : {}
+        ]"
+        :class="[
+            borderRadius.tl
+                ? $style.imgWrapperRadiusTl
+                : '',
+            borderRadius.tr
+                ? $style.imgWrapperRadiusTr
+                : '',
+            borderRadius.bl
+                ? $style.imgWrapperRadiusBl
+                : '',
+            borderRadius.br
+                ? $style.imgWrapperRadiusBr
+                : ''
+        ]"
+        :aria-label="`${data.name ? data.name : '图片'}.图集.共${data.text}张`"
+        class="img-wrapper"
+        @click="handleClick"
+    >
+        <!-- 图片；UIWebview 在 atom 下，滑动到屏幕之外的图片加载会出现白屏；需要把透明度设置为 .99；如果是 1 则会出现白屏的问题-->
+        <img
+            :src="data.src"
+            :style="[
+                {
+                    opacity: isUIWebview
+                        ? '.99'
+                        : '1'
+                }
+            ]"
+            class="img img-progressive"
+            @load="handleLoad"
+        >
+        <!-- 图片蒙层 -->
+        <!-- a-show 是为了在同步加载没有传宽高的时候，图片还没有加载出来的时候，其他元素会出现占位导致页面体验不好的问题 -->
+        <c-img-mask
+            a-if="data && (data.text || data.icon || data.pillBigText)"
+            a-show="loaded"
+            :type="data.type"
+            :size="data.size"
+            :icon="data.icon"
+            :text="data.text"
+            :pill-big-text="data.pillBigText"
+            class="img-mask img-progressive"
+        />
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 图片项数据
+         */
+        data: Object,
+        /**
+         * 默认占位图颜色
+         */
+        defaultPlaceholderImgColor: {
+            type: String,
+            default: '#efefef'
+        },
+        /**
+         * 是否是 UIWebview
+         */
+        isUIWebview: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 索引
+         */
+        index: Number,
+        // 类型；1：代表不传宽高；2：代表传入宽高；
+        type: {
+            type: Number,
+            default: 1
+        },
+        /**
+         * 底部间距
+         */
+        marginBottom: {
+            type: Number,
+            default: 2
+        },
+        /**
+         * 圆角
+         */
+        borderRadius: {
+            type: Object,
+            default: {
+                // top left
+                tl: false,
+                // top right
+                tr: false,
+                // bottom left
+                bl: false,
+                // bottom right
+                br: false
+            }
+        }
+    },
+    data: {
+        loaded: false
+    },
+    components: {
+        'c-img-mask': '../Image/ImageMask'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file ImgItem
+ * @author wangkai37(wangkai37@baidu.com)
+ */
+export default {
+    methods: {
+        handleClick() {
+            this.$emit('click', this.data);
+        },
+        handleLoad() {
+            this.loaded = true;
+        }
+    }
+};
+</script>
+
+<style module>
+.img-wrapper {
+    position: relative;
+    line-height: 0;
+    overflow: hidden;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+.img-wrapper-radius-tl,
+.img-wrapper-radius-tl > .img {
+    border-top-left-radius: 3px;
+}
+.img-wrapper-radius-tl,
+.img-wrapper-radius-tl > .img {
+    border-top-right-radius: 3px;
+}
+.img-wrapper-radius-tl,
+.img-wrapper-radius-tl > .img {
+    border-bottom-left-radius: 3px;
+}
+.img-wrapper-radius-tl,
+.img-wrapper-radius-tl > .img {
+    border-bottom-right-radius: 3px;
+}
+.img {
+    width: 100%;
+}
+.img-mask {
+    position: absolute;
+    right: .02rem;
+    bottom: .02rem;
+}
+.img-progressive {
+    animation: img-progressive-origin .32s ease-out;
+}
+@keyframes img-progressive-origin {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+</style>

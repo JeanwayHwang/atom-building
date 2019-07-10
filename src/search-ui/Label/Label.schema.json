@@ -1,0 +1,29 @@
+{
+    "alias": [
+        "c-label"
+    ],
+    "type": "object",
+    "properties": {
+        "label": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "@ChineseName": "标签类型",
+                    "@Demo": "public",
+                    "description": "标签类型"
+                },
+                "text": {
+                    "type": ["string", "number"],
+                    "@ChineseName": "标签中文案",
+                    "@Demo": "官网",
+                    "description": "标签中文案"
+                }
+            },
+            "propsData": [
+                "type",
+                "text"
+            ]
+        }
+    }
+}

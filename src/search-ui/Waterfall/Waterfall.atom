@@ -1,0 +1,469 @@
+<template>
+    <c-infinite-scroll
+        ref="infiniteScroll"
+        :mode="mode"
+        :load-btn-show="loadBtnShow"
+        :load-btn-text="loadBtnText"
+        :loading-text="loadingText"
+        :load-end-text="loadEndText"
+        :load-fail-text="loadFailText"
+        :buffer-height-px="infiniteScrollBottomDistance"
+        @load="handleLoad"
+    >
+        <!-- @slot 无限加载按钮 slot -->
+        <div slot="loadBtnSlot">
+            <slot name="loadBtnSlot"/>
+        </div>
+        <div
+            ref="waterfall"
+            :style="{
+                paddingLeft: gapOpts.outside + 'px',
+                paddingRight: gapOpts.outside + 'px'
+            }"
+            class="waterfall"
+        >
+            <div
+                a-for="(columnItem, columnIndex) in column"
+                ref="column"
+                :key="columnIndex"
+                :style="[
+                    {
+                        paddingLeft: gapOpts.inside / 2 + 'px',
+                        paddingRight: gapOpts.inside / 2 + 'px'
+                    },
+                    columnIndex === 0
+                        ? {
+                            paddingLeft: 0
+                        }
+                        : {},
+                    columnIndex === column - 1
+                        ? {
+                            paddingRight: 0
+                        }
+                        : {}
+                ]"
+                class="column"
+            >
+                <template a-for="(imgItem, imgIndex) in imgListData">
+                    <!-- 首屏 img 图片；一列排一个，假的瀑布流 -->
+                    <div
+                        a-if="imgItem && !imgItem.async && imgIndex % column === columnIndex"
+                        :key="imgIndex + '_' + columnIndex"
+                        class="img-item-wrapper"
+                    >
+                        <img-item
+                            :index="imgIndex"
+                            :data="imgItem"
+                            :is-u-i-webview="isUIWebview"
+                            :margin-bottom="gapOpts.bottom"
+                            :border-radius="borderRadius"
+                            @click="handleImgClick"
+                        />
+                    </div>
+                    <!-- 异步 img 图片；真正的瀑布流 -->
+                    <div
+                        a-if="imgItem && imgItem.async && imgItem.columnIndex === columnIndex"
+                        :key="imgIndex + '_' + columnIndex"
+                        class="img-item-wrapper"
+                    >
+                        <img-item
+                            :index="imgIndex"
+                            :data="imgItem"
+                            :is-u-i-webview="isUIWebview"
+                            :margin-bottom="gapOpts.bottom"
+                            :border-radius="borderRadius"
+                            @click="handleImgClick"
+                        />
+                    </div>
+                </template>
+            </div>
+        </div>
+    </c-infinite-scroll>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 图片列表
+         */
+        imgList: {
+            type: Array
+        },
+        /**
+         * 列数
+         */
+        column: {
+            type: Number,
+            default: 2
+        },
+        /**
+         * 类型；1：代表不传宽高；2：代表传入宽高；
+         */
+        type: {
+            type: Number,
+            default: 1
+        },
+        /**
+         * 默认占位图颜色
+         */
+        defaultPlaceholderImgColor: {
+            type: String,
+            default: '#efefef'
+        },
+        /**
+         * 加载文案
+         */
+        loadingText: {
+            type: String,
+            default: '正在加载...'
+        },
+        /**
+         * 底部文案
+         */
+        loadEndText: {
+            type: String,
+            default: '到底了 没有更多内容了'
+        },
+        /**
+         * 失败文案
+         */
+        loadFailText: {
+            type: String,
+            default: '加载失败 点击重新加载'
+        },
+        /**
+         * 触发模式；'scroll' 滚动到底部触发；'click' 点击按钮触发
+         */
+        mode: {
+            type: String,
+            default: 'scroll'
+        },
+        /**
+         * 是否显示加载按钮
+         */
+        loadBtnShow: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 加载按钮文案
+         */
+        loadBtnText: {
+            type: String,
+            default: '展开更多'
+        },
+        /**
+         * 间距配置
+         */
+        gapOpts: {
+            type: Object,
+            default: {
+                outside: 2,
+                inside: 2,
+                bottom: 2
+            }
+        },
+        /**
+         * 圆角
+         */
+        borderRadius: {
+            type: Object
+        }
+    },
+    data: {
+        // 内部 imgList
+        imgListData: imgList,
+        // 变化的 imgList
+        diffImgList: [],
+        // 每次变化的数量
+        diffCount: 0,
+        // 无限滚动到底部距离
+        infiniteScrollBottomDistance: 1000,
+        // 懒加载修正距离
+        lazyLoadFixDistance: 1000,
+        // 列宽度
+        columnWidth: 0,
+        // 列数组
+        columnArr: [],
+        // 旧的 imgList 长度
+        oldImgListLength: 0,
+        // 是否正在加载图片中
+        isLoadingImg: false,
+        // 是否是 UIWebview
+        isUIWebview: false,
+        // 瀑布流距离网页顶部的距离
+        waterfallTop: 0,
+        // 浏览器高度
+        browserHeight: 0,
+        // 当前滚动的位置
+        scrollTop: 0,
+        // 懒加载位置索引
+        lazyLoadIndex: 0
+    },
+    components: {
+        'img-item': './ImgItem',
+        'c-infinite-scroll': '../InfiniteScroll/InfiniteScroll',
+        'c-img-mask': '../Image/ImageMask'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file Waterfall
+ * @author wangkai37(wangkai37@baidu.com)
+ */
+export default {
+    mounted() {
+        this.attach();
+        // 计算列
+        this.calculateColumn();
+        // 判断是否是 UIWebview
+        this.judgeIsUIWebview();
+    },
+    methods: {
+        attach() {
+            // 获得浏览器高度
+            this.getBrowserHeight();
+            // 计算距离顶部的距离
+            this.getWaterfallTop();
+        },
+        detach() {
+        },
+        handleLoad(obj) {
+            /**
+             * 选项卡改变时触发.
+             *
+             * @event load
+             */
+            this.$emit('load', obj);
+        },
+        reset() {
+            this.$refs.infiniteScroll.reset();
+        },
+        // 获取浏览器内页面可用高度
+        getBrowserHeight() {
+            this.browserHeight = window.innerHeight;
+        },
+        // 计算距离顶部的距离
+        getWaterfallTop() {
+            this.waterfallTop = this.getElementTop(this.$refs.waterfall);
+        },
+        // 获取 dom 绝对位置的纵坐标
+        getElementTop(element) {
+            // 对象解构
+            let {
+                offsetTop: actualTop,
+                offsetParent: current
+            } = element;
+            while (current !== null) {
+                actualTop += current.offsetTop;
+                current = current.offsetParent;
+            }
+            return actualTop;
+        },
+        // 判断 UIWebview
+        judgeIsUIWebview() {
+            // 如果是 iOS 的手百和 UC，则为 UIWebview
+            if (this.isIOS() && (this.isBaiduApp() || this.isUC())) {
+                this.isUIWebview = true;
+            }
+        },
+        // 计算列
+        calculateColumn() {
+            // 列宽
+            this.columnWidth = this.$refs.column[0].offsetWidth;
+            // 不传宽高
+            if (this.type === 1) {
+                this.$refs.column.forEach((columnDom, columnIndex) => {
+                    let columnItem = {
+                        // 初始高度设置为距离顶部的距离
+                        height: this.waterfallTop
+                    };
+                    let items = columnDom.querySelectorAll('.img-item-wrapper');
+                    // nodelist 在 android 浏览器上没有 forEach 方法，所以用 for 循环
+                    for (let i = 0; i < items.length; i++) {
+                        // dom item
+                        let domItem = items[i];
+                        // 真正的 imgList 里的 index
+                        let imgItemIndex = this.column * i + columnIndex;
+                        // TODO: 处理同步数据
+                        // 这里赋值一些同步数据所欠缺的数据
+                        let imgItem = this.imgListData[imgItemIndex];
+                        // 记录索引
+                        imgItem.index = imgItemIndex;
+                        // 记录列高
+                        imgItem.columnHeight = columnItem.height;
+                        // 真实宽度
+                        imgItem.realWidth = this.columnWidth;
+                        // 真实高度；高度
+                        imgItem.realHeight = domItem.offsetHeight;
+                        // 如果没有高度和宽度传入，赋值宽高
+                        if (!(imgItem.width && imgItem.height)) {
+                            imgItem.width = imgItem.realWidth;
+                            imgItem.height = imgItem.realHeight;
+                        }
+                        // 宽高比
+                        imgItem.whScale = this.columnWidth / imgItem.realHeight;
+                        // 这里 +2 是因为有一个 margin-bottom: 2px；这里需要在记录到项以后，再加到列高度里
+                        columnItem.height += imgItem.realHeight + 2;
+                        // 这里直接复制 vnode 实例会导致无限加载不触发
+                        // this.$set(this.imgListData, imgItemIndex, imgItem);
+                    }
+                    // 把每一列放进去
+                    this.columnArr.push(columnItem);
+                });
+            }
+        },
+        // 得到最小列索引
+        getMinColumnIndex() {
+            let minIndex = 0;
+            let height = this.columnArr[minIndex].height;
+            this.columnArr.forEach((columnItem, index) => {
+                if (columnItem.height < height) {
+                    height = columnItem.height;
+                    minIndex = index;
+                }
+            });
+            return minIndex;
+        },
+        // 处理 diffImgList
+        handleDiffImgList(obj) {
+            this.diffImgList.forEach((imgItem, index) => {
+                let imgIndex = obj.oldLength + index;
+                // 计算宽高
+                this.getImgWidthHeight(imgItem.src, (width, height, error) => {
+                    // 如果加载错误
+                    if (error) {
+                        // 增加加载错误标识
+                        imgItem.error = true;
+                    }
+                    // 索引 index
+                    imgItem.index = imgIndex;
+                    // 异步
+                    imgItem.async = true;
+                    // 宽度
+                    imgItem.width = width;
+                    // 高度
+                    imgItem.height = height;
+                    // 宽高比
+                    imgItem.whScale = width / height;
+                    // 真实宽度
+                    imgItem.realWidth = this.columnWidth;
+                    imgItem.realHeight = Math.ceil(this.columnWidth / imgItem.whScale); // 真实高度
+                    // 如果没有颜色，使用默认颜色
+                    if (!imgItem.color) {
+                        imgItem.color = this.defaultPlaceholderImgColor;
+                    }
+                    this.diffCount++; // 数量++
+
+                    // 在整个 diffImgList 都加载完以后统一添加到 vm 里，避免每一次都添加造成的卡顿问题
+                    if (this.diffCount === this.diffImgList.length) {
+                        this.afterAllDiffImgLoaded();
+                        this.imgListData = this.imgListData.concat(this.diffImgList);
+                        // 重置数量
+                        this.diffCount = 0;
+                        // 加载完成
+                        this.isLoadingImg = false;
+                        // 记录旧长度；旧长度等于之前的旧长度加上新增的长度
+                        this.oldImgListLength += this.diffImgList.length;
+                    }
+                });
+            });
+        },
+        // 在所有 diffImg 加载完毕后
+        afterAllDiffImgLoaded() {
+            this.diffImgList.forEach((imgItem, index) => {
+                // 最小列高度
+                let minColumnIndex = this.getMinColumnIndex();
+                // 在图片里设置放到哪一列的标志
+                imgItem.columnIndex = minColumnIndex;
+                // 列高度
+                imgItem.columnHeight = this.columnArr[minColumnIndex].height;
+                // 这里如果不做处理，有可能获取不到 realHeight，因为是异步回调
+                if (this.diffImgList[index].realHeight) {
+                    this.columnArr[minColumnIndex].height += imgItem.realHeight; // 列高度++
+                }
+                else {
+                    // 获取不到 realHeight
+                }
+            });
+        },
+        // 得到图片的宽高；为了保证兼容性，统一使用回调的方式
+        getImgWidthHeight(imgSrc, callback) {
+            let image = new Image();
+            image.src = imgSrc;
+            image.onload = () => {
+                callback(image.width, image.height);
+            };
+            image.onerror = () => {
+                callback(0, 0, true);
+            };
+        },
+        // 得到当前滚动到顶部的位置
+        getScrollTop(el) {
+            if (!el) {
+                el = window;
+            }
+            const hasScrollTop = 'scrollTop' in el;
+            return hasScrollTop ? el.scrollTop : el.pageYOffset;
+        },
+        handleImgClick(obj) {
+            /**
+             * imgclick event.
+             *
+             * @event imgclick
+             * @property {object} param1 图片对象
+             * @property {number} param1.index 当前图片在数组中的索引
+             * @property {function} param1.success 加载成功指令
+             * @property {function} param1.complete 加载到尾部指令
+             * @property {function} param1.fail 加载失败指令
+             */
+            this.$emit('imgclick', obj);
+        },
+        // iOS
+        isIOS() {
+            return /(iphone|ipod|ipad)/.test(navigator.userAgent.toLowerCase());
+        },
+        // 手百
+        isBaiduApp() {
+            return /baiduboxapp/i.test(navigator.userAgent.toLowerCase());
+        },
+        // UC
+        isUC() {
+            return /ucbrowser/i.test(navigator.userAgent.toLowerCase());
+        }
+    },
+    watch: {
+        // 监测 imgList 的变化
+        imgList(newVal, oldVal) {
+            // 如果不是在加载中；这里用 isLoadingImg 是为了做一个保护，因为无限滚动加载的完成事件是暴露到最外层的，在自测时发现会有同时请求多组数据，由于获取图片宽高不是同步的，需要在回调之后执行；如果不做保护会导致数据加载混乱，所以这里做了处理
+            if (!this.isLoadingImg) {
+                // 设置加载中状态
+                this.isLoadingImg = true;
+                // 记录旧长度
+                if (!this.oldImgListLength) {
+                    this.oldImgListLength = oldVal.length;
+                }
+                // 得到 diffImgList；从旧长度开始截起
+                this.diffImgList = newVal.slice(this.oldImgListLength, newVal.length);
+                // 处理 diffImgList
+                this.handleDiffImgList({
+                    oldLength: this.oldImgListLength
+                });
+            }
+        }
+    }
+};
+</script>
+
+<style module>
+.waterfall {
+    display: flex;
+    width: 100%;
+}
+.column {
+    flex: 1;
+}
+</style>

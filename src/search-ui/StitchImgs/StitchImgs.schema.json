@@ -1,0 +1,44 @@
+{
+    "alias": [
+        "c-stitch-imgs"
+    ],
+    "type": "object",
+    "properties": {
+        "stitchImgs": {
+            "type": "object",
+            "properties": {
+                "imgList": {
+                    "type": "array",
+                    "@ChineseName": "图集数据列表",
+                    "description": "图集数据列表",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "src": {
+                                "type": "string",
+                                "@ChineseName": "图片链接",
+                                "description": "图片链接",
+                                "@Demo": "https://m.baidu.com/static/index/plus/homepage-newlogo.png"
+                            },
+                            "imgNum": {
+                                "type": "number",
+                                "@ChineseName": "显示图集个数",
+                                "description": "显示图集个数",
+                                "@Demo": 234
+                            },
+                            "url": {
+                                "type": "string",
+                                "@ChineseName": "查看更多跳转的url",
+                                "description": "查看更多跳转的url",
+                                "@Demo": "https://m.baidu.com"
+                            }
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "imgList"
+            ]
+        }
+    }
+}

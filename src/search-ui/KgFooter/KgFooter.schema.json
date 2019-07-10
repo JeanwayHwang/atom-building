@@ -1,0 +1,33 @@
+{
+    "alias": [
+        "c-kg-footer"
+    ],
+    "type": "object",
+    "properties": {
+        "kgFooter": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "@ChineseName": "kgFooter显示文案",
+                    "@Demo": "查看更多",
+                    "description": "kgFooter显示文案"
+                },
+                "url": {
+                    "type": "string",
+                    "@ChineseName": "kgFooter点击跳转地址",
+                    "@Demo": "https://www.baidu.com",
+                    "description": "kgFooter点击跳转地址"
+                },
+                "feedback": {
+                    "$ref": "../Footer/Feedback.schema.json#/properties/feedback"
+                }
+            },
+            "propsData": [
+                "text",
+                "url",
+                "feedback"
+            ]
+        }
+    }
+}

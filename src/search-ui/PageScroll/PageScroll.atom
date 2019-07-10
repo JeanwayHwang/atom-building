@@ -1,0 +1,254 @@
+<template>
+    <c-row type="tile">
+        <!-- eslint-disable atom/attribute-object-format -->
+        <div
+            a-voice-processor:scroll-page="scrollPageProcessor"
+            a-voice-provider:scroll-page="scrollPageProvider"
+            :voice-config="'scroll-page.total:' + pageNum + ';scroll-page.current:' + page"
+            :rl-type="contentTouchableStop ? 'stop' : null"
+            :style="[
+                overflow
+                    ? {
+                        overflow
+                    }
+                    : {}
+            ]"
+            class="c-page-scroll"
+            voice-action="scroll-page"
+        >
+            <!-- eslint-enable atom/attribute-object-format -->
+            <div
+                :style="{
+                    width: pageNum * 100 + '%'
+                }"
+                class="c-page-scroller"
+            >
+                <div
+                    a-voice-invisible="pageIndex === index ? null : true"
+                    a-for="(i, index) in pageNum"
+                    :key="index"
+                    :style="{
+                        width: 100 / pageNum + '%'
+                    }"
+                >
+                    <!-- @slot 选项卡容器，只能是多个c-page-scroll-item -->
+                    <slot :name="'__c__' + (i - 1)"></slot>
+                </div>
+            </div>
+        </div>
+        <div
+            a-if="indicator === undefined || indicator"
+            class="c-page-scroll-indicator c-gap-top c-gap-bottom-small"
+        >
+            <div class="c-scroll-indicator">
+                <span
+                    a-for="(i, index) in pageNum"
+                    :key="index"
+                    :aria-current="(pageIndex === i - 1) ? 'page' : false"
+                    :class="[
+                        'c-page-scroll-dotty',
+                        {
+                            'c-scroll-dotty-now': pageIndex === i - 1
+                        }
+                    ]"
+                >
+                </span>
+            </div>
+        </div>
+    </c-row>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 滑动势能开关
+         */
+        momentum: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 页码
+         */
+        page: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * 是否显示翻页指示器
+         */
+        indicator: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 当前 PageScroll 组件是否被隐藏，默认为 true 表示不被隐藏。当 PageScroll 由隐藏状态变为展示状态时，会触发 IScroll 的 refresh 方法，重新初始化变量。适用于 PageScroll 被嵌套在 Tab 中等情况。
+         */
+        isShow: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * contentTouchableStop
+         */
+        contentTouchableStop: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * PageScroll 的 overflow 属性
+         */
+        overflow: {
+            type: String
+        }
+    },
+    data: {
+        pageIndex: page ? page : 0
+    },
+    components: {
+        'c-row': '../Row/Row'
+    }
+}
+</script>
+
+<script>
+import IScroll from '@baidu/better-scroll';
+
+export default {
+
+    render(ctx) {
+
+        const vnodes = this.$slots.default;
+        this.pageNum = vnodes.length;
+
+        vnodes.forEach((vnode, index) => {
+            this.$slots['__c__' + index] = [vnode];
+        });
+
+        return this.$super.render();
+    },
+
+    mounted() {
+
+        const isSupportTouch = 'ontouchend' in document;
+
+        this.oScroll = new IScroll(this.$el.children[0], {
+            bindToWrapper: true,
+            disablePointer: true,
+            disableMouse: !isSupportTouch, // 移动端禁止鼠标操作
+            scrollX: true,
+            scrollY: false,
+            momentum: this.momentum, // 滑动势能动画开关,默认开
+            eventPassthrough: 'vertical',
+            scrollbars: false,
+            snapThreshold: 0.1,
+            snapSpeed: 400,
+            snap: true
+        });
+
+        if (this.pageIndex !== 0) {
+            this.goToPage(this.pageIndex);
+        }
+
+        this.oScroll.on('scrollEnd', (a, b, c) => {
+            this.pageIndex = this.oScroll.currentPage.pageX;
+
+            /**
+             * scrollEnd event.
+             *
+             * @event scrollEnd
+             * @property {number} params1 页码
+             */
+            this.$emit('scrollend', this.pageIndex);
+        });
+
+        this.refresh = this.refresh.bind(this);
+        this.$root.$on('attach', () => {
+            this.refresh();
+        });
+
+        window.addEventListener('orientationchange', this.refresh);
+        window.addEventListener('pageshow', this.refresh);
+    },
+
+    destroyed() {
+        window.removeEventListener('orientationchange', this.refresh);
+        window.removeEventListener('pageshow', this.refresh);
+    },
+
+    watch: {
+        page(val) {
+            this.pageIndex = val;
+            this.goToPage(val);
+        },
+        isShow(value) {
+            if (value) {
+                this.refresh();
+            }
+        }
+    },
+
+    methods: {
+        scrollPageProcessor(result, action) {
+            this.pageIndex = result.index;
+            this.goToPage(result.index);
+        },
+        scrollPageProvider(action) {
+            return {
+                current: String(this.pageIndex)
+            };
+        },
+        update() {
+            if (this.oScroll && !this.oScroll.wrapperWidth) {
+                setTimeout(() => {
+                    this.oScroll.refresh();
+                }, 300);
+            }
+        },
+        refresh() {
+            this.oScroll.refresh();
+        },
+        goToPage(val) {
+            this.oScroll.goToPage(val, 0, 300);
+        }
+    }
+};
+</script>
+
+<script type="php">
+function render ($ctx, $isXml = false) {
+    $vnodes = $ctx->slots['default'];
+    $ctx->_d['pageNum'] = count($vnodes);
+
+    foreach ($vnodes as $index => $vnode) {
+        $ctx->slots['__c__'.$index] = array($vnode);
+    }
+    return parent::render($ctx, false);
+}
+</script>
+
+<style scoped>
+    .c-page-scroll {
+        position: relative;
+        overflow: hidden;
+    }
+    .c-page-scroller {
+        position: relative;
+    }
+    .c-page-scroller > div {
+        display: inline-block;
+        position: relative;
+        vertical-align: top;
+    }
+    .c-page-scroll-dotty {
+        -webkit-transition: all .3s cubic-bezier(.645, .045, .355, 1);
+    }
+    .c-page-scroll-indicator {
+        text-align: center;
+        /* csshint-disable min-font-size require-number */
+        font-size: 6px;
+        line-height: 6px;
+        /* csshint-enable min-font-size require-number */
+    }
+</style>

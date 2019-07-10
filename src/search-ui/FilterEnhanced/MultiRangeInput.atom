@@ -1,0 +1,245 @@
+<!-- @ignore -->
+<!-- 范围输入 -->
+<template>
+    <section class="c-filter-multi-rangeinput c-gap-bottom-large">
+        <!-- 标签 -->
+        <div
+            class="c-gap-top-large"
+        >
+            {{ item.label }}
+        </div>
+        <!-- 范围输入框 -->
+        <c-row
+            :style="transition
+                ? {
+                    'padding-left': '0',
+                    'padding-right': '0'
+                }
+                : null
+            "
+            class="c-gap-top-small c-gap-bottom-small c-vertical-center"
+        >
+            <!-- 输入框；min -->
+            <c-span
+                col="1"
+            >
+                <c-input
+                    :value="minValue"
+                    :placeholder="item.input.min.placeholder"
+                    :primary-color="primaryColor"
+                    :right-text="item.input.unit"
+                    :is-show-close-icon="false"
+                    type="number"
+                    @change="handleInputChange($event, item, 0)"
+                />
+            </c-span>
+            <!-- 分割线 -->
+            <span
+                class="c-gap-left-middle c-gap-right-middle c-filter-multi-range-input-split-line"
+            />
+            <!-- 输入框；max -->
+            <c-span
+                col="1"
+            >
+                <c-input
+                    :value="maxValue"
+                    :placeholder="item.input.max.placeholder"
+                    :primary-color="primaryColor"
+                    :right-text="item.input.unit"
+                    :is-show-close-icon="false"
+                    type="number"
+                    padding-right=".3rem"
+                    @change="handleInputChange($event, item, 1)"
+                />
+            </c-span>
+        </c-row>
+        <!-- 选项按钮 -->
+        <c-row
+            a-for="(item1, index1) in math_ceil(item.options.length / 3)"
+            :key="index1"
+            :style="transition
+                ? {
+                    'padding-left': '0',
+                    'padding-right': '0'
+                }
+                : null
+            "
+            class="c-gap-top"
+        >
+            <template
+                a-for="(item2, index2) in item.options"
+            >
+                <!-- 当当前索引大于等于前一行的最大索引，并且小于当前行的最大索引时才渲染 -->
+                <c-checkbox
+                    a-if="index2 >= index1 * 3 && index2 < (index1 + 1) * 3"
+                    :key="index2"
+                    :text="item2.text"
+                    :checked="isChecked(item, item2)"
+                    :primary-color="primaryColor"
+                    :border-color="primaryColor"
+                    col="4"
+                    @click="handleRangeInputItemClick({
+                        item,
+                        option: item2,
+                        optionIndex: index2
+                    })"
+                />
+            </template>
+            <!-- 占位 -->
+            <template
+                a-if="index1 == (math_ceil(item.options.length / 3) - 1) && (item.options.length % 3) !== 0"
+            >
+                <c-span
+                    a-for="(item3, index3) in (3 - item.options.length % 3)"
+                    :key="index3"
+                    col="4"
+                />
+            </template>
+        </c-row>
+        <!-- 错误提示 -->
+        <div
+            a-if="item.input && item.input.isShowErrorTips"
+            class="c-color-red c-gap-top c-filter-multi-range-input-errortips"
+        >
+            {{ item.input.errorTips }}
+        </div>
+    </section>
+</template>
+
+<script type="config">
+    {
+        props: {
+            // store
+            store: {
+                type: Object
+            },
+            item: {
+                type: Object
+            },
+            primaryColor: {
+                type: String
+            },
+            // 是否增加动画
+            transition: Boolean
+        },
+        components: {
+            'c-row': '../Row/Row',
+            'c-span': '../Row/Span',
+            'c-input': '../Input/Input',
+            'c-checkbox': '../FilterEnhanced/Checkbox'
+        }
+    }
+</script>
+
+<script>
+    export default {
+        methods: {
+            // 输入事件改变
+            handleInputChange(obj, item, inputIndex) {
+                // 容错兼容
+                if (!item.defaultValue) {
+                    item.defaultValue = '';
+                }
+                // 转化为数组
+                let defaultValueArray = item.defaultValue.split(',');
+                defaultValueArray = defaultValueArray.map(item => item.trim());
+                // 将最小/最大值放入相应位置
+                defaultValueArray[inputIndex] = obj.value;
+                // 重新赋值
+                this.$set(item, 'defaultValue', defaultValueArray.join(','));
+                // 重置错误提示
+                this.$set(item.input, 'isShowErrorTips', false);
+            },
+            // 范围输入点击
+            handleRangeInputItemClick(obj) {
+                const {
+                    item,
+                    option
+                } = obj;
+
+                // 默认值数组
+                let defaultValueArray = [];
+                if (item.defaultValue) {
+                    defaultValueArray = item.defaultValue.split(',').map(item => item.trim());
+                }
+                // 选项的值数组
+                let optionValueArray = [];
+                if (option.value) {
+                    optionValueArray = option.value.split(',').map(item => item.trim());
+                }
+
+                // 如果相等，代表选中了相同的项，置空
+                if (defaultValueArray.join(',') === optionValueArray.join(',')) {
+                    this.$set(item, 'defaultValue', '');
+                }
+                // 如果不相等，设置为选中项的项
+                else {
+                    this.$set(item, 'defaultValue', option.value);
+                }
+                // 重置错误提示
+                this.$set(item.input, 'isShowErrorTips', false);
+            },
+            // 是否被选中
+            isChecked(item, option) {
+                if (!item.defaultValue) {
+                    return false;
+                }
+                // 首先通过逗号分隔将字符串转化为数组，为了实现单选和多选同时默认值的问题
+                let defaultValueArray = item.defaultValue.split(',');
+                // 这里要注意去掉首尾空格，否则会有问题
+                defaultValueArray = defaultValueArray.map(arrItem => arrItem.trim());
+                // 把选项里的值也转换成数组
+                let optionValueArray = option.value.split(',');
+                optionValueArray = optionValueArray.map(arrItem => arrItem.trim());
+                // 依次对比
+                for (let i = 0; i < defaultValueArray.length; i++) {
+                    if (defaultValueArray[i] !== optionValueArray[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        },
+        computed: {
+            minValue() {
+                if (!this.item.defaultValue) {
+                    return null;
+                }
+                const defaultValueArray = this.item.defaultValue.split(',');
+                if (defaultValueArray[0]) {
+                    return defaultValueArray[0].trim();
+                }
+            },
+            maxValue() {
+                if (!this.item.defaultValue) {
+                    return null;
+                }
+                const defaultValueArray = this.item.defaultValue.split(',');
+                if (defaultValueArray[1]) {
+                    return defaultValueArray[1].trim();
+                }
+            }
+        }
+    };
+</script>
+
+<style lang="less" scoped>
+    .c-vertical-center {
+        display: box;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-align: center;
+        -webkit-align-items: center;
+                align-items: center;
+    }
+    .c-filter-multi-range-input-split-line {
+        width: .08rem;
+        height: 1px;
+        background: #999;
+        line-height: .48rem;
+    }
+    .c-filter-multi-range-input-errortips {
+        text-align: center;
+    }
+</style>

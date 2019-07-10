@@ -1,0 +1,219 @@
+<template>
+    <c-toast-popup
+        :state="oState && !isBox"
+        :has-mask="false"
+        :top="top"
+        :bottom="bottom"
+        role="alert"
+        @change="changeState"
+    >
+        <div
+            a-if="iconType || iconCode"
+            :style="customStyle"
+            class="c-toast-content-with-icon"
+        >
+            <c-icon
+                :code="iconCode"
+                :type="iconType"
+                class="c-toast-icon"
+            />
+            <div>
+                {{ content }}
+                <!-- @slot 自定义区域 -->
+                <slot/>
+            </div>
+        </div>
+        <div
+            a-else
+            :style="customStyle"
+            class="c-toast-content-without-icon"
+        >
+            <p :class="['c-line-clamp' + clamp]" class="c-gap-bottom-zero">
+                {{ content }}
+            </p>
+            <p>
+                <!-- @slot 自定义区域 -->
+                <slot/>
+            </p>
+        </div>
+    </c-toast-popup>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 图标类型
+         */
+        iconType: {
+            type: String,
+            default: ''
+        },
+        /**
+         * 图标编码
+         */
+        iconCode: {
+            type: String,
+            default: ''
+        },
+        /**
+         * 提示文字
+         */
+        content: {
+            type: String,
+            default: ''
+        },
+        /**
+         * toast状态 true 为打开 false为关闭
+         */
+        state: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 是否自动关闭
+         */
+        autoClose: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * tip提示展示时间
+         */
+        duration: {
+            type: Number,
+            default: 2000
+
+        },
+        /**
+         * 手百上是否使用端能力
+         */
+        sdk: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 自定义Toast颜色
+         * 背景，字体颜色
+         */
+        customStyle: {
+            type: Object,
+            default: {
+                background: 'rgba(0, 0, 0, 0.8)',
+                color: '#fff'
+            }
+        },
+        /**
+         * Toast离顶部的距离
+         */
+        top: {
+            type: String,
+            default: '50%'
+        },
+        /**
+         * Toast离底部的距离
+         */
+        bottom: {
+            type: String,
+            default: ''
+        },
+        /**
+         * 显示行数，范围为1-5
+         */
+        clamp: {
+            type: [Number, String],
+            default: 1
+        }
+    },
+    data: {
+        oState: state,
+        timer: null,
+        isBox: false
+    },
+    components: {
+        'c-toast-popup': './ToastPopup',
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+
+<script>
+import ua from '@searchfe/user-agent';
+
+export default {
+    methods: {
+        changeState(value) {
+            /**
+             * 状态state 发生变化时触发 true 为打开，false 为关闭.
+             *
+             * @event change
+             */
+            this.$emit('change', value);
+            this.oState = value;
+            if (this.autoClose && value === true) {
+                this.timer && clearTimeout(this.timer);
+                this.timer = setTimeout(() => {
+                    this.changeState(false);
+                }, this.duration);
+            }
+        }
+    },
+    watch: {
+        state(value) {
+            this.changeState(value);
+            if (this.isBox && this.sdk) {
+                let params = {
+                    type: 1,
+                    message: this.content
+                };
+                /* eslint-disable fecs-no-require */
+                require(['@baidu/toast'], function (Jssdk) {
+                    Jssdk.toast(params);
+                });
+                /* eslint-enable fecs-no-require */
+            }
+        }
+    },
+    mounted() {
+        let verArr = ua.baiduBoxVersion();
+        if (ua.isBaiduBox() && this.sdk && parseFloat(verArr[0] * 10 + verArr[1]) / 10 >= 9.1) {
+            this.isBox = true;
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.c-toast-content-common {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+}
+.c-toast-content-with-icon {
+    .c-toast-content-common;
+    font-size: 14px;
+    line-height: 100%;
+    height: 1.2rem;
+    width: 1.2rem;
+}
+.c-toast-icon {
+    font-size: 44px;
+    line-height: 100%;
+    padding-top: .26rem;
+    padding-bottom: .14rem;
+    display: inline-block;
+}
+.c-toast-content-without-icon {
+    .c-toast-content-common;
+    padding: .09rem .17rem;
+    line-height: .44rem;
+    font-size: 16px;
+    box-sizing: border-box;
+    max-width: 80%;
+    p {
+        line-height: 26px;
+    }
+}
+</style>

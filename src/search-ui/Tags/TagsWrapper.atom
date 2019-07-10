@@ -1,0 +1,149 @@
+<!--@ignore-->
+<template>
+    <div class="c-tags">
+        <c-tags-content
+            a-if="!noContent && bottom"
+            ref="content"
+            :selected="oSelected"
+            :status="status"
+            :loading-data="tagData"
+            :inner-height="innerHeight"
+            :rl-type="contentTouchableStop ? 'stop' : null"
+            :tag-list="tagList"
+        >
+            <slot
+                a-for="(item, index) in tagList"
+                :name="'__c__' + index"
+            />
+        </c-tags-content>
+        <c-tags
+            :label-list="tagLabelList"
+            :selected-index="selectedIndex"
+            :is-expand="isExpand"
+            :allow-scroll="allowScroll"
+            @change="change"
+        />
+        </c-tags>
+        <c-tags-content
+            a-if="!noContent && !bottom"
+            ref="content"
+            :selected="oSelected"
+            :status="status"
+            :loading-data="tagData"
+            :inner-height="innerHeight"
+            :rl-type="contentTouchableStop ? 'stop' : null"
+            :tag-list="tagList"
+        >
+            <slot
+                a-for="(item, index) in tagList"
+                :name="'__c__' + index"
+            />
+        </c-tags-content>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        selected: {
+            type: Number,
+            default: 0
+        },
+        allowScroll: {
+            type: Boolean,
+            default: false
+        },
+        bottom: {
+            type: Boolean,
+            default: false
+        },
+        noContent: {
+            type: Boolean,
+            default: false
+        },
+        tagLabelList: {
+            type: Array
+        },
+        isExpand: {
+            type: Boolean,
+            default: false
+        },
+        innerHeight: {
+            type: Number,
+            default: 0
+        },
+        contentTouchableStop: {
+            type: Boolean,
+            default: true
+        }
+    },
+    data: {
+        selectedIndex: selected,
+        status: 'show',
+        oSelected: selected
+    },
+    components: {
+        'c-tags-content': './TagsContent',
+        'c-tags': './Tags'
+    }
+}
+</script>
+
+<script type="php">
+    function created($ctx) {
+        $data = $ctx->getMessage('tag-item-data');
+        $ctx->_d["tagList"] = $data;
+    }
+    function render ($ctx, $isXml = false) {
+        $vnodes = $ctx->slots['default'];
+
+        if (!empty($vnodes)) {
+            foreach ($vnodes as $index => $vnode) {
+                $ctx->slots['__c__' . $index] = array($vnode);
+            }
+        }
+
+        return parent::render($ctx, false);
+    }
+</script>
+
+<script>
+export default {
+    render() {
+        let vnodes = this.$slots.default || [];
+        this.tagList = vnodes.map((vnode, index) => {
+            this.$slots['__c__' + index] = [vnode];
+            let data = vnode.componentOptions.propsData;
+            let itemObj = {
+                isLoading: data.isLoading ? data.isLoading : false
+            };
+            return itemObj;
+        });
+        return this.$super.render();
+    },
+    watch: {
+        selectedIndex(value, old) {
+            if (value > this.tagLabelList.length) {
+                return;
+            }
+            this.status = 'leave';
+            // 渐隐状态是
+            setTimeout(() => {
+                this.status = 'show';
+                this.oSelected = value;
+            }, 240);
+        }
+    },
+    methods: {
+        change(value, old) {
+            old = old === undefined ? this.oSelected : old;
+            if (value === old) {
+                return;
+            }
+            this.$emit('change', value, old);
+            this.oSelected = value.current;
+        }
+    }
+};
+</script>
+

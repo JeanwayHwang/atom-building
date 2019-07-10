@@ -1,0 +1,29 @@
+{
+    "alias": [
+        "c-navs"
+    ],
+    "type": "object",
+    "properties": {
+        "navs": {
+            "type": "object",
+            "properties": {
+                "labelList": {
+                    "type": "array",
+                    "@ChineseName": "article 标题内容",
+                    "@Demo": "https://m.baidu.com/search?url=xxx",
+                    "description": "article 标题链接"
+                },
+                "selectedIndex": {
+                    "type": "number",
+                    "@ChineseName": "article 标题内容",
+                    "@Demo": 0,
+                    "description": "article 标题链接"
+                }
+            },
+            "propsData": [
+                "labelList",
+                "selectedIndex"
+            ]
+        }
+    }
+}

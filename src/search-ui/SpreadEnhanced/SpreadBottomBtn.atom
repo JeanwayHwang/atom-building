@@ -1,0 +1,115 @@
+<!-- @ignore -->
+<template>
+    <c-touchable-feedback
+        :top="touchableFeedbackTop"
+        :bottom="touchableFeedbackBottom"
+        :left="-.17"
+        :right="-.17"
+    >
+        <div
+            :style="{
+                'text-align': textAlign,
+                'padding-top': paddingTop,
+                'padding-bottom': paddingBottom
+            }"
+            :aria-expanded="spread"
+            :class="[
+                logClass
+                    ? 'WA_LOG_BTN'
+                    : ''
+            ]"
+            role="button"
+            class="spread-bottom-btn"
+            @click="handleClick"
+        >
+            <span>
+                {{
+                    spread
+                        ? foldText
+                        : spreadText
+                }}
+            </span>
+            <c-arrow
+                :direction="
+                    spread
+                        ? 2
+                        : 1
+                "
+                :fill-color="bgColor"
+                :color="iconColor"
+                class="c-gap-left-small"
+                aria-hidden="true"
+            />
+        </div>
+    </c-touchable-feedback>
+</template>
+
+<script type="config">
+{
+    props: {
+        // 用于设置初始状态，展开为 true，收起为 false
+        spread: {
+            type: Boolean,
+            default: false
+        },
+        // 收起状态时，展示内容文案配置
+        spreadText: {
+            type: String,
+            default: '展开'
+        },
+        // 展开状态时，收起内容文案配置
+        foldText: {
+            type: String,
+            default: '收起'
+        },
+        // 底部按钮文字方向
+        textAlign: {
+            type: String,
+            default: 'center'
+        },
+        paddingTop: {
+            type: String,
+            default: '.1rem'
+        },
+        paddingBottom: {
+            type: String,
+            default: '.1rem'
+        },
+        touchableFeedbackTop: {
+            type: Number,
+            default: 0
+        },
+        touchableFeedbackBottom: {
+            type: Number,
+            default: 0
+        },
+        // 是否增加日志类
+        logClass: {
+            type: Boolean,
+            default: true
+        },
+        bgColor: String,
+        // icon 颜色
+        iconColor: {
+            type: String,
+            default: '#555'
+        }
+    },
+    components: {
+        'c-arrow': '../AnimateIcon/Arrow',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleClick() {
+            this.$emit('click', {
+                spread: this.spread
+            });
+        }
+    }
+};
+</script>

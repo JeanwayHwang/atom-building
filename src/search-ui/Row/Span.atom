@@ -1,0 +1,33 @@
+<template>
+    <div :class="col ? ('c-span' + col) : 'c-span'">
+        <!-- @slot 栅格块内容 -->
+        <slot/>
+    </div>
+</template>
+
+<style scoped>
+    .c-span {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1 1 auto;
+        padding-right: 1.03092784%;
+        padding-left: 1.03092784%;
+        position: relative;
+        width: 16.666667%;
+        box-sizing: border-box;
+    }
+    .c-row-tight .c-span {
+        padding-right: 1px;
+        padding-left: 0;
+    }
+</style>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 栅格宽度， 1-12
+         */
+        col: [String, Number]
+    }
+}
+</script>

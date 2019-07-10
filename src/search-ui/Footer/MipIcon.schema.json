@@ -1,0 +1,22 @@
+{
+    "alias": [
+        "c-mip-icon"
+    ],
+    "type": "object",
+    "properties": {
+        "mipIcon": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "@ChineseName": "mip 闪电标跳转链接",
+                    "@Demo": "https://m.baidu.com/search?url=xxx",
+                    "description": "mip 闪电标跳转链接"
+                }
+            },
+            "propsData": [
+                "url"
+            ]
+        }
+    }
+}

@@ -1,0 +1,356 @@
+<template>
+    <!-- 这层 wrapper 是为了接收外层的类而设置 -->
+    <div
+        :style="[
+            rowTile
+                ? {
+                    'margin-left': '-.17rem',
+                    'margin-right': '-.17rem'
+                }
+                : {}
+        ]"
+        class="filter-frame-wrapper"
+    >
+        <!-- filter frame -->
+        <div
+            :style="[
+                {
+                    'z-index': mZIndex
+                }
+            ]"
+            class="filter-frame"
+        >
+            <!-- Tag 栏 -->
+            <c-tag-layout
+                ref="tagLayout"
+                :options="options"
+                :prevent-default-touch-move="stopScrollThrough && selectedIndex !== -1"
+                :primary-color="primaryColor"
+                @click="handleTagLayoutClick"
+            >
+                <slot name="tagLayout"/>
+            </c-tag-layout>
+            <div
+                :style="{
+                    'background-color': backgroundColor
+                }"
+                class="content-wrapper"
+            >
+                <!-- 内容项 -->
+                <c-content
+                    ref="content"
+                    :selected-index="selectedIndex"
+                    :horizontal-transition="horizontalTransition"
+                    :opacity-transition="opacityTransition"
+                    :transition-opts="transitionOpts"
+                    vertical-transition
+                >
+                    <div
+                        a-for="(option, optionIndex) in options"
+                        a-if="option.type !== 'order'"
+                        :key="optionIndex"
+                    >
+                        <!-- @slot:default 筛选浮层内容，顺序排列 -->
+                        <slot :name="'filterFrameItem' + optionIndex"/>
+                    </div>
+                </c-content>
+            </div>
+            <!-- 蒙层 -->
+            <!-- a-if="selectedIndex !== -1" -->
+            <c-mask
+                a-if="showMask"
+                ref="mask"
+                @click="handleMaskClick"
+            />
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        // 选项们
+        options: Array,
+        // z-index
+
+        /**
+         * 组件的`z-index`层级
+         */
+        zIndex: {
+            type: [Number, String],
+            default: 1
+        },
+
+        /**
+         * 是否是通栏
+         */
+        rowTile: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 水平切换动效开关
+         */
+        horizontalTransition: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 透明度动效开关
+         */
+        opacityTransition: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 动效配置
+         */
+        transitionOpts: {
+            type: Object,
+            default: {
+                // 下滑动效
+                downTransition: 'all .3s cubic-bezier(0.42, 0, 0.52, 1)',
+                // 上滑动效
+                upTransition: 'all .16s cubic-bezier(0.46, 0, 1, 1)',
+                // height 高度变化动效参数
+                heightTransition: 'height .3s cubic-bezier(0.4, 0.0, 0.2, 1)',
+                // 内容 item 左右动效参数
+                horizontalTransition: 'left .24s cubic-bezier(.18,.74,.78,.96),opacity .5s cubic-bezier(.18,0,.26,1)',
+                // 透明度渐变动效
+                opacityTransition: 'opacity .08s cubic-bezier(0,0,1,1)'
+            }
+        },
+
+        /**
+         * 背景颜色
+         */
+        backgroundColor: {
+            type: String,
+            default: '#fff'
+        },
+
+        /**
+         * 是否阻止滚动穿透；如果在结果页里使用，则不建议阻止
+         */
+        stopScrollThrough: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 是否显示蒙层；如果在结果页里使用，则建议不显示
+         */
+        showMask: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 主颜色
+         */
+        primaryColor: String
+    },
+    data: {
+        // 选中项的索引
+        selectedIndex: -1,
+        // 加载完成标识
+        mounted: false,
+        // 内部的 z-index
+        mZIndex: 'auto'
+    },
+    components: {
+        'c-tag-layout': '../FilterSimple/FilterTagLayout',
+        'c-mask': '../Mask/Mask',
+        'c-icon': '../Icon/Icon',
+        'c-content': '../Content/Content'
+    }
+}
+</script>
+
+<script>
+export default {
+    // render
+    render() {
+        let vnodes = this.$slots.default;
+        if (vnodes && vnodes.length) {
+            vnodes.forEach((vnode, index) => {
+                // 放入指定 slot
+                this.$slots['filterFrameItem' + index] = vnode;
+            });
+            // 设置 slots 长度
+            this.slotsCount = vnodes.length;
+        }
+        return this.$super.render();
+    },
+    mounted() {
+        this.mounted = true;
+    },
+    methods: {
+        init() {
+            this.$refs.content.init();
+        },
+        // Tag 项点击
+        handleTagLayoutClick(obj) {
+            // 将 option 参数改名，改为 selection 参数
+            obj.selection = obj.option;
+            // 触发 change 事件
+
+            /**
+             * 上方标签项点击
+             *
+             * @event taglayoutclick
+             * @property {object} param1 事件参数
+             * @property {string} param1.direction 方向
+             * @property {number} param1.lastSelectedIndex 上一次被选中的索引
+             * @property {object} param1.option 被选中的选项
+             * @property {number} param1.selectedIndex 选中项的索引
+             * @property {object} param1.selection 当前筛选项的实例
+             * @property {string} param1.type 筛选项类型
+             */
+            this.$emit('taglayoutclick', obj);
+
+            // 如果阻止默认事件
+            if (obj.option.preventDefault) {
+                return;
+            }
+            // 设置选中项
+            this.selectedIndex = obj.selectedIndex;
+            // 排序类型
+            if (obj.type === 'order') {
+                // 关闭蒙层
+                this.close();
+            }
+            // 普通类型
+            else {
+                // 如果是关闭蒙层
+                if (this.selectedIndex === -1) {
+                    // 关闭蒙层
+                    this.close();
+                }
+                // 如果是打开蒙层
+                else {
+                    // 清除 z-index timeout
+                    if (this.cancelZIndexTimeout) {
+                        clearTimeout(this.cancelZIndexTimeout);
+                        this.cancelZIndexTimeout = null;
+                    }
+                    // 设置 z-index
+                    this.mZIndex = this.zIndex;
+                }
+            }
+        },
+        // 蒙层点击
+        handleMaskClick() {
+
+            /**
+             * 蒙层阴影点击
+             *
+             * @event maskclick
+             * @property {object} param1 事件参数
+             * @property {number} param1.selectedIndex 选中项的索引
+             */
+            this.$emit('maskclick', {
+                selectedIndex: this.selectedIndex
+            });
+
+            this.close();
+        },
+
+        /**
+         * 主动关闭蒙层
+         *
+         * @public
+         */
+        close() {
+            // 如果不是 order 类型
+            if (this.options[this.selectedIndex] && this.options[this.selectedIndex].type !== 'order') {
+                // 手动设置方向
+                this.options[this.selectedIndex].direction = 'down';
+            }
+            // 设置为 -1
+            this.selectedIndex = -1;
+            // 主动改变 FilterTagLayout 里的 selectedIndex
+            this.$refs.tagLayout.changeSelectedIndex(-1);
+
+            // 取消 z-index
+            this.cancelZIndex();
+        },
+        // 取消 z-index
+        cancelZIndex() {
+            // 清除 z-index timeout
+            if (this.cancelZIndexTimeout) {
+                clearTimeout(this.cancelZIndexTimeout);
+                this.cancelZIndexTimeout = null;
+            }
+            this.cancelZIndexTimeout = setTimeout(() => {
+                // 设置 z-index
+                this.mZIndex = 'auto';
+            }, 240);
+        },
+
+        /**
+         * 设置内容高度，带动效
+         *
+         * @public
+         * @param {number} height 高度
+         */
+        setHeight(height) {
+            this.$refs.content.setHeight(height);
+        },
+
+        /**
+         * 设置 selectedIndex
+         *
+         * @param {number} selectedIndex 需要设置的索引
+         */
+        setSelectedIndex(selectedIndex) {
+            let option = this.options[selectedIndex];
+            let obj = {
+                optionIndex: selectedIndex,
+                option: option
+            };
+            this.$refs.tagLayout.handleTagLayoutItemClick(obj);
+        }
+    },
+    watch: {
+        selectedIndex(newVal, oldVal) {
+            if (newVal === -1 && oldVal !== -1) {
+                this.$refs.mask && this.$refs.mask.hide();
+            }
+            else if (newVal !== -1 && oldVal === -1) {
+                this.$refs.mask && this.$refs.mask.show();
+            }
+        }
+    }
+};
+</script>
+
+<script type="php">
+function render($ctx, $isXml = false) {
+    $vnodes = $ctx->slots['default'];
+    if ($vnodes && count($vnodes)) {
+        foreach ($vnodes as $index => $vnode) {
+            // 放入指定 slot
+            $ctx->slots['filterFrameItem' . $index] = $vnode;
+        }
+        // 设置 slots 长度
+        $ctx->_d['slotsCount'] = count($vnodes);
+    }
+    return parent::render($ctx);
+}
+</script>
+
+<style module>
+.filter-frame {
+    position: relative;
+}
+.content-wrapper {
+    position: absolute;
+    width: 100%;
+    z-index: 100;
+    overflow: hidden;
+}
+</style>

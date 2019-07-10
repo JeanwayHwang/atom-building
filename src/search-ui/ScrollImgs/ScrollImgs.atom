@@ -1,0 +1,185 @@
+<template>
+    <c-scroll
+        class="c-scroll-imgs"
+        voice-action="select-list"
+        scroller-flex
+        role="listbox"
+        @scrollEnd="onScrollEnd"
+    >
+        <c-scroll-item
+            a-for="idx in count"
+            :col="col"
+            :key="idx"
+            role="option"
+        >
+            <!-- 这里用div包裹是为了暴露出点击事件；参数传(idx-1)是因为数组的使用习惯一般是从0开始计数 -->
+            <c-touchable-feedback
+                :open="!!(imgList[idx - 1].url || (imgList[idx - 1].params && imgList[idx - 1].params.tcUrl))"
+                :top="-.05"
+                :bottom="-.05"
+                :left="-.04"
+                :right="-.04"
+                :url="imgList[idx - 1].url"
+                :url-params="imgList[idx - 1].params"
+                is-jump
+                expand
+                style="height: 100%"
+            >
+                <div @click="handleItemClick(idx-1)">
+                    <c-scroll-imgs-item
+                        a-if="idx <= count && imgList[idx - 1]"
+                        :idx="idx - 1"
+                        :col="col"
+                        :item="imgList[idx - 1]"
+                        :title-fix-height="titleFixHeight"
+                        :voice-config="'select-list.item:' + imgList[idx - 1].title + ' ' + imgList[idx - 1].subTitle"
+                        :default-image-type="defaultImageType"
+                    >
+                        <!-- @slot:c-scroll-imgs{{index}} item图片slot -->
+                        <slot :name="'c-scroll-imgs' + (idx - 1)"/>
+                    </c-scroll-imgs-item>
+                    <!-- @slot:c-scroll-imgs-ext{{index}} item辅助信息 -->
+                    <slot :name="'c-scroll-imgs-ext' + (idx - 1)"/>
+                </div>
+            </c-touchable-feedback>
+        </c-scroll-item>
+        <c-scroll-item a-if="moreUrl" :col="moreCol">
+            <!-- 使用定位来解决 iOS 10.1 及以下高度 100% 填充问题 -->
+            <!-- In Safari 10.1 and below, the height of (non flex) children are not recognized in percentages -->
+            <!-- https://bugs.webkit.org/show_bug.cgi?id=137730 -->
+            <c-touchable-feedback
+                :open="!!(moreUrl || (moreUrlParams && moreUrlParams.tcUrl))"
+                :url="moreUrl"
+                :url-params="moreUrlParams"
+                is-jump
+                expand
+                style="position: absolute; top: .05rem; bottom: 0; left: 0; right: 0"
+            >
+                <c-more
+                    :url="moreUrl"
+                    :params="moreUrlParams"
+                    :voice-config="'select-list.item:查看更多'"
+                    text="查看更多"
+                    @showMore="showMore"
+                />
+            </c-touchable-feedback>
+        </c-scroll-item>
+    </c-scroll>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 栅格列数
+         */
+        col: {
+            type: [Number, String],
+            default: 3
+        },
+
+        /**
+         * 图片列表
+         *
+         * @property {string} url 跳转链接
+         * @property {Object} params 跳转链接所需的参数，参考[Link](./Link#API) `params`
+         * @property {string} src 图片链接
+         * @property {string} type 图片比例，值有（s,l,w,x,y）详见[栅格图片](http://pmd.baidu.com/doc/#image)
+         * @property {string} title 图片标题
+         * @property {number} titleClamp 图片标题截断行数
+         * @property {string} subTitle 图片副标题
+         * @property {number} subTitleClamp 图片副标题截断行数
+         * @property {boolean} hackWhiteStroke 加上去白边的蒙层
+         * @property {number|string} imgNum 显示图集个数
+         * @property {number|string} imgPillBigText 图片右下角胶囊遮罩大号字体文案
+         * @property {string} iconType 显示图集icon类型
+         * @property {string} defaultImageType 缺省图&加载图类型，具体可参考[Image](./Image#API)，优先级高于外层设置的
+         */
+        imgList: {
+            type: Array,
+            default: []
+        },
+
+        /**
+         * 查看更多的跳转链接
+         */
+        moreUrl: String,
+
+        /**
+         * 查看更多的跳转链接所需参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        moreUrlParams: Object,
+
+        /**
+         * 查看更多的栅格列数
+         */
+        moreCol: {
+            type: [Number, String],
+            default: 4
+        },
+
+        /**
+         * 标题是否定高
+         */
+        titleFixHeight: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 缺省图&加载图类型，具体可参考[Image](./Image#API)
+         */
+        defaultImageType: String
+    },
+    computed: {
+        count: imgList.length ? imgList.length : 0
+    },
+    components: {
+        'c-scroll': '../Scroll/Scroll',
+        'c-scroll-item': '../Scroll/ScrollItem',
+        'c-scroll-imgs-item': './ScrollImgsItem',
+        'c-span': '../Row/Span',
+        'c-link': '../Link/Link',
+        'c-more': '../More/More',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        showMore() {
+
+            /**
+             * 当最后一项展示『查看更多』并且需要有特殊操作时，可在组件外层调用的地方绑定该事件
+             *
+             * @event showMore
+             */
+            this.$emit('showMore');
+        },
+        onScrollEnd() {
+
+            /**
+             * 滚动事件
+             *
+             * @event imgScrollEnd
+             */
+            this.$emit('imgScrollEnd');
+        },
+        handleItemClick(index) {
+
+            /**
+             * 当点击图片不做url跳转有特殊操作时，可在组件外层调用的地方绑定该事件
+             *
+             * @event itemclick
+             * @property {number} param1 索引
+             */
+            this.$emit('itemclick', index);
+        }
+    }
+};
+</script>

@@ -1,0 +1,39 @@
+<template>
+    <div :class="[hasLastBorder ? '': listBorderClass]" class="c-list-item c-line-bottom">
+        <!-- @slot 内容 -->
+        <slot/>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 最后一行的底边框：0（没有边框）；1（有边框）
+         */
+        hasLastBorder: {
+            type: Number,
+            default: 0
+        }
+    },
+    data: {
+        listBorderClass: 'c-list-border'
+    }
+}
+</script>
+
+<style scoped>
+.c-list .c-list-item {
+    padding: .05rem 0;
+}
+.c-list .c-list-item:nth-of-type(1) {
+    padding-top: 0;
+}
+.c-list .c-list-item:nth-last-of-type(1) {
+    padding-bottom: 0;
+}
+.c-list .c-list-border:nth-last-of-type(1) {
+    border-bottom: none;
+}
+</style>

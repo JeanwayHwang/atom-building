@@ -1,0 +1,285 @@
+<template>
+    <!-- 无限下拉底部栏 -->
+    <div
+        :style="[
+            {
+                'visibility': status === LOAD_STATUS.IDLE
+                    ? 'hidden'
+                    : 'visible',
+                'background-color': bgColor
+            },
+            rowTile
+                ? {
+                    'margin-left': '-.17rem',
+                    'margin-right': '-.17rem'
+                }
+                : {}
+        ]"
+        class="c-infinite-scroll-bottom-bar"
+        @click="handleClick"
+    >
+        <div class="center" aria-live="assertive">
+            <!-- @slot 左侧自定义区域 -->
+            <slot name="left"/>
+            <!-- 加载中图标 -->
+            <span
+                a-if="status === LOAD_STATUS.LOADING"
+                :style="{
+                    'background-color': iconColor
+                }"
+                class="c-loading-icon"
+            />
+            <!-- 加载中文案 -->
+            <span
+                :style="{
+                    color: textColor
+                }"
+                class="c-loading-text c-color c-font-small"
+            >
+                {{ text }}
+            </span>
+            <!-- @slot 右侧自定义区域 -->
+            <slot name="right"/>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 加载中文案
+         */
+        loadingText: {
+            type: String,
+            default: '正在加载...'
+        },
+
+        /**
+         * 加载完成文案
+         */
+        loadEndText: {
+            type: String,
+            default: '到底了 没有更多内容了'
+        },
+
+        /**
+         * 加载失败文案
+         */
+        loadFailText: {
+            type: String,
+            default: '加载失败 点击重新加载'
+        },
+
+        /**
+         * 加载状态
+         */
+        status: {
+            type: [Number, String],
+            default: 0
+        },
+
+        /**
+         * 背景色
+         */
+        bgColor: {
+            type: String,
+            default: '#fff'
+        },
+
+        /**
+         * 图标颜色
+         */
+        iconColor: {
+            type: String,
+            default: '#2a2a31'
+        },
+
+        /**
+         * 文字颜色
+         */
+        textColor: {
+            type: String,
+            default: '#555'
+        },
+
+        /**
+         * 是否为通栏
+         */
+        rowTile: {
+            type: Boolean,
+            default: false
+        }
+    },
+    data: {
+        // 加载状态
+        LOAD_STATUS: {
+            // 空闲
+            'IDLE': 0,
+            // 加载中
+            'LOADING': 1,
+            // 加载完成
+            'LOAD_END': 2,
+            // 加载失败
+            'LOAD_FAIL': 3
+        }
+    },
+    components: {
+        'c-slink': '../Slink/Slink'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file 无限下拉底部栏
+ * @author chenrui09@baidu.com
+ * @changer wangkai37@baidu.com
+ */
+export default {
+    methods: {
+        handleClick() {
+
+            /**
+             * 点击事件
+             *
+             * @event click
+             * @property {number} param1.status 加载状态；0：空闲；1：加载中；2：加载完成；3：加载失败
+             */
+            this.$emit('click', {
+                status: this.status
+            });
+        }
+    },
+    computed: {
+        // 显示文案
+        text() {
+            let text = '';
+            switch (this.status) {
+                case 0:
+                    break;
+                case 1:
+                    text = this.loadingText;
+                    break;
+                case 2:
+                    text = this.loadEndText;
+                    break;
+                case 3:
+                    text = this.loadFailText;
+                    break;
+                default:
+                    break;
+            }
+            return text;
+        }
+    }
+};
+</script>
+
+<script type="php">
+function computed_text($ctx){
+    $text = '';
+    if (empty($ctx->_d['status'])) {
+        return $text;
+    }
+    $status = $ctx->_d['status'];
+    switch ($status)
+    {
+        case 0:
+            break;
+        case 1:
+            $text = $ctx->_d['loadingText'];
+            break;
+        case 2:
+            $text = $ctx->_d['loadEndText'];
+            break;
+        case 3:
+            $text = $ctx->_d['loadFailText'];
+            break;
+        default:
+            break;
+    }
+    return $text;
+}
+</script>
+
+<style lang="less" scoped>
+.c-infinite-scroll-bottom-bar {
+    position: relative;
+    height: 52px;
+    line-height: 0;
+    background-color: #fff;
+    box-sizing: border-box;
+    text-align: center;
+    transition-timing-function: cubic-bezier(0.1, 0.57, 0.1, 1);
+    transition-duration: 0ms;
+    transform: translateZ(0px);
+    box-sizing: border-box;
+    // 垂直居中
+    .center {
+        position: absolute;
+        width: 100%;
+        top: 50%;
+        transform: translateY(-12px);
+    }
+    // icon
+    .c-loading-icon {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 6px;
+        margin-right: 12px;
+        opacity: .3;
+        vertical-align: middle;
+        background-color: rgba(42, 42, 49, 1);
+        animation: c-loading-ani 750ms;
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
+    }
+    .c-loading-text {
+        display: inline-block;
+    }
+}
+// 图标旋转动画
+@-webkit-keyframes c-loading-ani {
+    from {
+        opacity: .3;
+        transform: rotateY(0deg);
+    }
+    40% {
+        transform: rotateY(90deg);
+    }
+    50% {
+        opacity: .6;
+        transform: rotateY(180deg);
+    }
+    60% {
+        transform: rotateY(270deg);
+    }
+    to {
+        opacity: .3;
+        transform: rotateY(360deg);
+    }
+}
+@keyframes c-loading-ani {
+    from {
+        opacity: .3;
+        transform: rotateY(0deg);
+    }
+    40% {
+        transform: rotateY(90deg);
+    }
+    50% {
+        opacity: .6;
+        transform: rotateY(180deg);
+    }
+    60% {
+        transform: rotateY(270deg);
+    }
+    to {
+        opacity: .3;
+        transform: rotateY(360deg);
+    }
+}
+</style>

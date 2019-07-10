@@ -1,0 +1,508 @@
+<template>
+    <div
+        :class="{
+            'c-line-bottom': bottomLine,
+            'c-navs-wrap-open': isMoreOpen && allowScroll,
+            'c-navs-wrap-close': !isMoreOpen && allowScroll,
+            'c-navs-pc': $platform === 'pc'
+        }"
+        data-module="c-n"
+        class="c-navs-wrap c-navs-container"
+    >
+        <c-navs-common
+            a-if="!allowScroll"
+            :label-list="convertedList"
+            :selected-index="oSelectedIndex"
+            :type="type"
+            :selected-color="selectedColor"
+            :background-color="backgroundColor"
+            :is-open-log="isOpenLog"
+            :log-content="{logList: oLogList}"
+            :item-style="itemStyle"
+            :disable-event="disableEvent"
+            :feedback-color="feedbackColor"
+            @clickItem="itemClick"
+        />
+        <c-navs-scroll
+            a-if="allowScroll"
+            :label-list="convertedList"
+            :selected-index="oSelectedIndex"
+            :background-color="backgroundColor"
+            :item-style="itemStyle"
+            :is-open="isMoreOpen"
+            :type="type"
+            :selected-color="selectedColor"
+            :is-open-log="isOpenLog"
+            :log-content="{logList: oLogList}"
+            :gap-right="isExpand?0.34:-0.17"
+            :has-mask="hasMask"
+            @clickItem="itemClick"
+            @scrollEnd="onScrollEnd"
+        />
+        <!-- 更多面板 -->
+        <div
+            :class="{
+                'c-navs-more-cont-sub': type === 'navSub'
+            }"
+            class="c-navs-more-cont"
+            @touchmove.prevent
+        >
+            <c-transition
+                :enter="{
+                    animations: {
+                        slideDown: {}
+                    },
+                    options: {
+                        duration: 300,
+                        easing: 'cubic-bezier(0.42, 0, 0.52, 1)'
+                    }
+                }"
+                :leave="{
+                    animations: {
+                        slideDown: {
+                            reverse: true,
+                            fill: 'end'
+                        }
+                    },
+                    options: {
+                        duration: 160,
+                        easing: 'cubic-bezier(0.46, 0, 1, 1)'
+                    }
+                }"
+            >
+                <div a-show="allowScroll && isExpand && isMoreOpen">
+                    <!-- @slot 自定义下拉内容，可以给对应 nav 组件一个 ref，使用 this.$refs[refname].toggleChange(index) 实现切换选项卡 -->
+                    <slot>
+                        <c-navs-more
+                            :label-list="convertedList"
+                            :selected-index="oSelectedIndex"
+                            :is-open="isMoreOpen"
+                            :type="type"
+                            :selected-color="selectedColor"
+                            :toggle-label="toggleLabel"
+                            :is-open-log="isOpenLog"
+                            :log-content="{logList: oLogList}"
+                            @clickItem="itemClick"
+                            @toggle="toggleMore"
+                        />
+                    </slot>
+                </div>
+            </c-transition>
+        </div>
+        <!-- 提示语 -->
+        <p
+            a-if="allowScroll&&isExpand"
+            :class="{
+                'c-navs-wrap-toggleLabe-open': isMoreOpen,
+                'c-navs-wrap-toggleLabe-close': !isMoreOpen
+            }"
+            class="c-color-gray c-navs-wrap-toggleLabe"
+            @touchmove.prevent
+        >
+            {{ toggleLabel }}
+        </p>
+        <!-- 箭头图标 -->
+        <div
+            a-if="allowScroll && isExpand"
+            :data-nolog="!isOpenLog"
+            class="c-navs-more-icon WA_LOG_BTN"
+            @click="toggleMore"
+        >
+            <i
+                :class="{
+                    'c-navs-more-icon-transform-open': isMoreOpen,
+                    'c-navs-more-icon-transform-close': !isMoreOpen
+                }"
+            />
+        </div>
+        <!-- 阴影 -->
+        <div class="c-navs-mask-cont">
+            <c-transition
+                :enter="{
+                    animations: {
+                        opacity: {}
+                    },
+                    options: {
+                        duration: 300,
+                        easing: 'cubic-bezier(0.42, 0, 0.52, 1)'
+                    }
+                }"
+                :leave="{
+                    animations: {
+                        opacity: {
+                            reverse: true,
+                            fill: 'end'
+                        }
+                    },
+                    options: {
+                        duration: 300,
+                        easing: 'cubic-bezier(0, 0, 0.3, 1)'
+                    }
+                }"
+            >
+                <div
+                    a-show="allowScroll && isExpand && isMoreOpen"
+                    ref="mask"
+                    class="c-navs-mask"
+                    @touchmove.prevent
+                    @click="toggleMore('mask')"
+                />
+            </c-transition>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 标签数组
+         *
+         * @property {string} txt 每个项目的文字
+         * @property {string} url 可直接跳转的地址，若无则不可直接跳转
+         * @property {Object} params 跳转链接所需参数
+         * @property {string} dataModule 区块统计参数
+         */
+        labelList: {
+            type: Array,
+            required: true
+        },
+
+        /**
+         * 选中的标签索引
+         */
+        selectedIndex: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * 是否允许navs滑动
+         */
+        allowScroll: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 下拉显示后的引导文字
+         */
+        toggleLabel: {
+            type: String,
+            default: '请选择分类'
+        },
+        /**
+         * 判断nav类型可选项为 nav、navSub
+         */
+        type: {
+            type: String,
+            default: 'nav'
+        },
+        /**
+         * 选中项目字体颜色，边框线（如果有）颜色
+         */
+        selectedColor: {
+            type: String,
+            default: '#333'
+        },
+        /**
+         * 更改背景色仅支持无弹层的navs
+         */
+        backgroundColor: {
+            type: String,
+            default: '#fff'
+        },
+        /**
+         * navs item 未选择项颜色和透明度
+         */
+        itemStyle: {
+            type: Object,
+            default: {
+                color: '#666',
+                opacity: '1'
+            }
+        },
+        /**
+         * 是否触发点击事件改选定选项
+         */
+        disableEvent: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 点击态颜色
+         */
+        feedbackColor: {
+            type: String,
+            default: 'rgba(0, 0, 0, .08)'
+        },
+        /**
+         * 是否可展开，有下拉按钮
+         */
+        isExpand: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 是否有遮罩
+         */
+        hasMask: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 是否发送日志
+         */
+        isOpenLog: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 日志内容 logList为labelList每一个label的自定义日志， 其中数组中每一个元素为object类型 内容为json key value 格式
+         */
+        logContent: {
+            type: Object,
+            default: {
+                logList: []
+            }
+        },
+        /**
+         * 用于设置是否添加下边1px 黑线，默认存在
+         */
+        bottomLine: {
+            type: Boolean,
+            default: true
+        }
+    },
+    data: {
+        // 选定label索引
+        oSelectedIndex: selectedIndex,
+        // 是否展开状态
+        isMoreOpen: false,
+        // 某些浏览器下快速点击会有问题
+        isClickMask: false
+    },
+    components: {
+        'c-navs-common': './NavsCommon',
+        'c-navs-scroll': './NavsScroll',
+        'c-navs-more': './ListMore',
+        'c-transition': '../Motion/Transition'
+    }
+}
+</script>
+
+<script type="php">
+    function computed_oLogList($ctx) {
+        if (!isset($ctx->_d["logContent"]) ) {
+            return array();
+        }
+        $list = is_array($ctx->_d["logContent"]["logList"]) ? $ctx->_d["logContent"]["logList"] : array();
+        return array_map(json_encode, $list);
+    }
+    function computed_convertedList($ctx) {
+        return array_map(function($label) {
+            return is_string($label) ? array("txt"=>$label): $label;
+
+        }, $ctx->_d["labelList"]);
+    }
+</script>
+
+<script>
+export default {
+    methods: {
+        itemClick(index) {
+            if (this.disableEvent) {
+                return;
+            }
+
+            /**
+             * clickItem event.
+             *
+             * @event clickItem
+             * @property {object} param1.index 序号
+             */
+            this.$emit('clickItem', {index});
+            this.onChange(index);
+        },
+        onChange(index) {
+            if (this.isMoreOpen) {
+                this.toggleMore();
+            }
+            if (this.oSelectedIndex === index || index < 0 || index >= this.labelList.length) {
+                return;
+            }
+
+            /**
+             * change event.
+             *
+             * @event change
+             * @property {object} param1.current 序号
+             * @property {object} param1.text 文本
+             * @property {object} param1.old 改变前序号
+             */
+            this.$emit('change', {
+                current: index,
+                text: this.labelList[index].txt || this.labelList[index],
+                old: this.oSelectedIndex
+            });
+            this.oSelectedIndex = index;
+        },
+        toggleMore(val) {
+            if (val === 'mask') {
+                // 简搜下快速点击会出现蒙层闪动问题,动效库bug修复生效后删除
+                if (!this.isClickMask && this.isMoreOpen) {
+                    this.isClickMask = true;
+                    this.isMoreOpen = !this.isMoreOpen;
+                    this.isClickMask = false;
+                }
+            }
+            else {
+                this.isMoreOpen = !this.isMoreOpen;
+            }
+
+            /**
+             * toggle event.
+             *
+             * @event toggle
+             * @property {object} param1.toggle isMoreOpen
+             */
+            this.$emit('toggle', {toggle: this.isMoreOpen});
+        },
+        onScrollEnd() {
+
+            /**
+             * scrollEnd event.
+             *
+             * @event scrollEnd
+             */
+            this.$emit('scrollEnd');
+        }
+    },
+    computed: {
+        oLogList() {
+            if (!this.logContent || !this.logContent.logList instanceof Array) {
+                return [];
+            }
+            return this.logContent.logList.map(function (value) {
+                return JSON.stringify(value);
+            });
+        },
+        convertedList() {
+            return this.labelList.map(function (value, index) {
+                return typeof value  === 'string' ? {txt: value} : value;
+            });
+        }
+    },
+    watch: {
+        selectedIndex(value, oldValue) {
+            if (value === this.oSelectedIndex) {
+                return;
+            }
+            this.onChange(value);
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.c-navs-wrap {
+    margin: 0 -.17rem;
+    position: relative;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+       -moz-user-select: none;
+            user-select: none;
+    background: #fff;
+}
+.c-navs-pc {
+    margin: 0 -9px;
+}
+.c-navs-wrap-open {
+    transition: all .08s;
+    border-bottom: 1px solid rgba(238, 238, 238, 0);
+}
+.c-navs-wrap-close {
+    transition: all .08s;
+    border-bottom: 1px solid rgba(238, 238, 238, 1);
+}
+.c-navs-wrap-toggleLabe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    line-height: .41rem;
+    height: .41rem;
+    padding-left: .17rem;
+    right: 0;
+}
+.c-navs-wrap-toggleLabe-open {
+    transition: all .08s;
+    z-index: 10;
+    opacity: 1;
+}
+.c-navs-wrap-toggleLabe-close {
+    transition: all .08s;
+    z-index: 9;
+    opacity: 0;
+}
+.c-navs-more-cont {
+    position: absolute;
+    top: .41rem;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    z-index: 12;
+}
+.c-navs-more-cont-sub {
+    top: .39rem;
+}
+.c-navs-more-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: .39rem;
+    background-color: #fff;
+    z-index: 10;
+    &:before {
+        content: '';
+        position: absolute;
+        width: 12px;
+        top: 0;
+        bottom: 0;
+        left: -10px;
+        box-shadow: inset -10px 0 10px 0 #fff;
+    }
+    i {
+        width: 0;
+        height: 0;
+        position: absolute;
+        top: 17px;
+        right: .17rem;
+        border-top: 5px solid #999;
+        border-right: 5px solid transparent;
+        border-left: 5px solid transparent;
+    }
+    .c-navs-more-icon-transform-open {
+        transform: rotate(180deg);
+        transform-origin: center center;
+        transition: All .3s cubic-bezier(.42, 0, .52, 1);
+    }
+    .c-navs-more-icon-transform-close {
+        transform: rotate(0deg);
+        transform-origin: center center;
+        transition: All .16s cubic-bezier(.46, 0, 1, 1);
+    }
+}
+.c-navs-mask-cont {
+    position: absolute;
+    top: .44rem;
+    left: 0;
+    right: 0;
+    z-index: 11;
+}
+.c-navs-mask {
+    background-color: rgba(0, 0, 0, .5);
+    height: 1024px;
+    width: 100%;
+}
+</style>

@@ -1,0 +1,123 @@
+{
+    "alias": [
+        "c-scroll-video"
+    ],
+    "type": "object",
+    "properties": {
+        "scrollVideo": {
+            "type": "object",
+            "properties": {
+                "video": {
+                    "type": "array",
+                    "@ChineseName": "数据列表",
+                    "description": "数据列表",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "@ChineseName": "每一项的跳转链接",
+                                "description": "每一项的跳转链接",
+                                "@Demo": "https://m.baidu.com"
+                            },
+                            "urlType": {
+                                "type": "string",
+                                "enum": [
+                                    "normal",
+                                    "sf",
+                                    "mip"
+                                ],
+                                "@ChineseName": "链接类型",
+                                "description": "链接类型",
+                                "@Demo": "normal"
+                            },
+                            "title": {
+                                "type": "string",
+                                "@ChineseName": "文章标题",
+                                "description": "文章标题",
+                                "@Demo": "我是文章标题"
+                            },
+                            "poster": {
+                                "type": "string",
+                                "@ChineseName": "每一项的图片缩略图地址",
+                                "description": "每一项的图片缩略图地址",
+                                "@Demo": "https://m.baidu.com/static/index/plus/homepage-newlogo.png"
+                            },
+                            "source": {
+                                "type": "string",
+                                "@ChineseName": "文章来源",
+                                "description": "文章来源",
+                                "@Demo": "中关村在线"
+                            },
+                            "duration": {
+                                "type": "number",
+                                "@ChineseName": "视频的显示时长(秒)",
+                                "description": "视频的显示时长(秒)",
+                                "@Demo": "70"
+                            },
+                            "pubtime": {
+                                "type": "number",
+                                "@ChineseName": "时间戳(毫秒)",
+                                "description": "时间戳(毫秒)",
+                                "@Demo": "1503400684000"
+                            },
+                            "playtime": {
+                                "type": "number",
+                                "@ChineseName": "已播放次数",
+                                "description": "已播放次数",
+                                "@Demo": "234"
+                            },
+                            "score": {
+                                "type": "number",
+                                "@ChineseName": "评分",
+                                "description": "评分",
+                                "@Demo": "8.5"
+                            },
+                            "text": {
+                                "type": "number",
+                                "@ChineseName": "描述文案",
+                                "description": "描述文案",
+                                "@Demo": "梁静茹睽违三年再踏红馆,重唱情歌感触多"
+                            }
+                        }
+                    }
+                },
+                "moreInfo": {
+                    "type": "object",
+                    "@ChineseName": "查看更多配置",
+                    "description": "查看更多配置",
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "@ChineseName": "链接地址",
+                            "description": "链接地址",
+                            "@Demo": "https://m.baidu.com"
+                        },
+                        "urlType": {
+                            "type": "string",
+                            "enum": [
+                                "normal",
+                                "sf",
+                                "mip"
+                            ],
+                            "@ChineseName": "链接类型",
+                            "description": "链接类型",
+                            "@Demo": "normal"
+                        },
+                        "text": {
+                            "type": "string",
+                            "@ChineseName": "查看更多文案",
+                            "description": "查看更多文案",
+                            "@Demo": "查看更多"
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "video",
+                "moreInfo"
+            ]
+        }
+    }
+}

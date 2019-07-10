@@ -1,0 +1,27 @@
+{
+    "alias": [
+        "c-link"
+    ],
+    "type": "object",
+    "properties": {
+        "link": {
+            "type": "object",
+            "@ChineseName": "link 组件实例",
+            "description": "link 组件实例",
+            "properties": {
+                "url": {
+                    "type": [
+                        "string",
+                        "object"
+                    ],
+                    "@ChineseName": "link 链接",
+                    "@Demo": "https://m.baidu.com/search?url=xxx",
+                    "description": "link 链接"
+                }
+            },
+            "propsData": [
+                "url"
+            ]
+        }
+    }
+}

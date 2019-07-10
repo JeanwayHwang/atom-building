@@ -1,0 +1,338 @@
+<template>
+    <div
+        class="spread-tag"
+    >
+        <!-- 不带展开收起的单独的标签栏 -->
+        <!-- label 存在并且不显示展开收起时，显示 -->
+        <div
+            a-if="label
+                && !spreadOpts.show
+            "
+            class="c-gap-inner-top c-gap-inner-bottom"
+        >
+            {{ label }}
+        </div>
+        <!-- 展开收起 -->
+        <c-spread
+            :top-btn="{
+                isShow: spreadOpts.show,
+                leftText: label,
+                spreadText: '',
+                foldText: '',
+                paddingTop: spreadOpts.paddingTop,
+                paddingBottom: spreadOpts.paddingBottom,
+                touchableFeedbackTop: spreadOpts.touchableFeedbackTop,
+                touchableFeedbackBottom: spreadOpts.touchableFeedbackBottom
+            }"
+            :bottom-btn="{
+                isShow: false
+            }"
+            :spread="spreadOpts.spread"
+            :threshold="spreadOpts.threshold"
+            @spreadbtnclick="handleSpreadBtnClick"
+            @change="handleSpreadChange"
+        >
+            <!-- @slot 默认 slot -->
+            <slot/>
+            <c-row
+                a-for="(row, rowIndex) in rowNum"
+                :key="rowIndex"
+                :class="[
+                    rowIndex !== 0
+                        ? 'c-gap-inner-top'
+                        : ''
+                ]"
+            >
+                <!-- 项 -->
+                <c-span
+                    a-for="(option, optionIndex) in options"
+                    a-if="
+                        optionIndex >= rowIndex * column
+                            && optionIndex < (rowIndex + 1) * column
+                    "
+                    :key="rowIndex + '_' + optionIndex"
+                    :col="col"
+                >
+                    <!-- 标签项 -->
+                    <c-tag-item
+                        :text="option.text"
+                        :icon="option.icon"
+                        :type="type"
+                        :size="size"
+                        :theme="theme"
+                        :selected="option.selected"
+                        :force-check="forceCheck"
+                        :style="[
+                            marginInner
+                                ? {
+                                    margin: marginInner
+                                }
+                                : {}
+                        ]"
+                        :selected-color="primaryColor"
+                        @click="handleTagItemClick(
+                            {
+                                e: $event,
+                                option,
+                                optionIndex
+                            }
+                        )"
+                    />
+                </c-span>
+                <!-- 占位的元素；作用是当行空间不足时占空间；当 options 长度不是3的整数时，并且当前行数为最后一行时才出现 -->
+                <!-- 判断当前行数为最后一行时这里必须用 == 而不能用 === 否则会出现服务端渲染和前端渲染不一致的问题 -->
+                <template
+                    a-if="
+                        rowIndex == (rowNum - 1)
+                            && (options.length % column) !== 0
+                    "
+                >
+                    <c-span
+                        a-for="(placeholder, placeholderIndex) in (column - (options.length % column))"
+                        :key="rowIndex + '_' + placeholderIndex"
+                        :col="col"
+                    />
+                </template>
+            </c-row>
+        </c-spread>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 标签
+         */
+        label: String,
+        /**
+         * 类型；'radio' 单选；'checkbox' 多选
+         */
+        type: {
+            type: String,
+            default: 'radio'
+        },
+        /**
+         * 默认值；多个值请使用 ',' 区分，如：'选项1,选项2'
+         */
+        defaultValue: String,
+        /**
+         * 展开收起配置
+         */
+        spreadOpts: {
+            type: Object,
+            default: {
+                // 是否显示展开收起
+                show: true,
+                // 是否展开
+                spread: false,
+                threshold: 1
+            }
+        },
+        /**
+         * 单项所占栅格数
+         */
+        col: {
+            type: Number,
+            default: 4
+        },
+        /**
+         * 大小；'normal' 正常；'large' 大号
+         */
+        size: {
+            type: String,
+            default: 'large'
+        },
+        /**
+         * 主题；'normal' 正常；'gray' 灰色主题
+         */
+        theme: {
+            type: String,
+            default: 'gray'
+        },
+        /**
+         * 范围输入的预置选项
+         *
+         * @property {string} text 选项的文案
+         * @property {string} value 选项的值
+         * @property {string} icon 选项的图标
+         */
+        options: {
+            type: Array,
+            default: []
+        },
+        /**
+         * 是否强制显示对勾的样式
+         */
+        forceCheck: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 内部 margin，为了解决在某些 Android 浏览器上边线消失的问题
+         */
+        marginInner: {
+            type: String,
+            default: ''
+        },
+        /**
+         * 外部实例；外部传入的实例，在部分场景下，需要把 vnode 挂载到外部传入的实例上
+         */
+        ins: Object,
+        /**
+         * 主颜色
+         */
+        primaryColor: String
+    },
+    data: {
+        // 列数
+        column: 12 / col
+    },
+    components: {
+        'c-spread': '../SpreadEnhanced/Spread',
+        'c-tag-item': '../Tags/TagItem',
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span'
+    }
+}
+</script>
+
+<script>
+export default {
+    mounted() {
+        // 设置默认值
+        this.init();
+    },
+    methods: {
+        init() {
+            // 设置默认值
+            this.setDefaultValue(this.defaultValue);
+
+            // 如果外部实例 ins 存在
+            if (this.ins) {
+                // 把 vnode 挂载到外部实例上去
+                this.ins.vnode = this;
+            }
+        },
+        // 设置默认值
+        setDefaultValue(defaultValue) {
+            // 如果没有默认值
+            if (!defaultValue) {
+                this.options.forEach((option, optionIndex) => {
+                    this.$set(option, 'selected', false);
+                });
+            }
+            // 单选
+            if (this.type === 'radio') {
+                this.options.forEach((option, optionIndex) => {
+                    if (option.value === defaultValue) {
+                        this.$set(option, 'selected', true);
+                    }
+                    else {
+                        this.$set(option, 'selected', false);
+                    }
+                });
+            }
+            // 多选
+            else if (this.type === 'checkbox') {
+                let defaultValueArr = defaultValue.split(',').map(item => item.trim());
+                this.options.forEach((option, optionIndex) => {
+                    this.$set(option, 'selected', false);
+                    if (defaultValueArr.indexOf(option.value) !== -1) {
+                        this.$set(option, 'selected', true);
+                    }
+                });
+            }
+        },
+        // 展开收起按钮点击事件
+        handleSpreadBtnClick(obj) {
+
+            /**
+             * 展开收起按钮点击事件
+             *
+             * @event spreadbtnclick
+             * @property {boolean} lastSpread 上一次展开收起的状态，true 展开，false 收起
+             */
+            this.$emit('spreadbtnclick', obj);
+        },
+        // 展开收起改变事件（点击后的 nextTick）
+        handleSpreadChange(obj) {
+
+            /**
+             * 展开收起状态改变后触发的回调
+             *
+             * @event spreadchange
+             * @property {boolean} spread 是否展开
+             * @property {string} type 当前展开收起的类型
+             * @property {number} height 当前高度
+             * @property {number} diffHeight 相较于上一次变化的高度，主要用来配合外侧元素动态计算高度
+             */
+            this.$emit('spreadchange', obj);
+        },
+        // 标签项点击事件
+        handleTagItemClick(obj) {
+            // 单选
+            if (this.type === 'radio') {
+                this.options.forEach((option, optionIndex) => {
+                    this.$set(option, 'selected', false);
+                });
+                this.$set(obj.option, 'selected', true);
+            }
+            // 多选
+            else {
+                if (!obj.option.selected) {
+                    this.$set(obj.option, 'selected', true);
+                }
+                else {
+                    this.$set(obj.option, 'selected', false);
+                }
+            }
+            let selectedArr = [];
+            let valueArr = [];
+            this.options.forEach((item, index) => {
+                if (item.selected) {
+                    selectedArr.push(index);
+                    valueArr.push(item.value);
+                }
+            });
+            let valueStr = valueArr.join(',');
+            /**
+             * click event.
+             *
+             * @event itemclick
+             * @property {object} param1 选项
+             * @property {number} param1.indexnumber 选项的索引
+             * @property {function} param1.typestring 选项的类型
+             * @property {function} param1.selectedArrarray 选中项索引的数组
+             * @property {function} param1.valueArrarray 选中项值的数组
+             * @property {function} param1.valueStrstring 选中项值的字符串，以','分隔
+             * @property {function} param1.clickItemobject 被点击的项
+             */
+            this.$emit('itemclick', {
+                e: obj.e,
+                index: obj.optionIndex,
+                clickItem: obj.option,
+                type: this.type,
+                selectedArr,
+                valueArr,
+                valueStr
+            });
+        }
+    },
+    computed: {
+        // 计算行数
+        rowNum() {
+            return Math.ceil(this.options.length / (12 / this.col));
+        }
+    }
+};
+</script>
+
+<script type="php">
+    // 计算行数
+    function computed_rowNum($ctx) {
+        $col = $ctx->_d['col'];
+        $options = $ctx->_d['options'];
+        return ceil(count($options) / (12 / $col));
+    }
+</script>

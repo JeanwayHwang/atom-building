@@ -1,0 +1,119 @@
+<template>
+
+<div ref="wrapper" class="wrapper">
+    <slot />
+</div>
+
+</template>
+
+<script type="config">
+    {
+        props: {
+            animations: {
+                type: Object,
+                required: true
+            },
+            options: {
+                type: Object,
+                default: {}
+            }
+        }
+    }
+</script>
+
+<script>
+    import animationsFn from './animations';
+    import Flip from './Flip';
+    import Promise from '@searchfe/promise';
+    
+    export default {
+        mounted() {
+            this.flip = new Flip();
+        },
+        methods: {
+            first(el) {
+                if (!el) {
+                    el = this.$slots.default[0].elm;
+                }
+
+                return this.flip.first(el);
+            },
+            last(el) {
+                if (!el) {
+                    el = this.$slots.default[0].elm;
+                }
+
+                return this.flip.last(el);
+            },
+            play(opt = {}, conf = {}) {
+                const el = this.$slots.default[0].elm;
+                const flipKey = 'flip';
+
+                const options = Object.assign({}, this.options || {}, opt);
+
+                let animationObjs = [];
+                if (this.animations) {
+                    Object.keys(this.animations).forEach(key => {
+                        if (animationsFn[key]) {
+                            const config = Object.assign({}, this.animations[key] || {}, conf);
+                            if (key === flipKey) {
+                                config.delta = this.flip.delta;
+                            }
+                            const animation = animationsFn[key](el, config, options);
+                            animationObjs.push(animation);
+                        }
+                    });
+                }
+
+                if (this.animationObjs) {
+                    this.cancel();
+                }
+
+                this.animationObjs = animationObjs;
+                return Promise.all(animationObjs.map(({promise}) => promise));
+            },
+            resume() {
+                if (!this.animationObjs) {
+                    return false;
+                }
+
+                this.animationObjs.forEach(({animation}) => {
+                    // fix 部分 anroid 机重复 play() 动画不执行的 bug
+                    if (animation.playState === 'running') {
+                        return;
+                    }
+                    animation.pause();
+                    setTimeout(() => {
+                        animation.play();
+                    }, 0);
+                });
+                return true;
+            },
+            pause() {
+                if (!this.animationObjs) {
+                    return false;
+                }
+
+                this.animationObjs.forEach(({animation}) => {
+                    animation.pause();
+                });
+                return true;
+            },
+            cancel() {
+                if (!this.animationObjs) {
+                    return false;
+                }
+                this.animationObjs.forEach(({animation}) => {
+                    animation.cancelFix();
+                });
+                return true;
+            }
+        }
+    };
+</script>
+
+<style scoped>
+    .wrapper {
+        display: inherit;
+    }
+</style>

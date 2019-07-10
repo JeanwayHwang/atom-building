@@ -1,0 +1,62 @@
+{
+    "alias": [
+        "c-share"
+    ],
+    "type": "object",
+    "properties": {
+        "share": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "@ChineseName": "要分享的url",
+                    "description": "要分享的url",
+                    "@Demo": "https://m.baidu.com/"
+                },
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "自定义的分享标题",
+                    "description": "自定义的分享标题",
+                    "@Demo": "百度商品"
+                },
+                "content": {
+                    "type": "string",
+                    "@ChineseName": "自定义的分享内容",
+                    "description": "自定义的分享内容",
+                    "@Demo": "百度商品_你想要的全都有"
+                },
+                "iconUrl": {
+                    "type": "string",
+                    "@ChineseName": "自定义的分享图片的地址",
+                    "description": "自定义的分享图片的地址",
+                    "@Demo": "https://m.baidu.com/static/index/plus/homepage-newlogo.png"
+                },
+                "imageurl": {
+                    "type": "string",
+                    "@ChineseName": "分享图片的地址",
+                    "description": "分享图片的地址",
+                    "@Demo": "https://m.baidu.com/static/index/plus/homepage-newlogo.png"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "url",
+                        "image",
+                        "screenshot"
+                    ],
+                    "@ChineseName": "分享类型",
+                    "description": "分享类型",
+                    "@Demo": "url"
+                }
+            },
+            "propsData": [
+                "url",
+                "title",
+                "content",
+                "imageurl",
+                "iconUrl",
+                "type"
+            ]
+        }
+    }
+}

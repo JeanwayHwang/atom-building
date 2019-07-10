@@ -1,0 +1,331 @@
+<template>
+    <div
+        :class="{
+            'c-dropdown-disable': disabled,
+            'c-dropdown-focus': focus,
+            'c-gap-top-small': !label
+        }"
+        class="c-dropdown c-gap-bottom-small dropdown"
+        data-module="c-dd"
+        rl-type="stop"
+    >
+        <label a-if="label">
+            {{ label }}
+        </label>
+        <select
+            a-voice-provider:select="selectProvider"
+            :disabled="disabled"
+            :name="name"
+            :style="[
+                innerValue === undefined
+                    ? {
+                        color: '#999'
+                    }
+                    : {},
+                direction !== 'ltr'
+                    ? {
+                        direction
+                    }
+                    : {},
+                disabled
+                    ? {
+                        color: '#dbdbdb'
+                    }
+                    : {},
+                noBorder
+                    ? {
+                        border: 'none',
+                        color: '#555'
+                    }
+                    : {}
+            ]"
+            :voice-tag="label"
+            voice-action="select"
+            @focus="focus = true"
+            @blur="focus = false"
+            @change="handleChange"
+        >
+            <!-- options -->
+            <template a-if="options && options.length > 0">
+                <!-- 没有选中项 -->
+                <option
+                    a-if="innerValue === undefined"
+                    :voice-config="'select.item:' + label"
+                    value=""
+                    selected
+                >
+                    请选择
+                </option>
+                <!-- 选中项 -->
+                <option
+                    a-for="(item, index) in options"
+                    :key="index"
+                    :value="item.value"
+                    :selected="innerValue !== undefined && innerValue === item.value"
+                    :voice-config="'select.item:' + item.text"
+                >
+                    {{ item.text }}
+                </option>
+            </template>
+            <!-- optGroup -->
+            <template a-else-if="optGroup && optGroup.length > 0">
+                <optgroup
+                    a-for="(optGroupItem, optGroupIndex) in optGroup"
+                    :key="optGroupIndex"
+                    :label="optGroupItem.label"
+                >
+                    <option
+                        a-for="(option, optionIndex) in optGroupItem.options"
+                        :key="optionIndex"
+                        :value ="option.value"
+                    >
+                        {{ option.text }}
+                    </option>
+                </optgroup>
+            </template>
+        </select>
+        <!-- 箭头 -->
+        <c-arrow
+            :direction="focus
+                ? 2
+                : 1
+            "
+            :color="disabled
+                ? '#dbdbdb'
+                : '#555'
+            "
+            class="dropdown-arrow"
+            animation
+        />
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 是否禁用
+         */
+        disabled: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 选中的值
+         */
+        value: [Number, String],
+
+        /**
+         * 选择列表的值
+         *
+         * @property {string} text 选项文案
+         * @property {string|number} value 选项值
+         */
+        options: {
+            type: Array,
+            default: []
+        },
+
+        /**
+         * 选项分组列表的值
+         *
+         * @property {string} label 选项组标签文案
+         * @property {Object[]} options 自选项列表
+         * @property {string} options[].text 选项文案
+         * @property {string|number} options[].value 选项值
+         */
+        optGroup: {
+            type: Array,
+            default: []
+        },
+
+        /**
+         * 下拉框上方的标签名
+         */
+        label: String,
+
+        /**
+         * `select`标签需要的表单项名称
+         */
+        name: String,
+
+        /**
+         * 文字方向，可选值：`ltr`，`rtl`
+         */
+        direction: {
+            type: String,
+            default: 'ltr'
+        },
+
+        /**
+         * 是否去掉边框
+         */
+        noBorder: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 静默参数：是否在值改变时不触发 change 事件，默认为 false
+         */
+        silent: {
+            type: Boolean,
+            default: false
+        }
+    },
+    data: {
+        focus: false,
+        innerValue: value
+    },
+    components: {
+        'c-arrow': '../AnimateIcon/Arrow'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file 下拉选择框组件
+ * @author cxtom (chenxiao07@baidu.com)
+ * @changer wangkai37<wangkai37@baidu.com>
+ */
+export default {
+    computed: {
+        selectedIndex: {
+            get() {
+                return this.getSelectedIndex(this.innerValue);
+            },
+            set(index) {
+                if (this.options[index]) {
+                    this.innerValue = this.options[index].value;
+                }
+            }
+        }
+    },
+    watch: {
+        value(v) {
+            this.innerValue = v;
+        },
+        innerValue(v) {
+            // 如果是静默
+            if (this.silent) {
+                return;
+            }
+            // 选项
+            if (this.options && this.options.length > 0) {
+                this.$emit('change', {
+                    target: this,
+                    value: v,
+                    selectedIndex: this.getSelectedIndex(v)
+                });
+            }
+            // 选项组 optGroup
+            else if (this.optGroup && this.optGroup.length > 0) {
+                let optGroupSelectedIndex = -1;
+                let selectedIndex = -1;
+                this.optGroup.forEach((optItem, optIndex) => {
+                    optItem.options.forEach((option, optionIndex) => {
+                        if (option.value === v) {
+                            selectedIndex = optionIndex;
+                            optGroupSelectedIndex = optIndex;
+                        }
+                    });
+                });
+
+                /**
+                 * 单选类型时选择后的改变事件
+                 *
+                 * @event change
+                 * @property {object} param1.target 当前组件实例
+                 * @property {number|string} param1.value 改变后的值
+                 * @property {number} param1.optGroupSelectedIndex 改变后的选中的组索引
+                 * @property {number} param1.selectedIndex 改变后的选中的项索引
+                 */
+                this.$emit('change', {
+                    target: this,
+                    value: v,
+                    optGroupSelectedIndex,
+                    selectedIndex
+                });
+            }
+        }
+    },
+    methods: {
+        selectProvider(action) {
+            return {
+                current: String(this.selectedIndex)
+            };
+        },
+        getSelectedIndex(v) {
+            for (let i = 0, len = this.options.length; i < len; i++) {
+                if (this.options[i].value === v) {
+                    return i;
+                }
+            }
+        },
+        handleChange(e) {
+            this.innerValue = e.target.value;
+        }
+    }
+};
+</script>
+
+<script type="php">
+function computed_selectedIndex($ctx) {
+    $options = $ctx->_d["options"];
+    $value = $ctx->_d["value"];
+
+    foreach ($options as $index => $option) {
+        if ($option["value"] === $value) {
+            return $index;
+        }
+    }
+}
+</script>
+
+<style lang="less" scoped>
+    .c-dropdown {
+        position: relative;
+        label,
+        select {
+            position: relative;
+            z-index: 1;
+            border-radius: 5px;
+        }
+        select {
+            padding: 0 .29rem 0 .08rem;
+        }
+        // 扩展 input 区避免容易误操作触发整卡点击态
+        &::after {
+            content: ' ';
+            position: absolute;
+            left: -.1rem;
+            right: -.1rem;
+            top: 0;
+            bottom: -.05rem;
+            z-index: 0;
+        }
+    }
+</style>
+
+<style module>
+    .dropdown {
+        background-color: inherit;
+    }
+    .dropdown > select {
+        height: 38px;
+        /* pmd.css 里面是 .14rem，需要改为 14px */
+        font: 14px/24px Arial, Helvetica, sans-serif;
+        vertical-align: top;
+    }
+    .dropdown::before {
+        content: "";
+    }
+    .dropdown-arrow {
+        position: absolute;
+        right: .08rem;
+        bottom: 7px;
+    }
+</style>

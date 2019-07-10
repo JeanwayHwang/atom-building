@@ -1,0 +1,107 @@
+<template>
+    <span
+        :class="themes[type]"
+        :aria-label="`标签.${text}.`"
+        class="c-label-radius"
+        @click="$emit('click', $event)"
+    >
+        {{ text }}
+    </span>
+</template>
+
+<style scoped>
+    .c-text-secondary {
+        background-color: #65b12c;
+    }
+    .c-index-gray {
+        background-color: #999;
+        color: #fff;
+        width: 16px;
+        font-size: 12px;
+    }
+    /* csshint-disable */
+    .c-text {
+        line-height: 1.5;
+        margin-right: 5px;
+        font-size: 10px;
+        height: 1.5em;
+    }
+    /* csshint-enable */
+    .c-text-box {
+        margin-right: 5px;
+    }
+    .c-text:first-child,
+    .c-text-box:first-child {
+        margin-left: 0;
+    }
+    .c-text:last-child,
+    .c-text-box:last-child {
+        margin-right: 0;
+    }
+</style>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 标签类型：public；danger；secondary；box_red；box_orange；box_blue；
+         * box_pink；box_gray；box_green；box_yellow；info；index；index_hot1；
+         * index_hot2；index_hot3；index_gray
+         *
+         * @see See [文字图标](http://pmd.baidu.com/doc/#texticon)
+         */
+        type: {
+            type: String,
+            default: 'public'
+        },
+
+        /**
+         * 文案
+         */
+        text: {
+            type: [String, Number],
+            required: true
+        }
+    },
+    data: {
+        themes: {
+            /* eslint-disable fecs-camelcase */
+            public: ['c-text', 'c-text-public'],
+            danger: ['c-text', 'c-text-danger'],
+            secondary: ['c-text', 'c-text-secondary'],
+            box_red: ['c-text-box', 'c-text-box-red'],
+            box_orange: ['c-text-box', 'c-text-box-orange'],
+            box_blue: ['c-text-box', 'c-text-box-blue'],
+            box_pink: ['c-text-box', 'c-text-box-pink'],
+            box_gray: ['c-text-box', 'c-text-box-gray'],
+            box_green: ['c-text-box', 'c-text-box-green'],
+            box_yellow: ['c-text-box', 'c-text-box-yellow'],
+            info: ['c-text-info'],
+            index: ['c-index'],
+            index_hot1: ['c-index', 'c-index-hot1'],
+            index_hot2: ['c-index', 'c-index-hot2'],
+            index_hot3: ['c-index', 'c-index-hot3'],
+            index_gray: ['c-index', 'c-index-gray']
+        }
+    }
+}
+</script>
+
+<script>
+/**
+ * 点击事件
+ *
+ * @event click
+ * @property {Event} param1 透传事件对象
+ */
+</script>
+
+
+<style scoped>
+.c-label-radius {
+    border-radius: 2px;
+    overflow: hidden;
+}
+</style>
+

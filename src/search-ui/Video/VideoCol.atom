@@ -1,0 +1,147 @@
+<template>
+    <c-link
+        :url="item.url"
+        :params="params
+            ? params
+            : item.params
+        "
+        @click="$emit('click', $event)"
+    >
+        <c-video-thumbnail
+            :img="item.poster"
+            :mask-icon-type="iconType"
+            :img-type="imgType"
+            :default-image-type="item.defaultImageType"
+            :duration="math_round(item.duration)"
+            :img-border-radius="imgBorderRadius"
+            aria-hidden="true"
+        />
+
+        <c-text-line
+            :clamp="titleClamp"
+            :text="item.title"
+            :label-front="item.labelFront"
+            :label-front-type="item.labelFrontType"
+            :fix-height="!!titleFixHeight"
+            color="link"
+            class="c-video-scroll-title"
+        />
+
+        <c-line clamp="1" class="c-color-gray c-video-scroll-tips">
+            <template a-if="item.source && +infoLine === 1">
+                {{ item.source }}
+                <i class="c-gap-left-small c-video-scroll-split"/>
+            </template>
+
+            <template a-if="item.pubtime && item.pubtime !== '0'">
+                <c-timespan a-if="item.pubtime" :time="math_round(item.pubtime)"/>
+                <i
+                    :class="[+infoLine === 2 ? 'c-gap-left-middle' : 'c-gap-left-small']"
+                    class="c-video-scroll-split"
+                />
+            </template>
+
+            <template a-if="item.playtime && item.playtime !== '0'">
+                {{ item.playtime }}次播放
+                <i class="c-gap-left-small c-video-scroll-split"/>
+            </template>
+
+            <c-line a-if="item.source && +infoLine === 2">
+                {{ item.source }}
+            </c-line>
+        </c-line>
+    </c-link>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 视频信息
+         *
+         * @property {string} url 跳转链接
+         * @property {string} title 标题，最小长度1个字符 最大长度200个字符
+         * @property {string} poster 图片缩略图地址，最小长度1个字符 最大长度1024个字符
+         * @property {number} source 来源，最小长度1个字符 最大长度100个字符
+         * @property {number} duration 播放时长，单位：秒，最小长度1个字符 最大长度10个字符
+         * @property {number} pubtime 发布时间，标准时间戳，最小长度1个字符 最大长度10个字符
+         * @property {number} playtime 播放次数，最小值为（包含）0，最大值为（包含）99999999
+         * @property {number} score 评分
+         * @property {string} labelFront 标题左侧标签文案
+         * @property {string} labelFrontType 标题前的标签类型，可参考Label组件
+         */
+        item: {
+            type: Object,
+            default: {}
+        },
+        /**
+         * 图片类型
+         */
+        imgType: {
+            type: String,
+            default: 'y'
+        },
+        /**
+         * 描述图片右下角遮罩内自定义icon图标
+         */
+        iconType: {
+            type: String,
+            default: ''
+        },
+        /**
+         * 标题截断，默认为1行截断
+         */
+        titleClamp: {
+            type: [String, Number],
+            default: 1
+        },
+        /**
+         * 来源信息，可选，默认为1行展现，2为两行展现，有效值1或2
+         */
+        infoLine: {
+            type: [String, Number],
+            default: 1
+        },
+        params: Object,
+        /**
+         * 标题是否定高
+         */
+        titleFixHeight: Boolean,
+
+        /**
+         * 圆角配置
+         *
+         * @property {boolean} [tl=true] 左上角是否有圆角
+         * @property {boolean} [tr=true] 右上角是否有圆角
+         * @property {boolean} [bl=true] 左下角是否有圆角
+         * @property {boolean} [br=true] 右下角是否有圆角
+         * @property {string} tlRadius 左上角圆角半径值，默认为 3px
+         * @property {string} trRadius 右上角圆角半径值，默认为 3px
+         * @property {string} blRadius 左下角圆角半径值，默认为 3px
+         * @property {string} brRadius 右下角圆角半径值，默认为 3px
+         */
+        imgBorderRadius: {
+            type: Object
+        }
+    },
+    components: {
+        'c-line': '../Line/Line',
+        'c-text-line': '../TextLine/TextLine',
+        'c-link': '../Link/Link',
+        'c-video-thumbnail': '../Video/VideoThumbnail',
+        'c-timespan': '../Timespan/Timespan'
+    }
+    /**
+     * click event.
+     *
+     * @event click
+     */
+}
+</script>
+
+<style scoped>
+    .c-video-scroll-tips .c-video-scroll-split:last-child {
+        display: none;
+    }
+</style>

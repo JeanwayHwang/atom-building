@@ -1,0 +1,58 @@
+<template>
+    <div
+        :style="[
+            {
+                'margin-bottom': '2px',
+                'background-color': color,
+                'height': 0,
+                'padding-bottom': math_floor(1 / whScale * 100) + '%'
+            },
+            borderRadius.tl
+                ? {
+                    'border-top-left-radius': '3px'
+                }
+                : {},
+            borderRadius.tr
+                ? {
+                    'border-top-right-radius': '3px'
+                }
+                : {},
+            borderRadius.bl
+                ? {
+                    'border-bottom-left-radius': '3px'
+                }
+                : {},
+            borderRadius.br
+                ? {
+                    'border-bottom-right-radius': '3px'
+                }
+                : {}
+        ]"
+        class="c-img-tombstone-item"
+    />
+</template>
+
+<script type="config">
+{
+    props: {
+        index: Number,
+        color: {
+            type: String,
+            default: '#f4f2f2'
+        },
+        whScale: {
+            type: Number,
+            default: 1
+        },
+        borderRadius: {
+            type: Object,
+            default: {
+                tl: false,
+                tr: false,
+                bl: false,
+                br: false
+            }
+        }
+    }
+}
+</script>

@@ -1,0 +1,66 @@
+{
+    "alias": [
+        "c-audio"
+    ],
+    "type": "object",
+    "properties": {
+        "audio": {
+            "type": "object",
+            "@ChineseName": "Audio 组件实例",
+            "description": "Audio 的基础相关数据",
+            "properties": {
+                "isOpacity": {
+                    "type": "boolean",
+                    "@ChineseName": "Audio 是否透明",
+                    "@Demo": false,
+                    "description": "Audio 背景颜色是否透明"
+                },
+                "isProgress": {
+                    "type": "boolean",
+                    "@ChineseName": "Audio 是否展现进度条",
+                    "@Demo": false,
+                    "description": "Audio 是否展现音频播放进度条"
+                },
+                "time": {
+                    "type": "number",
+                    "@ChineseName": "Audio 音频时间长度",
+                    "@Demo": 87,
+                    "description": "Audio 音频时间长度，以秒为单位"
+                },
+                "showTime": {
+                    "type": "boolean",
+                    "@ChineseName": "Audio 是否显示时间",
+                    "@Demo": true,
+                    "description": "Audio 是否显示音频时间"
+                },
+                "url": {
+                    "type": "string",
+                    "@ChineseName": "Audio 跳转落地页url",
+                    "@Demo": "www.baidu.com",
+                    "description": "Audio 跳转落地页url"
+                },
+                "audioUrl": {
+                    "type": "string",
+                    "@ChineseName": "Audio 播放地址",
+                    "@Demo": "test.mp3",
+                    "description": "Audio 音频源文件播放地址"
+                },
+                "customText": {
+                    "type": "string",
+                    "@ChineseName": "Audio 自定义初始文案",
+                    "@Demo": "如懿传：点击播放语音",
+                    "description": "Audio 自定义音频显示文案"
+                }
+            },
+            "propsData": [
+                "isOpacity",
+                "isProgress",
+                "time",
+                "showTime",
+                "url",
+                "audioUrl",
+                "customText"
+            ]
+        }
+    }
+}

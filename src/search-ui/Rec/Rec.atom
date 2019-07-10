@@ -1,0 +1,257 @@
+<template>
+    <div
+        :class="{
+            'horizontal-padding': horizontalPadding
+        }"
+    >
+        <c-title
+            :text="title"
+            :icon="titleIcon"
+            :color="titleColor"
+            class="c-rec-title"
+        />
+        <!-- 可滑动样式 -->
+        <c-scroll-auto
+            a-if="type === 'scroll' && !isDownGrade"
+            :row="2"
+            sort-order="vertical"
+            class="c-gap-top-small c-gap-bottom"
+        >
+            <c-slink
+                a-for="(item, index) in list"
+                :key="index"
+                :text="item.text"
+                :url="item.href"
+                :params="item.params"
+                :style="{
+                    'box-sizing': 'border-box'
+                }"
+                :class="[
+                    index > list.length - 3
+                        ? ''
+                        : 'c-gap-right'
+                ]"
+                class="rec-scroll-item"
+                type="auto"
+            />
+        </c-scroll-auto>
+        <!-- 竖直样式 -->
+        <div
+            a-else-if="type === 'vertical'"
+            class="c-gap-inner-top-small c-gap-bottom"
+        >
+            <div
+                a-for="(item, index) in list"
+                a-if="index < num"
+                :key="index"
+                class="c-gap-inner-top-small c-gap-inner-bottom-small"
+            >
+                <c-slink
+                    :text="item.text"
+                    :url="item.href"
+                    :params="item.params"
+                    :style="{
+                        'margin-top': '0',
+                        'margin-bottom': '0',
+                        'box-sizing': 'border-box'
+                    }"
+                    type="strong"
+                />
+            </div>
+        </div>
+        <!-- 默认样式 -->
+        <div
+            a-else
+            class="c-rec-list"
+        >
+            <template
+                a-for="(rsitem, index) in list"
+            >
+                <div
+                    a-if="index < num && index % 2 == 0"
+                    :key="index"
+                    class="c-row c-gap-top"
+                >
+                    <div class="c-span6">
+                        <c-touchable-feedback
+                            :open="!!rsitem.href"
+                            is-jump
+                            border-radius="5px"
+                            background-color="rgba(0, 0, 0, .08)"
+                        >
+                            <c-link
+                                :url="rsitem.href"
+                                class="c-rec-item c-line-clamp1"
+                                @click="handleItemClick({
+                                    index,
+                                    item: rsitem
+                                })"
+                            >
+                                {{ rsitem.text }}
+                            </c-link>
+                        </c-touchable-feedback>
+                    </div>
+                    <div class="c-span6">
+                        <c-touchable-feedback
+                            a-if="list[index + 1]"
+                            :open="!!list[index + 1].href"
+                            is-jump
+                            border-radius="5px"
+                            background-color="rgba(0, 0, 0, .08)"
+                        >
+                            <c-link
+                                :url="list[index + 1].href"
+                                class="c-rec-item c-line-clamp1"
+                                @click="handleItemClick({
+                                    index: index + 1,
+                                    item: list[index + 1]
+                                })"
+                            >
+                                {{ list[index + 1].text }}
+                            </c-link>
+                        </c-touchable-feedback>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 推荐数据
+         */
+        list: {
+            type: Array,
+            required: true
+        },
+        /**
+         * 推荐卡片标题文案
+         */
+        title: {
+            type: String,
+            default: '去全网搜索'
+        },
+        /**
+         * 标题图标
+         */
+        titleIcon: {
+            type: String,
+            default: 'baidu'
+        },
+        /**
+         * 标题颜色
+         */
+        titleColor: {
+            type: String,
+            default: '#999'
+        },
+        /**
+         * 推荐条数最大限制
+         */
+        num: {
+            type: Number,
+            default: 8
+        },
+        /**
+         * 推荐样式类型；'normal' 正常类型；'scroll' 滑动类型；'vertical' 竖直排列样式
+         */
+        type: {
+            type: String,
+            default: 'normal'
+        },
+        /**
+         * 滑动样式配置
+         *
+         * @property {number} row 显示的行数
+         * @property {string} width 滑动 dom 的宽度
+         * @property {number} wrapItemCountThreshold 换行项数阈值（项数超过这个则换行）
+         */
+        scrollOpts: {
+            type: Object,
+            default: {
+                // 显示的行数
+                row: 2,
+                // 滑动 dom 的宽度
+                width: '633px',
+                // 换行项数阈值（项数超过这个则换行）
+                wrapItemCountThreshold: 9
+            }
+        },
+        /**
+         * 水平内间距；为保证线上兼容，默认自带水平内间距，如不需要需要手动传入 false
+         */
+        horizontalPadding: {
+            type: Boolean,
+            default: true
+        }
+    },
+    data: {
+        // 降级标志
+        isDownGrade: false
+    },
+    components: {
+        'c-title': '../Title/Title',
+        'c-link': '../Link/Link',
+        'c-slink': '../Slink/Slink',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback',
+        'c-scroll-auto': '../Scroll/ScrollAuto'
+    }
+}
+</script>
+
+<script>
+import UA from '@searchfe/user-agent';
+
+export default {
+    mounted() {
+        let iOSVersion = UA.iOSVersion()[0];
+        // iOS 7 降级
+        if (iOSVersion <= 7) {
+            this.isDownGrade = true;
+        }
+    },
+    methods: {
+        handleItemClick(obj) {
+
+            /**
+             * handleItemClick event.
+             *
+             * @event handleItemClick
+             */
+            this.$emit('itemclick', obj);
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.horizontal-padding {
+    padding-left: .17rem;
+    padding-right: .17rem;
+}
+.c-rec-title {
+    padding-top: .15rem;
+}
+.c-rec-list {
+    padding-bottom: .15rem;
+}
+.c-rec-item {
+    height: 38px;
+    padding: 0 12px;
+    line-height: 38px;
+    text-align: center;
+    color: #000;
+    border-radius: 5px;
+    font-size: 14px;
+    background: #f5f5f5;
+}
+.c-rec-title .c-title {
+    /* lesslint-disable disallow-important */
+    color: #999!important;
+    font-size: 19px!important;
+    /* lesslint-enable disallow-important */
+}
+</style>

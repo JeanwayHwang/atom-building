@@ -1,0 +1,311 @@
+<template>
+    <div class="c-loading-wrapper" aria-label="正在加载">
+        <!-- 图标 -->
+        <div
+            a-if="type == TYPE_ENUM.ICON"
+            class="c-loading-icon-wrapper"
+            aria-hidden="true"
+        >
+            <span class="c-loading-icon-wrapper2">
+                <!-- 旋转动效；这里使用 before 伪元素会有在华为 p10 上动画不动的问题，所以使用实体元素 -->
+                <div class="c-loading-icon-before"/>
+                <!-- 图标 -->
+                <c-icon
+                    class="c-loading-icon"
+                    type="baidu"
+                />
+            </span>
+            <p class="c-loading-icon-text">{{ text }}</p>
+        </div>
+        <!-- 百度文字 LOGO -->
+        <div
+            a-else-if="type == TYPE_ENUM.TEXT_LOGO"
+            :class="{
+                'c-loading-text-logo-dark': textLogoStyle === 'dark'
+            }"
+            class="c-loading-text-logo"
+            aria-hidden="true"
+        >
+            <!-- eslint-disable atom/max-len -->
+            <!-- 百度文字 logo svg -->
+            <svg
+                id="baiduTextLogo"
+                data-name="baiduTextLogo"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 440.54 141.06"
+                class="logo-svg"
+            >
+                <g id="logo">
+                    <path id="Fill-1" d="M200.26,44c8.5,0,15.37-9.75,15.37-21.8S208.77.44,200.26.44s-15.38,9.75-15.38,21.79S191.77,44,200.26,44" transform="translate(0 -0.44)"/>
+                    <path id="Fill-3" d="M236.88,45.48c11.37,1.47,18.68-10.62,20.13-19.77s-5.85-19.77-13.9-21.6-18.13,11-19.05,19.41c-1.1,10.25,1.48,20.5,12.82,22" transform="translate(0 -0.44)"/>
+                    <path id="Fill-5" d="M171.68,74.78c15.39-3.3,13.3-21.62,12.84-25.63-.76-6.18-8.05-17-18-16.12-12.46,1.11-14.28,19-14.28,19-1.69,8.29,4,26,19.39,22.71" transform="translate(0 -0.44)"/>
+                    <path id="Fill-7" d="M281.94,60.86c0-4.38-3.65-17.57-17.2-17.57s-15.39,12.45-15.39,21.25c0,8.4.71,20.13,17.57,19.76s15-19,15-23.44" transform="translate(0 -0.44)"/>
+                    <path id="Fill-9" d="M188,106.66c-.45,1.29-1.46,4.59-.59,7.46,1.72,6.44,7.34,6.73,7.34,6.73h8.06V101.21H194.2a9.45,9.45,0,0,0-6.17,5.45" transform="translate(0 -0.44)"/>
+                    <path id="Fill-11" d="M249.34,128.6h-23C217.38,126.31,217,120,217,120V94.62l9.35-.15v22.81c.57,2.43,3.6,2.87,3.6,2.87h9.49V94.62h9.94Zm-37.28.14H192c-8.64-1.71-12.09-7.59-12.52-8.59s-2.87-5.74-1.58-13.77c3.74-12,14.39-12.91,14.39-12.91H203v-13l9.07.14Zm52.68-29.42s-17.59-13.55-27.86-28.2C223,49.52,203.2,58.3,196.59,69.29s-16.84,17.93-18.31,19.77S157,101.5,161.43,120.91s19.79,19,19.79,19a86.66,86.66,0,0,0,24.54-1.82,52,52,0,0,1,24.53.73s30.78,10.27,39.2-9.5-4.75-30-4.75-30Z" transform="translate(0 -0.44)"/>
+                    <path id="Fill-13" d="M345.2,105.75H302.74V94H345.2Zm.08,21.06s-.75,1.78-1.79,1.78H302.74V116.09h42.55ZM359,78V67.27H288.3l-.1,10.86h30.4l-2.85,6.48H289.91v53.67h61.42c6.42,0,5.86-6.45,5.86-6.45V84.61H331.28L333.55,78Z" transform="translate(0 -0.44)"/>
+                    <path id="Fill-15" d="M419,116.2l-10.19,5.34-9.34-5.34Zm-37.07.14,17.82,10.28c-1.41,1.55-7.49,3.51-7.49,3.51h-11.9V138h16.14c4.81-1,13.73-5.49,13.73-5.49,3.69,3.38,10.77,4.78,10.77,4.78H439.4v-7.89H425.53a21.07,21.07,0,0,1-7.08-2.68l20.94-12v-6.48H382Zm39.2-20.6s-1,1.83-2.26,1.83H398V90.1h23.13Zm11.18-13.53V78.13H421.16v4.09h-23V78.27H387.55v3.95h-7.17l.15,8h7v15.08h38.71c5.38,0,6.08-5.64,6.08-5.64V90.25h8.2v-8Zm7.49-14.66H412.08V62.15h-13v5.14H367.23v70.9h11.46V76.43h61.14Z" transform="translate(0 -0.44)"/>
+                    <path id="Fill-16" d="M130.94,137.9h15.42V84.75H130.94Zm0-59.06h15.42V65.29H130.94Z" transform="translate(0 -0.44)"/>
+                    <path id="Fill-17" d="M108.65,127.57h-21a6.94,6.94,0,0,1-4-3.49,5,5,0,0,1-.09-3.84,7.92,7.92,0,0,1,4.53-4h20.57ZM105.83,84.8l-32.93-.1V95.88h28.87s6.88,1.69,6.88,6v3.94H82.52S72.24,106.8,68.94,119c-.57,5.73.2,8.54.57,9.58a16.21,16.21,0,0,0,12.36,9.49h41.6V100s-2-13.06-17.64-15.21Z" transform="translate(0 -0.44)"/>
+                    <path id="Fill-18" d="M47,90.73a8.63,8.63,0,0,1-6.24,3.8H16.16V79.24H40.61s5.32-.23,7.08,4c0,0,1.05,4.46-.72,7.52M41.58,125v0H16.16V109.09H41.44l.86.17s4.82.87,6.57,5.19c0,0,1,4-1.17,7.05,0,0-1.6,2.79-6.11,3.49m24-5.74c.46-12.95-11.21-17.42-11.21-17.42,9.87-5.14,8.61-18.08,8.61-18.08C61.88,63.92,37.57,64.84,37.57,64.84H0v73.88H42.42c24.93-.08,23.13-19.47,23.13-19.47" transform="translate(0 -0.44)"/>
+                </g>
+            </svg>
+            <!-- eslint-enable atom/max-len -->
+            <!-- 白色 -->
+            <div
+                a-if="textLogoStyle === 'light'"
+                :style="{
+                    'background-color': 'rgba(255, 255, 255, .4)'
+                }"
+                class="toplight"
+            />
+            <!-- 黑色 -->
+            <div
+                a-if="textLogoStyle === 'dark'"
+                class="toplight-dark"
+            >
+                <!-- 外层 -->
+                <div class="toplight-dark-outer">
+                    <!-- 左 -->
+                    <div class="toplight-dark-inner-left"/>
+                    <!-- 右 -->
+                    <div class="toplight-dark-inner-right"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 组件下方文字描述，当且仅当类型为图标类型才生效
+         */
+        text: {
+            type: String,
+            default: '加载中...'
+        },
+
+        /**
+         * 类型：1 (图标类型)；2（百度logo）
+         */
+        type: {
+            type: [String, Number],
+            default: 1
+        },
+
+        /**
+         * 百度logo样式风格：light（白底样式）dark（黑底样式）
+         */
+        textLogoStyle: {
+            type: String,
+            default: 'light'
+        }
+    },
+    data: {
+        // 类型枚举
+        TYPE_ENUM: {
+            // 图标；默认类型
+            ICON: 1,
+            // 百度文字 LOGO
+            TEXT_LOGO: 2
+        }
+    },
+    components: {
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+
+<style lang="less" scoped>
+.c-loading-wrapper {
+    text-align: center;
+    // 图标 loading
+    .c-loading-icon-wrapper {
+        text-align: center;
+        .c-loading-icon-wrapper2 {
+            display: inline-block;
+            position: relative;
+        }
+        .c-loading-icon-text {
+            margin-top: .08rem;
+            text-indent: .5em;
+            color: #999;
+        }
+        // 圆形动效
+        .c-loading-icon-before {
+            position: absolute;
+            display: block;
+            width: .5rem;
+            height: .5rem;
+            margin: auto;
+            border: .02rem solid #f3f3f3;
+            box-sizing: content-box;
+            border-top-color: #ddd;
+            border-radius: 50%;
+            -webkit-transform-origin: 50% 50%;
+                    transform-origin: 50% 50%;
+            -webkit-transform: rotate(90deg);
+                    transform: rotate(90deg);
+            -webkit-animation: c-loading-rotation 1s ease 0s infinite normal;
+                    animation: c-loading-rotation 1s ease 0s infinite normal;
+        }
+        .c-loading-icon {
+            position: relative;
+            display: block;
+            width: .54rem;
+            height: .54rem;
+            margin: auto;
+            font-size: .3rem;
+            line-height: .52rem;
+            color: #f3f3f3;
+        }
+    }
+    @keyframes c-loading-rotation {
+        from {
+            -webkit-transform: rotate(1deg);
+                    transform: rotate(1deg);
+        }
+        to {
+            -webkit-transform: rotate(360deg);
+                    transform: rotate(360deg);
+        }
+    }
+    @-webkit-keyframes c-loading-rotation {
+        from {
+            -webkit-transform: rotate(1deg);
+                    transform: rotate(1deg);
+        }
+        to {
+            -webkit-transform: rotate(360deg);
+                    transform: rotate(360deg);
+        }
+    }
+    // 文字 logo
+    // 白色
+    .c-loading-text-logo {
+        display: inline-block;
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+        margin: 0 auto;
+        // svg logo 颜色
+        svg {
+            fill: rgba(0, 0, 0, .1);
+        }
+        // svg 图标类
+        .logo-svg {
+            display: inline-block;
+            background-size: 147px 48px;
+            height: 48px;
+            width: 147px;
+        }
+        // 斜杠 高亮部分
+        .toplight {
+            display: inline-block;
+            position: absolute;
+            height: 48px;
+            width: 12px;
+            top: 0;
+            left: 0;
+            background-color: rgba(255, 255, 255, .4);
+            -webkit-transform: skew(20deg) translateZ(0);
+                    transform: skew(20deg) translateZ(0);
+            -webkit-animation: 1s toplight-light-animate infinite;
+                    animation: 1s toplight-light-animate infinite;
+        }
+        // 白 斜杠 动效
+        @keyframes toplight-light-animate {
+            0% {
+                left: 0;
+            }
+            100% {
+                left: 147px;
+            }
+        }
+        @-webkit-keyframes toplight-light-animate {
+            0% {
+                left: 0;
+            }
+            100% {
+                left: 147px;
+            }
+        }
+    }
+    // 黑色
+    .c-loading-text-logo-dark {
+        svg {
+            fill: #333;
+        }
+        // 黑色高亮
+        .toplight-dark {
+            display: inline-block;
+            position: absolute;
+            height: 48px;
+            width: 147px;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.15);
+            .toplight-dark-outer {
+                position: relative;
+                // 左边
+                .toplight-dark-inner-left,
+                .toplight-dark-inner-right {
+                    display: inline-block;
+                    position: absolute;
+                    height: 48px;
+                    width: 160px;
+                    top: 0;
+                    left: -186px;
+                    background-color: rgba(0, 0, 0, .15);
+                    -webkit-transform: skew(20deg) translateZ(0);
+                            transform: skew(20deg) translateZ(0);
+                    -webkit-animation: 1s toplight-dark-animate-left infinite;
+                            animation: 1s toplight-dark-animate-left infinite;
+                }
+                // 右边
+                .toplight-dark-inner-right {
+                    left: -6px;
+                    -webkit-animation: 1s toplight-dark-animate-right infinite;
+                            animation: 1s toplight-dark-animate-right infinite;
+                }
+            }
+        }
+        // 黑 左边
+        @keyframes toplight-dark-animate-left {
+            0% {
+                left: -186px;
+            }
+            100% {
+                left: -6px;
+            }
+        }
+        @-webkit-keyframes toplight-dark-animate-left {
+            0% {
+                left: -186px;
+            }
+            100% {
+                left: -6px;
+            }
+        }
+        // 黑 右边
+        @keyframes toplight-dark-animate-right {
+            0% {
+                left: -6px;
+            }
+            100% {
+                left: 174px;
+            }
+        }
+        @-webkit-keyframes toplight-dark-animate-right {
+            0% {
+                left: -6px;
+            }
+            100% {
+                left: 174px;
+            }
+        }
+    }
+}
+</style>

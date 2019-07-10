@@ -1,0 +1,24 @@
+{
+    "alias": [
+        "c-span"
+    ],
+    "type": "object",
+    "properties": {
+        "span": {
+            "type": "object",
+            "@ChineseName": "span 组件实例",
+            "description": "span 组件实例，span 的基础相关数据",
+            "properties": {
+                "col": {
+                    "type": "number",
+                    "@ChineseName": "栅格宽度",
+                    "description": "栅格宽度",
+                    "@Demo": 4
+                }
+            },
+            "propsData": [
+                "col"
+            ]
+        }
+    }
+}

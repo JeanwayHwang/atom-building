@@ -1,0 +1,186 @@
+<!--@ignore-->
+<template>
+    <div
+        ref="content"
+        class="c-navs-list-more"
+    >
+        <div class="c-navs-list-more-container">
+            <c-row
+                a-for="rowIndex in row"
+                :key="rowIndex"
+                class="c-gap-top-large"
+            >
+                <c-span
+                    a-for="colIndex in 3"
+                    :key="colIndex"
+                    col="4"
+                >
+                    <div
+                        a-if="labelList[rowIndex * 3 + colIndex - 4] !== undefine"
+                        :style="colIndex + rowIndex * 3 - 4 === selectedIndex
+                            ? {
+                                'color': selectedColor,
+                                'border-color': selectedColor
+                            }
+                            : null
+                        "
+                        :data-log="logContent.logList&&logContent.logList[rowIndex * 3 + colIndex - 4]
+                            ? logContent.logList[rowIndex * 3 + colIndex - 4]
+                            : null
+                        "
+                        :data-nolog="!isOpenLog"
+                        :class="{
+                            'c-navs-list-more-selected': colIndex + rowIndex * 3 - 4 === selectedIndex
+                        }"
+                        class="c-navs-list-more-item c-color-gray-a WA_LOG_BTN"
+                        @click="itemClick(rowIndex * 3 + colIndex - 4)"
+                    >
+                        <span>
+                            {{ labelList[rowIndex * 3 + colIndex - 4].txt }}
+                        </span>
+                    </div>
+                </c-span>
+            </c-row>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        labelList: {
+            type: Array,
+            required: true
+        },
+        selectedIndex: {
+            type: Number,
+            default: 0
+        },
+        toggleLabel: {
+            type: String,
+            default: '请选择分类'
+        },
+        selectedColor: {
+            type: String,
+            default: '#333'
+        },
+        isOpen: {
+            type: Boolean,
+            default: false
+        },
+        isOpenLog: {
+            type: Boolean,
+            default: true
+        },
+        logContent: {
+            type: Object,
+            default: {}
+        }
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span'
+    }
+}
+</script>
+
+<script>
+/**
+* @file c-navs 组件字组件， 可滑动nav 展开组件
+* @auth songshaokang
+*/
+export default {
+    methods: {
+        toggle() {
+            this.$emit('toggle');
+        },
+        itemClick(index) {
+            this.$emit('clickItem', index);
+        }
+    },
+    computed: {
+        row() {
+            return Math.ceil(this.labelList.length / 3);
+        },
+        toggleStyle() {
+            if (this.isOpen) {
+                return `height: ${this.$refs.content.offsetHeight}px`;
+            }
+            return 'height: 0';
+        }
+    }
+};
+</script>
+
+<script type="php">
+    function computed_row($ctx) {
+        return ceil(count($ctx->_d["labelList"])/3.0);
+    }
+    function computed_toggleStyle() {
+        return "height: 0";
+    }
+</script>
+
+<style lang="less" scoped>
+.c-navs-list-more {
+    width: 100%;
+    background: #fff;
+    padding: 0 .17rem .15rem .17rem;
+    box-sizing: border-box;
+}
+p {
+    padding: .15rem 0 .15rem .17rem;
+    line-height: 100%;
+}
+.c-navs-list-more-icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: .4rem;
+    padding: 0 .17rem;
+    background-color: #fff;
+}
+.c-navs-list-more-container {
+    margin-top: -.15rem;
+}
+.c-navs-list-more-up {
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: 50%;
+    transform: scaleY(-50%);
+    right: .17rem;
+    border-bottom: 5px solid #999;
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+}
+.c-navs-list-more-item {
+    height: .3rem;
+    line-height: .28rem;
+    box-sizing: border-box;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 100%;
+    border: solid 1px #f1f1f1;
+    border-radius: 5px;
+    text-align: center;
+    overflow: hidden;
+    &:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0);
+        transition: background-color .12s cubic-bezier(.4, 0, .2, 1);
+    }
+    &:active:after {
+        background-color: rgba(0, 0, 0, .08);
+    }
+}
+.c-navs-list-more-selected {
+    color: #333;
+    border: solid 1px #333;
+}
+</style>

@@ -1,0 +1,126 @@
+<template>
+    <div
+        :style="[
+            {
+                height: '100%'
+            },
+            marginBottom !== undefined
+                ? {
+                    'margin-bottom': marginBottom
+                }
+                : {}
+        ]"
+        :class="{
+            'c-scroll-item-wrapper': hasBorder
+        }"
+    >
+        <div a-if="length === 0 || length === 1" style="height: 100%">
+            <!-- @slot 自定义 item 分列布局每一列的内容 -->
+            <slot/>
+        </div>
+        <div a-else class="c-flexbox">
+            <div
+                a-for="(item, index) in innerCols"
+                :key="index"
+                :style="{
+                    width: (97 * item + (index === (length - 1) ? -24 : 0)) / (97 * col - 24) * 100 + '%',
+                    paddingRight: (index === (length - 1) ? 0 : paddingRight) + '%'
+                }"
+                class="c-scroll-item-inner"
+            >
+                <!-- @slot:default 自定义 item 分列布局每一列的内容 -->
+                <slot :name="'__c__' + index"/>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style lang="less" scoped>
+    .c-scroll-item {
+        &-wrapper {
+            border: solid 1px #f1f1f1;
+            margin-bottom: 1px;
+        }
+        &-inner {
+            overflow: hidden;
+            white-space: normal;
+        }
+    }
+</style>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 栅格宽度
+         */
+        col: {
+            type: [Number, String]
+        },
+
+        /**
+         * 如果 item 内部符合分列布局，则设置 innerCols 可以设置每一列的栅格宽度，有n列就设置n个宽度。
+         * 数组中的元素之和必须为 col。如果不是分列布局，则默认不填
+         */
+        innerCols: {
+            type: Array,
+            default: []
+        },
+
+        /**
+         * 是否有border，值为`border: solid 1px #f1f1f1`
+         */
+        hasBorder: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * margin-bottom值
+         *
+         * @ignore
+         */
+        marginBottom: String
+    },
+    computed: {
+        length: innerCols.length,
+        paddingRight: 24 / (97 * col - 24) * 100
+    }
+}
+</script>
+
+<script type="php">
+
+    function created ($ctx) {
+        $ctx->dispatch('scroll-item-data', array(
+            'col' => $ctx->_d['col'],
+        ));
+    }
+
+    function render ($ctx, $isXml = false) {
+        $vnodes = $ctx->slots['default'];
+
+        if (!empty($vnodes)) {
+            foreach ($vnodes as $index => $vnode) {
+                $ctx->slots['__c__' . $index] = array($vnode);
+            }
+        }
+
+        return parent::render($ctx, false);
+    }
+</script>
+
+<script>
+export default {
+    render() {
+        let vnodes = this.$slots.default || [];
+
+        vnodes.forEach((vnode, index) => {
+            this.$slots['__c__' + index] = [vnode];
+        });
+
+        return this.$super.render();
+    }
+};
+</script>

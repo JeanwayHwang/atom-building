@@ -1,0 +1,36 @@
+{
+    "alias": [
+        "c-timespan"
+    ],
+    "type": "object",
+    "properties": {
+        "timespan": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "number",
+                    "@ChineseName": "时间戳",
+                    "description": "时间戳(单位：毫秒)",
+                    "@Demo": 1509519986000
+                },
+                "serverTime": {
+                    "type": "number",
+                    "@ChineseName": "服务器时间戳",
+                    "description": "服务器时间戳(单位：毫秒)",
+                    "@Demo": 1509519986000
+                },
+                "type": {
+                    "type": "number",
+                    "@ChineseName": "分隔符类型",
+                    "description": "分隔符类型；1：横杠 '-' 分割；2：中文 '年、月、日' 分割",
+                    "@Demo": 2
+                }
+            },
+            "propsData": [
+                "time",
+                "serverTime",
+                "type"
+            ]
+        }
+    }
+}

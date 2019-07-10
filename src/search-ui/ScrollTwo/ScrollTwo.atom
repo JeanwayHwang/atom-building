@@ -1,0 +1,161 @@
+<template>
+    <c-scroll-two-frame
+        :orientation="orientation"
+        :col="col"
+        :length="list.length"
+        :more-url="moreUrl"
+        :more-url-params="moreUrlParams"
+        role="listbox"
+        @showmore="handleShowMore"
+        @scrollend="handleScrollEnd"
+        @itemclick="handleItemClick"
+    >
+        <c-touchable-feedback
+            a-for="(item, index) in list"
+            :key="index"
+            :slot="'c-scroll-two-frame-slot' + index"
+            :open="!!(item.url || (item.urlParams && item.urlParams.tcUrl))"
+            :top="-.05"
+            :bottom="-.05"
+            :left="-.04"
+            :right="-.04"
+            is-jump
+            role="option"
+        >
+            <c-link
+                :url="item.url"
+                :params="item.urlParams"
+                :key="index"
+            >
+                <c-img
+                    :src="item.imgSrc"
+                    :type="imgType"
+                    :lazy="item.lazy"
+                    :show-num="item.showNum"
+                    :icon-type="item.iconType"
+                    :hack-white-stroke="item.hackWhiteStroke"
+                    :maskgap-size="item.maskgapSize"
+                    :progressive="item.progressive"
+                    :blur="item.blur"
+                />
+                <c-line
+                    class="c-color-link"
+                    clamp="1"
+                >
+                    {{ item.title }}
+                </c-line>
+                <!-- @slot:c-scroll-two-slot{{index}} item项的辅助信息 -->
+                <slot :name="'c-scroll-two-slot' + index"/>
+            </c-link>
+        </c-touchable-feedback>
+    </c-scroll-two-frame>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 排列方式，有水平排列（'horizontal'）和竖直排列（'vertical'）两种
+         */
+        orientation: {
+            type: String,
+            default: 'horizontal'
+        },
+
+        /**
+         * 数据列表
+         *
+         * @property {string} url 跳转链接
+         * @property {Object} urlParams 跳转链接所需的参数，参考[Link](./Link#API) `params`
+         * @property {string} imgSrc 图片链接
+         * @property {string} title 图片标题
+         * @property {boolean} lazy 是否需要懒加载
+         * @property {string|number} showNum 展示图集个数或者视频时长
+         * @property {string} iconType 图标类型
+         * @property {boolean} hackWhiteStroke 加上去白边的蒙层
+         * @property {string|number} maskgapSize 图片右下角遮罩与外框的边距
+         * @property {boolean} progressive 图片显示使用渐显效果
+         * @property {boolean} blur 图片显示使用模糊效果
+         */
+        list: {
+            type: Array,
+            required: true
+        },
+
+        /**
+         * 图片比例，值有（s,l,w,x,y），详见[栅格图片](http://pmd.baidu.com/doc/#image)
+         */
+        imgType: {
+            type: String,
+            default: 'l'
+        },
+
+        /**
+         * 栅格列数
+         */
+        col: {
+            type: Number,
+            default: 4
+        },
+
+        /**
+         * 查看更多跳转链接
+         */
+        moreUrl: {
+            type: String
+        },
+
+        /**
+         * 查看更多跳转链接所需参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        moreUrlParams: {
+            type: Object
+        }
+    },
+    components: {
+        'c-scroll-two-frame': '../ScrollTwoFrame/ScrollTwoFrame',
+        'c-img': '../Image/Image',
+        'c-line': '../Line/Line',
+        'c-link': '../Link/Link',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleShowMore() {
+
+            /**
+             * 当最后一项展示『查看更多』并且需要有特殊操作时，可在组件外层调用的地方绑定该事件
+             *
+             * @event showmore
+             */
+            this.$emit('showmore');
+        },
+        handleScrollEnd() {
+
+            /**
+             * 滚动事件结束时触发
+             *
+             * @event scrollend
+             */
+            this.$emit('scrollend');
+        },
+        handleItemClick(index) {
+
+            /**
+             * 当点击项不做url跳转有特殊操作时，可在组件外层调用的地方绑定该事件
+             *
+             * @event itemclick
+             * @property {number} param1 索引
+             */
+            this.$emit('itemclick', index);
+        }
+    }
+};
+</script>

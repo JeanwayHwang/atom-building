@@ -1,0 +1,127 @@
+{
+    "alias": [
+        "c-source"
+    ],
+    "type": "object",
+    "properties": {
+        "source": {
+            "type": "object",
+            "properties": {
+                "imgSrc": {
+                    "type": "string",
+                    "@ChineseName": "图片的地址",
+                    "description": "图片的地址",
+                    "@Demo": "https://m.baidu.com/static/index/plus/homepage-newlogo.png"
+                },
+                "source": {
+                    "type": "string",
+                    "@ChineseName": "来源字符串",
+                    "description": "来源字符串",
+                    "@Demo": "宝宝知道"
+                },
+                "time": {
+                    "type": [
+                        "string",
+                        "number"
+                    ],
+                    "@ChineseName": "时间（可传字符串，也可传数字时间戳）",
+                    "description": "时间（可传字符串，也可传数字时间戳）",
+                    "@Demo": 1510798394304
+                },
+                "serverTime": {
+                    "type": "number",
+                    "@ChineseName": "服务器时间戳",
+                    "description": "服务器时间戳",
+                    "@Demo": 1510798394304
+                },
+                "url": {
+                    "type": "string",
+                    "@ChineseName": "链接",
+                    "description": "链接",
+                    "@Demo": "https://m.baidu.com"
+                },
+                "xzhInfo": {
+                    "type": "object",
+                    "@ChineseName": "熊掌号数据",
+                    "description": "熊掌号数据",
+                    "properties": {
+                        "appid": {
+                            "type": "string",
+                            "@ChineseName": "筛选项 tag 的初始文本",
+                            "@Demo": "标签1",
+                            "description": "筛选项 tag 的初始文本"
+                        },
+                        "des": {
+                            "type": "string",
+                            "@ChineseName": "筛选项 tag 类型",
+                            "@Demo": "list",
+                            "description": "筛选项 tag 类型，分为以下类型：多级筛选：'list'；多重筛选：'multi'；排序筛选：'order'；定义布局：'custom'"
+                        },
+                        "logo": {
+                            "type": "string",
+                            "@ChineseName": "筛选项 tag 的初始文本",
+                            "@Demo": "标签1",
+                            "description": "筛选项 tag 的初始文本"
+                        },
+                        "next": {
+                            "type": "string",
+                            "@ChineseName": "筛选项 tag 的初始文本",
+                            "@Demo": "标签1",
+                            "description": "筛选项 tag 的初始文本"
+                        },
+                        "otime": {
+                            "type": "string",
+                            "@ChineseName": "筛选项 tag 的初始文本",
+                            "@Demo": "标签1",
+                            "description": "筛选项 tag 的初始文本"
+                        },
+                        "pauid": {
+                            "type": "string",
+                            "@ChineseName": "筛选项 tag 的初始文本",
+                            "@Demo": "标签1",
+                            "description": "筛选项 tag 的初始文本"
+                        },
+                        "platform": {
+                            "type": "number",
+                            "@ChineseName": "筛选项 tag 的初始文本",
+                            "@Demo": 3,
+                            "description": "筛选项 tag 的初始文本"
+                        },
+                        "showurl": {
+                            "type": "string",
+                            "@ChineseName": "筛选项 tag 的初始文本",
+                            "@Demo": "标签1",
+                            "description": "筛选项 tag 的初始文本"
+                        },
+                        "title": {
+                            "type": "string",
+                            "@ChineseName": "筛选项 tag 的初始文本",
+                            "@Demo": "标签1",
+                            "description": "筛选项 tag 的初始文本"
+                        },
+                        "url": {
+                            "type": "string",
+                            "@ChineseName": "筛选项 tag 的初始文本",
+                            "@Demo": "标签1",
+                            "description": "筛选项 tag 的初始文本"
+                        },
+                        "v_type": {
+                            "type": "number",
+                            "@ChineseName": "筛选项 tag 的初始文本",
+                            "@Demo": 10,
+                            "description": "筛选项 tag 的初始文本"
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "imgSrc",
+                "source",
+                "time",
+                "serverTime",
+                "url",
+                "xzhInfo"
+            ]
+        }
+    }
+}

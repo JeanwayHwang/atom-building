@@ -1,0 +1,86 @@
+{
+    "alias": [
+        "c-video-thumbnail"
+    ],
+    "type": "object",
+    "properties": {
+        "videoThumbnail": {
+            "type": "object",
+            "@ChineseName": "VideoThumbnail 组件实例",
+            "description": "VideoThumbnail 组件实例，VideoThumbnail 的基础相关数据",
+            "properties": {
+                "showTxt": {
+                    "type": [
+                        "string",
+                        "number"
+                    ],
+                    "@ChineseName": "描述图片右下角遮罩内自定义文案及数字，与duration互斥，优先显示showTxt",
+                    "description": "描述图片右下角遮罩内自定义文案及数字，与duration互斥，优先显示showTxt",
+                    "@Demo": "2"
+                },
+                "maskIconType": {
+                    "type": "string",
+                    "@ChineseName": "描述图片右下角遮罩内自定义icon图标",
+                    "description": "描述图片右下角遮罩内自定义icon图标",
+                    "@Demo": "baidu"
+                },
+                "icontypeDefined": {
+                    "type": "string",
+                    "@ChineseName": "描述图片居中遮罩自定义icon, 不传时，默认值为 ‘video_play3'",
+                    "description": "描述图片居中遮罩自定义icon, 不传时，默认值为 ‘video_play3'",
+                    "@Demo": "video_play3"
+                },
+                "icontxt": {
+                    "type": "string",
+                    "@ChineseName": "描述图片居中遮罩自定义文案内容, 与 `icontypeDefined` 只能出现一个，否则都显示，影响展现",
+                    "description": "描述图片居中遮罩自定义文案内容, 与 `icontypeDefined` 只能出现一个，否则都显示，影响展现",
+                    "@Demo": "文案"
+                },
+                "showColDefined": {
+                    "type": [
+                        "number",
+                        "string"
+                    ],
+                    "@ChineseName": "描述自定义图片栅格数，不传默认栅格数值为4",
+                    "description": "描述自定义图片栅格数，不传默认栅格数值为4",
+                    "@Demo": 4
+                },
+                "imgType": {
+                    "type": "string",
+                    "@ChineseName": "图片比例，默认为y，3:2",
+                    "description": "图片比例，默认为y，3:2",
+                    "@Demo": "y"
+                },
+                "img": {
+                    "type": "string",
+                    "@ChineseName": "图片地址",
+                    "description": "图片地址",
+                    "@Demo": "http://www.baidu.com/default.jpg"
+                },
+                "duration": {
+                    "type": "number",
+                    "@ChineseName": "播放时长，单位：秒",
+                    "description": "播放时长，单位：秒",
+                    "@Demo": 60
+                },
+                "defaultImageType": {
+                    "type": "string",
+                    "@ChineseName": "缺省图&加载图类型，具体可参考 [Image 组件](http://sfe.baidu.com:8184/Image)",
+                    "description": "缺省图&加载图类型，具体可参考 [Image 组件](http://sfe.baidu.com:8184/Image)",
+                    "@Demo": "app"
+                }
+            },
+            "propsData": [
+                "showTxt",
+                "maskIconType",
+                "icontypeDefined",
+                "icontxt",
+                "showColDefined",
+                "imgType",
+                "img",
+                "duration",
+                "defaultImageType"
+            ]
+        }
+    }
+}

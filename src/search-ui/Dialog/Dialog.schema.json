@@ -1,0 +1,31 @@
+{
+  "alias": [
+    "c-dialog"
+  ],
+  "type": "object",
+  "properties": {
+    "popup": {
+      "type": "object",
+      "@ChineseName": "dialog 组件实例",
+      "description": "dialog 组件实例，dialog的基础相关数据",
+      "properties": {
+        "title": {
+          "type": "string",
+          "@ChineseName": "dialog 标题",
+          "@Demo": "标题",
+          "description": "dialog 标题"
+        },
+        "content": {
+          "type": "string",
+          "@ChineseName": "dialog 内容",
+          "@Demo": "内容",
+          "description": "dialog 内容"
+        }
+      },
+      "propsData": [
+        "title",
+        "content"
+      ]
+    }
+  }
+}

@@ -1,0 +1,135 @@
+<template>
+    <span
+        ref="arrow"
+        class="arrow"
+        aria-hidden="true"
+    >
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            version="1.1"
+            width="14"
+            height="24"
+        >
+            <path
+                :fill="fillColor"
+                :stroke="color"
+                :d="directionData === 2
+                    ? 'M1 15 L7 9 L13 15'
+                    : 'M1 9 L7 15 L13 9'
+                "
+                stroke-width="1"
+            >
+                <animate
+                    ref="svgAnimateSpread"
+                    attributeName="d"
+                    from="M1 9 L7 15 L13 9"
+                    to="M1 15 L7 9 L13 15"
+                    dur=".3s"
+                    begin="indefinite"
+                    calcMode="spline"
+                    keySplines="0.18, 0, 0.26, 1"
+                />
+                <animate
+                    ref="svgAnimateFold"
+                    attributeName="d"
+                    from="M1 15 L7 9 L13 15"
+                    to="M1 9 L7 15 L13 9"
+                    dur=".3s"
+                    begin="indefinite"
+                    calcMode="spline"
+                    keySplines="0.18, 0, 0.26, 1"
+                />
+            </path>
+        </svg>
+    </span>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 颜色 svg stroke color
+         */
+        color: {
+            type: String,
+            default: '#000'
+        },
+        /**
+         * svg 填充颜色
+         */
+        fillColor: {
+            type: String,
+            default: '#fff'
+        },
+        /**
+         * 默认方向；1：向下；2：向上
+         */
+        direction: {
+            type: Number,
+            default: 1
+        },
+        /**
+         * 是否开启点击动画
+         */
+        animation: {
+            type: Boolean,
+            default: true
+        }
+    },
+    data: {
+        // 方向
+        directionData: direction
+    },
+    components: {
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file 特殊 Icon
+ * @author wangkai <wangkai37@baidu.com>
+ */
+export default {
+    methods: {
+        svgAnimate(direction) {
+            if (direction === 1) {
+                // 开启 svg 动画
+                this.$refs.svgAnimateFold.beginElement();
+            }
+            else if (direction === 2) {
+                // 开启 svg 动画
+                this.$refs.svgAnimateSpread.beginElement();
+            }
+            // 线程结束后更新状态
+            setTimeout(() => {
+                this.directionData = direction;
+            }, 0);
+        }
+    },
+    watch: {
+        direction(newVal, oldVal) {
+            if (this.animation) {
+                if (oldVal === 1 && newVal === 2) {
+                    this.svgAnimate(2);
+                }
+                else if (oldVal === 2 && newVal === 1) {
+                    this.svgAnimate(1);
+                }
+            }
+            else {
+                this.directionData = newVal;
+            }
+        }
+    }
+};
+</script>
+
+<style module>
+    .arrow {
+        display: inline-block;
+        line-height: 0;
+        vertical-align: top;
+    }
+</style>

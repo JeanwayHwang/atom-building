@@ -1,0 +1,172 @@
+<template>
+    <span
+        :aria-label="timeLabel"
+        role="text"
+        @click="$emit('click', $event)"
+    >
+        {{ timespan }}
+    </span>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 时间戳 单位：毫秒，
+         */
+        time: [Number, String],
+        /**
+         * 服务器时间戳 单位：毫秒（注意：若不提供服务器时间，则以本地时间作为服务器时间）
+         */
+        serverTime: [Number, String],
+        /**
+         * 分隔符类型；1：横杠 '-' 分割；2：中文 '年、月、日' 分割
+         */
+        type: {
+            type: Number,
+            default: 1
+        }
+    },
+    data: {
+        timeLabel: ''
+    }
+}
+</script>
+
+<script type="php">
+    function computed_timespan ($ctx) {
+        $yearUnit = '-';
+        $monthUnit = '-';
+        $dayUnit = '';
+        // 如果是中文类型
+        if (isset($ctx->_d['type']) && $ctx->_d['type'] === 2) {
+            $yearUnit = '年';
+            $monthUnit = '月';
+            $dayUnit = '日';
+        }
+        if (empty($ctx->_d['time'])) {
+            return '';
+        }
+        $time = floor($ctx->_d['time'] / 1000);
+        $now = isset($ctx->_d['serverTime']) ? floor($ctx->_d['serverTime'] / 1000) : time();
+        $dur = $now - $time;
+        $suffix = $dur >= 0 ? '前' : '后';
+        $timespan = '';
+
+        if (date('Y', $time) !== date('Y', $now)) {
+            $str = 'Y' . $yearUnit . 'm' . $monthUnit . 'd' . $dayUnit;
+            $timespan = date($str, $time);
+        }
+        else if (abs($dur) == 0) {
+            $timespan = '刚刚';
+        }
+        else if (abs($dur) > 0 && abs($dur) < 60) {
+            $timespan = floor(abs($dur)) . '秒' . $suffix;
+        }
+        else if (abs($dur / 60) < 60) {
+            $timespan = floor(abs($dur / 60)) . '分钟' . $suffix;
+        }
+        else if (abs($dur / 60 / 60) < 24) {
+            $timespan = floor(abs($dur / 60 / 60)) . '小时' . $suffix;
+        }
+        else if (abs($dur / 24 / 60 / 60) <= 7) {
+            $timespan = floor(abs($dur / 24 / 60 / 60)) . '天' . $suffix;
+        }
+        else {
+            $str = 'm' . $monthUnit . 'd' . $dayUnit;
+            $timespan = date($str, $time);
+        }
+        return $timespan;
+    }
+</script>
+
+<script>
+/**
+ * @file 时间差组件c-timespan
+ * @author haoyan@baidu.com
+ */
+
+export default {
+    computed: {
+        timespan() {
+            if (!this.time) {
+                return '';
+            }
+            let yearUnit = '-';
+            let monthUnit = '-';
+            let dayUnit = '';
+            // 如果是中文类型
+            if (this.type === 2) {
+                yearUnit = '年';
+                monthUnit = '月';
+                dayUnit = '日';
+            }
+            let now = this.serverTime || new Date().getTime();
+            now = parseInt(now, 10);
+            // 单位：ms
+            let time = parseInt(this.time, 10);
+            // 单位：s
+            let dur = parseInt((now - time) / 1000, 10);
+            const format = this.format;
+            const suffix = dur >= 0 ? '前' : '后';
+            let timespan = '';
+
+            if (format(new Date(now), 'yyyy') !== format(new Date(time), 'yyyy')) {
+                timespan = format(new Date(time), `yyyy${yearUnit}MM${monthUnit}dd${dayUnit}`);
+                this.timeLabel = format(new Date(time), 'yyyy年MM月dd日');
+            }
+            else if (Math.abs(dur) === 0) {
+                timespan = '刚刚';
+            }
+            else if (Math.abs(dur) > 0 && Math.abs(dur) < 60) {
+                timespan = parseInt(Math.abs(dur), 10) + '秒' + suffix;
+            }
+            else if (Math.abs(dur / 60) < 60) {
+                timespan = parseInt(Math.abs(dur / 60), 10) + '分钟' + suffix;
+            }
+            else if (Math.abs(dur / 60 / 60) < 24) {
+                timespan = parseInt(Math.abs(dur / 60 / 60), 10) + '小时' + suffix;
+            }
+            else if (Math.abs(dur / 24 / 60 / 60) <= 7) {
+                timespan = parseInt(Math.abs(dur / 24 / 60 / 60), 10) + '天' + suffix;
+            }
+            else {
+                timespan = format(new Date(time), `MM${monthUnit}dd${dayUnit}`);
+                this.timeLabel = format(new Date(time), 'MM月dd日');
+            }
+
+            return timespan;
+        }
+    },
+    methods: {
+        format(date, fmt) {
+            const o = {
+                'M+': date.getMonth() + 1,
+                'd+': date.getDate(),
+                'h+': date.getHours(),
+                'm+': date.getMinutes(),
+                's+': date.getSeconds(),
+                'q+': Math.floor((date.getMonth() + 3) / 3),
+                'S': date.getMilliseconds()
+            };
+            if (/(y+)/.test(fmt)) {
+                fmt = fmt.replace(RegExp.$1, (date.getFullYear() + '').substr(4 - RegExp.$1.length));
+            }
+            Object.keys(o).map(k => {
+                if (new RegExp('(' + k + ')').test(fmt)) {
+                    fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1)
+                        ? (o[k])
+                        : (('00' + o[k]).substr(('' + o[k]).length)));
+                }
+            });
+            return fmt;
+        }
+        /**
+         * click event.
+         *
+         * @event click
+         */
+    }
+};
+
+</script>

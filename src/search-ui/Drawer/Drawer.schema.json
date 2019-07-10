@@ -1,0 +1,68 @@
+{
+    "alias": [
+        "c-drawer"
+    ],
+    "type": "object",
+    "properties": {
+        "drawer": {
+            "type": "object",
+            "@ChineseName": "Drawer 组件实例",
+            "description": "Drawer 组件实例，Drawer 的基础相关数据",
+            "properties": {
+                "isOpen": {
+                    "type": "boolean",
+                    "@ChineseName": "Drawer 是否打开抽屉",
+                    "@Demo": false,
+                    "description": "Drawer 是否打开抽屉"
+                },
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "Drawer 标题内容",
+                    "@Demo": "这里是 Drawer 标题",
+                    "description": "Drawer 标题内容"
+                },
+                "list": {
+                    "type": "array",
+                    "@ChineseName": "Drawer 单选类型列表数据",
+                    "description": "Drawer 单选类型列表数据",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "@ChineseName": "列表项的显示文案",
+                                "@Demo": "文案1",
+                                "description": "列表项的显示文案"
+                            }
+                        }
+                    }
+                },
+                "leftTips": {
+                    "type": "object",
+                    "@ChineseName": "Drawer 左侧蒙层关闭提示",
+                    "description": "Drawer 左侧蒙层关闭提示，是一个对象，如果想不显示请传入空对象 {}",
+                    "properties": {
+                        "icon": {
+                            "type": "string",
+                            "@ChineseName": "Drawer 左侧蒙层图标名称",
+                            "@Demo": "baidu",
+                            "description": "Drawer 左侧蒙层图标名称，参考 Icon 组件"
+                        },
+                        "text": {
+                            "type": "string",
+                            "@ChineseName": "Drawer 左侧蒙层显示文案",
+                            "@Demo": "轻触关闭目录",
+                            "description": "Drawer 左侧蒙层显示文案"
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "isOpen",
+                "title",
+                "list",
+                "leftTips"
+            ]
+        }
+    }
+}

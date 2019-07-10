@@ -1,0 +1,29 @@
+{
+    "alias": [
+        "c-icon"
+    ],
+    "type": "object",
+    "properties": {
+        "icon": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "@ChineseName": "图标名称",
+                    "@Demo": "baidu",
+                    "description": "直接传入图标名称"
+                },
+                "code": {
+                    "type": "string",
+                    "@ChineseName": "icon编码",
+                    "@Demo": "&#xe65d",
+                    "description": "直接传入icon编码"
+                }
+            },
+            "propsData": [
+                "type",
+                "code"
+            ]
+        }
+    }
+}

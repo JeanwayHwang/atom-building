@@ -1,0 +1,436 @@
+<template>
+    <div class="range-input">
+        <c-spread-tags
+            ref="spreadTag"
+            :options="options"
+            :label="label"
+            :spread-opts="spreadOpts"
+            :force-check="forceCheck"
+            :margin-inner="marginInner"
+            :primary-color="primaryColor"
+            @itemclick="handleItemClick"
+            @spreadchange="handleSpreadChange"
+        >
+            <div>
+                <c-row class="input-row c-gap-bottom-small">
+                    <!-- min -->
+                    <c-span>
+                        <c-input
+                            ref="minInput"
+                            :value="minValue"
+                            :right-text="unit"
+                            :is-show-close-icon="unit
+                                ? false
+                                : true
+                            "
+                            :padding-right="unit
+                                ? '.3rem'
+                                : ''
+                            "
+                            :placeholder="min.placeholder"
+                            :primary-color="primaryColor"
+                            padding-wrapper="0 1px"
+                            @change="handleInputChange({
+                                value: $event.value,
+                                type: 'min'
+                            })"
+                        />
+                    </c-span>
+                    <!-- 分割线 -->
+                    <span
+                        class="split-line"
+                    />
+                    <!-- max -->
+                    <c-span>
+                        <c-input
+                            ref="maxInput"
+                            :value="maxValue"
+                            :right-text="unit"
+                            :is-show-close-icon="unit
+                                ? false
+                                : true
+                            "
+                            :padding-right="unit
+                                ? '.3rem'
+                                : ''
+                            "
+                            :placeholder="max.placeholder"
+                            :primary-color="primaryColor"
+                            padding-wrapper="0 1px"
+                            @change="handleInputChange({
+                                value: $event.value,
+                                type: 'max'
+                            })"
+                        />
+                    </c-span>
+                </c-row>
+                <!-- 错误提示 -->
+                <div
+                    a-if="isShowErrorTips && errorTips"
+                    :style="{
+                        'text-align': 'center'
+                    }"
+                    class="c-color-red c-gap-bottom"
+                >
+                    {{ errorTips }}
+                    <span
+                        a-if="errmsg"
+                        class="errmsg"
+                    >
+                        {{ errmsg }}
+                    </span>
+                </div>
+            </div>
+        </c-spread-tags>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 标签
+         */
+        label: String,
+
+        /**
+         * 默认值
+         */
+        defaultValue: String,
+
+        /**
+         * 单位
+         */
+        unit: String,
+
+        /**
+         * 是否允许负数
+         */
+        allowMinus: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 错误提示语；如果该值为空，则不显示错误提示
+         */
+        errorTips: {
+            type: String,
+            default: '错误提示：'
+        },
+
+        /**
+         * 最小值
+         */
+        min: {
+            type: Object,
+            default: {
+                placeholder: ''
+            }
+        },
+
+        /**
+         * 最大值
+         */
+        max: {
+            type: Object,
+            default: {
+                placeholder: ''
+            }
+        },
+
+        /**
+         * 外部实例；外部传入的实例，在部分场景下，需要把 vnode 挂载到外部传入的实例上
+         */
+        ins: Object,
+
+        /**
+         * 展开收起配置
+         *
+         * @property {boolean} [show=true] 是否显示展开收起
+         * @property {boolean} [spread=true] 是否展开
+         * @property {number} [threshold=2] 收起状态时的高度
+         */
+        spreadOpts: {
+            type: Object,
+            default: {
+                // 是否显示展开收起
+                show: true,
+                // 是否展开
+                spread: false,
+                threshold: 2,
+                paddingBottom: '.05rem',
+                touchableFeedbackBottom: -.05
+            }
+        },
+
+
+        /**
+         * 范围输入的预置选项们
+         *
+         * @property {string} text 文案
+         * @property {string} value 值
+         */
+        options: {
+            type: Array,
+            default: []
+        },
+
+        /**
+         * 强制显示对勾；不论是 radio 还是 checkbox，显示对勾就完事了
+         */
+        forceCheck: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 内部 margin 为了解决在某些 Android 浏览器上边线消失的问题
+         */
+        marginInner: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 主颜色
+         */
+        primaryColor: String
+    },
+    data: {
+        minValue: '',
+        maxValue: '',
+        // 内部维护一个不更新视图的变量
+        mMinValue: '',
+        mMaxValue: '',
+        // 是否显示错误提示
+        isShowErrorTips: false,
+        // 内部的错误信息
+        errmsg: ''
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-input': '../Input/Input',
+        'c-spread-tags': '../Tags/SpreadTags'
+    }
+}
+</script>
+
+<script>
+export default {
+    mounted() {
+        this.init();
+    },
+    methods: {
+        init() {
+            // 如果外部实例 ins 存在
+            if (this.ins) {
+                // 把 vnode 挂载到外部实例上去
+                this.ins.vnode = this;
+            }
+
+            // 处理数据
+            this.options.forEach((option, optionIndex) => {
+                // 去除 value 里的所有空格
+                option.value = option.value.replace(/ /g, '');
+            });
+
+            // 处理默认值
+            this.setDefaultValue(this.defaultValue);
+        },
+        // 展开收起状态改变后触发的回调
+        handleSpreadChange(obj) {
+            /**
+             * 展开收起状态改变后触发的回调
+             *
+             * @event spreadchange
+             * @property {boolean} spread 是否展开
+             * @property {string} type 当前展开收起的类型
+             * @property {number} height 当前高度
+             * @property {number} diffHeight 相较于上一次变化的高度，主要用来配合外侧元素动态计算高度
+             */
+            this.$emit('spreadchange', obj);
+        },
+
+        // 选项点击事件
+        handleItemClick(obj) {
+            let value = obj.clickItem.value;
+            if (value) {
+                let valueArr = value.split(',').map(item => item.trim());
+                if (valueArr.length === 2) {
+                    this.minValue = valueArr[0];
+                    this.maxValue = valueArr[1];
+                }
+            }
+        },
+        // 输入框改变事件
+        handleInputChange(obj) {
+            // 隐藏错误提示
+            this.hideErrorTips();
+
+            /**
+             * 改变事件
+             *
+             * @event change
+             * @property {string} param1.value 值
+             * @property {string} param1.type 类型：min（最小值）；max（最大值）
+             */
+            this.$emit('change', obj);
+            // 最小值
+            if (obj.type === 'min') {
+                this.mMinValue = obj.value;
+            }
+            // 最大值
+            else if (obj.type === 'max') {
+                this.mMaxValue = obj.value;
+            }
+            // 更新下面的 Tags
+            this.updateTags();
+        },
+        // 更新 Tags
+        updateTags() {
+            let minMaxStr = this.mMinValue + ',' + this.mMaxValue;
+            this.options.forEach((option, optionIndex) => {
+                if (minMaxStr === option.value) {
+                    this.$set(option, 'selected', true);
+                }
+                else {
+                    this.$set(option, 'selected', false);
+                }
+            });
+        },
+
+        /**
+         * 处理默认值
+         *
+         * @public
+         * @param {string} defaultValue 默认值，多个时用`,`分隔
+         */
+        setDefaultValue(defaultValue) {
+            // 处理默认值
+            if (defaultValue) {
+                // 按 , 分隔
+                let defaultValueArr = defaultValue.split(',').map(item => item.trim());
+                if (defaultValueArr.length > 0) {
+                    // 设置最小值
+                    this.minValue = defaultValueArr[0];
+                    if (defaultValueArr.length > 1) {
+                        // 设置最大值
+                        this.maxValue = defaultValueArr[1];
+                    }
+                }
+            }
+            else {
+                this.reset();
+            }
+        },
+
+        /**
+         * 检查是否有输入框错误的问题，返回值 err 为错误对象；err.errno 错误代码，err.errmsg 错误信息；对照关系如下表
+         *   | errno | errmsg |
+         *   | --- | --- |
+         *   | 0 | |
+         *   | 1 | 最小值不是数字 |
+         *   | 2 | 最大值不是数字 |
+         *   | 3 | 最小值大于最大值 |
+         *   | 4 | 最小值为负数 |
+         *   | 5 | 最大值为负数 |
+         *
+         * @public
+         * @return {Object} err 错误对象；
+         */
+        check() {
+            let err = {
+                // 错误码
+                errno: 0,
+                // 错误信息
+                errmsg: ''
+            };
+            if (isNaN(this.mMinValue)) {
+                err.errno = 1;
+                err.errmsg = '最小值不是数字';
+            }
+            else if (isNaN(this.mMaxValue)) {
+                err.errno = 2;
+                err.errmsg = '最大值不是数字';
+            }
+            else if (Number(this.mMinValue, 10) > Number(this.mMaxValue, 10)) {
+                err.errno = 3;
+                err.errmsg = '最小值大于最大值';
+            }
+            // 负数校验
+            // 不允许传负数时
+            else if (!this.allowMinus) {
+                if (this.mMinValue < 0) {
+                    err.errno = 4;
+                    err.errmsg = '最小值为负数';
+                }
+                else if (this.mMaxValue < 0) {
+                    err.errno = 5;
+                    err.errmsg = '最大值为负数';
+                }
+            }
+
+            // 如果有错误，显示错误提示
+            if (err.errno !== 0) {
+                this.errmsg = err.errmsg;
+                this.showErrorTips();
+            }
+            // 隐藏错误提示
+            else {
+                this.errmsg = '';
+                this.hideErrorTips();
+            }
+            return err;
+        },
+
+        /**
+         * 重置
+         *
+         * @public
+         */
+        reset() {
+            // 注：设置值也会触发 input 的 change 事件
+            this.minValue = '';
+            this.maxValue = '';
+            this.mMinValue = '';
+            this.mMaxValue = '';
+            this.$refs.minInput.setValue('');
+            this.$refs.maxInput.setValue('');
+        },
+        // 显示错误提示
+        showErrorTips() {
+            this.isShowErrorTips = true;
+        },
+        // 隐藏错误提示
+        hideErrorTips() {
+            this.isShowErrorTips = false;
+        }
+    },
+    watch: {
+        minValue(newVal, oldVal) {
+            this.mMinValue = newVal;
+        },
+        maxValue(newVal, oldVal) {
+            this.maxValue = newVal;
+        }
+    }
+};
+</script>
+
+<style module>
+.split-line {
+    position: relative;
+    margin-right: 7px;
+    margin-left: 7px;
+    top: 24px;
+    width: 8px;
+    height: 1px;
+    background: #555;
+}
+.errmsg {
+    margin-left: .05rem;
+}
+</style>

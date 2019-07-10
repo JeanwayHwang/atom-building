@@ -1,0 +1,50 @@
+{
+    "alias": [
+        "c-tombstone"
+    ],
+    "type": "object",
+    "properties": {
+        "tombstone": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "number",
+                    "@ChineseName": "占位加载图类型",
+                    "description": "占位加载图类型；1：图片；2：资讯；3：问答列表；4：图文列表",
+                    "@Demo": 1
+                },
+                "enterAnimationDuration": {
+                    "type": "number",
+                    "@ChineseName": "进入动画持续时间",
+                    "description": "进入动画持续时间；默认为 0",
+                    "@Demo": 0
+                },
+                "leaveAnimationDuration": {
+                    "type": "number",
+                    "@ChineseName": "离开动画持续时间",
+                    "description": "离开动画持续时间；默认为 80",
+                    "@Demo": 80
+                },
+                "imgNum": {
+                    "type": "number",
+                    "@ChineseName": "图片占位图占的屏幕数量",
+                    "description": "图片占位图占的屏幕数量；默认1屏；当且仅当为图片类型 type === 1 时生效",
+                    "@Demo": 1
+                },
+                "num": {
+                    "type": "number",
+                    "@ChineseName": "其他类型占位加载的条数",
+                    "description": "其他类型占位加载的条数；默认6条；当且仅当不为图片类型 type !== 1 时生效",
+                    "@Demo": 6
+                }
+            },
+            "propsData": [
+                "type",
+                "enterAnimationDuration",
+                "leaveAnimationDuration",
+                "imgNum",
+                "num"
+            ]
+        }
+    }
+}

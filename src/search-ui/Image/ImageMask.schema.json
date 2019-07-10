@@ -1,0 +1,50 @@
+{
+    "alias": [
+        "c-img-mask",
+        "c-image-mask"
+    ],
+    "type": "object",
+    "properties": {
+        "img": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "@ChineseName": "遮罩类型",
+                    "@Demo": "pills",
+                    "description": "遮罩类型",
+                    "enum": ["pills", "circle"]
+                },
+                "size": {
+                    "type": "string",
+                    "@ChineseName": "圆形遮罩尺寸",
+                    "@Demo": "normal",
+                    "description": "圆形遮罩尺寸",
+                    "enum": ["normal", "small"]
+                },
+                "icon": {
+                    "type": "string",
+                    "@ChineseName": "遮罩图标",
+                    "@Demo": "baidu",
+                    "description": "遮罩图标"
+                },
+                "text": {
+                    "type": "string",
+                    "@ChineseName": "遮罩文案",
+                    "@Demo": "",
+                    "description": "遮罩文案"
+                },
+                "pillBigText": {
+                    "type": "string",
+                    "@ChineseName": "胶囊遮罩文案前显示的大号字体文案",
+                    "@Demo": "",
+                    "description": "胶囊遮罩文案前显示的大号字体文案"
+                }
+            },
+            "propsData": [
+                "type",
+                "icon"
+            ]
+        }
+    }
+}

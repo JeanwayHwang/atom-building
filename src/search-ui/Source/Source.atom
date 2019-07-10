@@ -1,0 +1,282 @@
+<template>
+    <c-row
+        role="text"
+        class="c-source c-line-clamp1"
+        @click.native="handleClick"
+    >
+        <c-span>
+            <!-- 来源 -->
+            <c-touchable-feedback
+                :open="!!(urlData || (paramsData && paramsData.tcUrl))"
+                :left="-.05"
+                :right="-.05"
+                is-jump
+                background-color="rgba(0, 0, 0, .08)"
+                class="link-touchable"
+            >
+                <c-link
+                    :url="urlData"
+                    :params="paramsData"
+                    class="link"
+                    data-module="c-sr"
+                >
+                    <!-- 图片 -->
+                    <span
+                        a-if="imgSrcData"
+                        :style="{
+                            'background-image': 'url(' + imgSrcData + ')'
+                        }"
+                        class="c-source-img-wrapper c-gap-right-small"
+                        aria-hidden="true"
+                    />
+                    <!-- 来源文字 -->
+                    <span
+                        a-if="sourceData"
+                        :aria-label="`来自.${sourceData}`"
+                        class="c-color-gray"
+                    >
+                        {{ sourceData }}
+                    </span>
+                </c-link>
+            </c-touchable-feedback>
+            <!-- 插槽 -->
+            <!-- @slot 内容区插槽，位置在来源文案之后，时间文案之前 -->
+            <slot/>
+            <!-- 时间 -->
+            <span
+                a-if="timeData !== undefined && timeData !== null"
+                :style="{
+                    'margin-left': timeMarginLeft
+                }"
+                class="c-color-gray"
+            >
+                <!-- 时间戳 -->
+                <c-timespan
+                    a-if="isTimeNumber"
+                    :time="timeData"
+                    :server-time="serverTimeData"
+                    :type="2"
+                />
+                <!-- 时间字符串 -->
+                <span a-else>
+                    {{ timeData }}
+                </span>
+            </span>
+            <!-- 功能按钮 -->
+            <c-tooltip-func-btn
+                a-if="(feedback && feedback.suggest && feedback.suggest.is_show == 1) || evaluate"
+                :feedback="feedback"
+                :evaluate="evaluate"
+                class="func-btn c-gap-left"
+                @click.native="handleTooltipFuncBtnClick"
+                @feedbackclick="handleFeedbackClick"
+            />
+        </c-span>
+    </c-row>
+</template>
+
+<style lang="less" scoped>
+.c-source {
+    .link-touchable {
+        display: inline-block;
+        .c-source-img-wrapper {
+            position: relative;
+            top: .04rem;
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: center no-repeat;
+            background-size: cover;
+            border-radius: .08rem;
+            vertical-align: top;
+            border: 1px solid #eee;
+            box-sizing: border-box;
+        }
+    }
+}
+</style>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 跳转链接
+         */
+        url: String,
+
+        /**
+         * 跳转链接所需参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        params: Object,
+
+        /**
+         * 图片链接
+         */
+        imgSrc: String,
+
+        /**
+         * 来源文案
+         */
+        source: String,
+
+        /**
+         * 时间（可传字符串，也可传数字时间戳）
+         * 传字符串直接展示，传数字时间戳会使用 TimeSpan 转换成相对时间
+         */
+        time: [String, Number],
+
+        /**
+         * 服务器端时间戳
+         */
+        serverTime: Number,
+
+        /**
+         * 时间字段距离左边的间距
+         */
+        timeMarginLeft: {
+            type: String,
+            default: '.1rem'
+        },
+
+        /**
+         * 熊掌号数据；参数说明请参考：[阿拉丁 Atom 前端增加熊掌号入口开发规范](http://sfe.baidu.com:8188/standard/xzh.md)
+         */
+        xzhInfo: {
+            type: Object,
+            default: null
+        },
+
+        /**
+         * 反馈参数；详情请参考：[Atom 卡片反馈功能开发规范](http://sfe.baidu.com:8188/standard/feedback.md)
+         */
+        feedback: Object,
+
+        /**
+         * 评价数据；详见 [TooltipFuncBtn 组件文档](http://soy.baidu-int.com/component/TooltipFuncBtn)
+         *
+         * @property {string} url 评价跳转链接
+         * @property {object} params 评价跳转链接的 urlParams
+         */
+        evaluate: Object
+    },
+    data: {
+        urlData: url
+            ? url
+            : xzhInfo && xzhInfo.url
+                ? xzhInfo.url
+                : null,
+        paramsData: params
+            ? params
+            : xzhInfo && xzhInfo.params
+                ? xzhInfo.params
+                : {},
+        imgSrcData: imgSrc
+            ? imgSrc
+            : xzhInfo && xzhInfo.logo
+                ? xzhInfo.logo
+                : '',
+        sourceData: source
+            ? source
+            : xzhInfo && xzhInfo.title
+                ? xzhInfo.title
+                : '',
+        // 加 time !== undefined && time !== null 是为了容错字符串 0： '0'
+        timeData: (time !== undefined && time !== null)
+            ? time
+            : xzhInfo && xzhInfo.otime
+                ? xzhInfo.otime
+                : null,
+        serverTimeData: serverTime
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-timespan': '../Timespan/Timespan',
+        'c-link': '../Link/Link',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback',
+        'c-tooltip-func-btn': '../TooltipFuncBtn/TooltipFuncBtn'
+    }
+}
+</script>
+
+<script type="php">
+    function computed_isTimeNumber($ctx) {
+        if(isset($ctx->_d["time"])) {
+            if (is_string($ctx->_d["time"])) {
+                return false;
+            }
+            return is_numeric($ctx->_d["time"]);
+        }
+        if (isset($ctx->_d["xzhInfo"]) && isset($ctx->_d["xzhInfo"]['otime'])) {
+            $otime = $ctx->_d["xzhInfo"]['otime'];
+            if (is_string($otime)) {
+                return false;
+            }
+            return is_numeric($otime);
+        }
+        return false;
+    }
+</script>
+
+<script>
+/**
+ * @file 来源
+ * @author wangkai <wangkai37@baidu.com>
+ */
+export default {
+    methods: {
+        handleClick(e) {
+
+            /**
+             * 点击事件
+             *
+             * @event click
+             * @property {Event} param1 透传点击事件
+             */
+            this.$emit('click', e);
+        },
+        // 新反馈入口点击
+        handleFeedbackClick(obj) {
+
+            /**
+             * 反馈入口点击事件
+             *
+             * @event feedbackclick
+             * @property {Object} param1 对象参数
+             * @property {Event} param1.event 事件对象
+             * @property {Object} param1.feedback 反馈数据对象
+             */
+            this.$emit('feedbackclick', obj);
+        },
+        // 弹层按钮点击
+        handleTooltipFuncBtnClick(e) {
+            e.stopPropagation();
+
+            /**
+             * 功能按钮点击事件
+             *
+             * @event funcbtnclick
+             */
+            this.$emit('funcbtnclick');
+        }
+    },
+    computed: {
+        isTimeNumber() {
+            // 避免 time === 0 的情况
+            if (this.time === 0) {
+                return true;
+            }
+            if (this.time) {
+                return typeof this.time === 'number';
+            }
+            if (this.xzhInfo && this.xzhInfo.otime) {
+                return typeof this.xzhInfo.otime === 'number';
+            }
+            return false;
+        }
+    }
+};
+</script>

@@ -1,0 +1,713 @@
+<template>
+    <c-link
+        :url="url"
+        :params="params"
+        :aria-label="`${audioText}.时长${transTime}`"
+    >
+        <!-- 真正的 Audio，样式基本上都在这里写 -->
+        <!-- 有边线的时候加边线 -->
+        <!-- 透明模式的时候不要边线，当然点击态还是要的 -->
+        <div
+            ref="audioContainer"
+            :style="[
+                {
+                    width: audioWidth,
+                    backgroundColor: active ? activeBackgroundColor : backgroundColor,
+                    border: active ? '1px solid ' + activeBackgroundColor : '1px solid ' + backgroundColor
+                },
+                border
+                    ? {
+                        border
+                    }
+                    : {},
+                isOpacity
+                    ? {
+                        backgroundColor: active ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.2)',
+                        border: null
+                    }
+                    : {}
+            ]"
+            class="c-audio-container c-gap-left-small"
+            rl-type="stop"
+            @touchstart="handleTouchStart"
+            @touchend="handleTouchEnd"
+            @click="play"
+        >
+            <!-- 这里要根据是否显示时间计算出右侧的 padding -->
+            <div
+                :style="{
+                    paddingRight: setPadding
+                }"
+                class="c-audio-inner c-gap-left"
+            >
+                <!-- 图标 -->
+                <div class="c-audio-playing-wrap">
+                    <div
+                        :class="[
+                            isOpacity ? 'c-audio-opacity' : '',
+                            isPlaying ? 'c-audio-playing' : ''
+                        ]"
+                    >
+                        <svg
+                            class="c-audio-svg"
+                            width="16px"
+                            height="16px"
+                            viewBox="0 0 48 48"
+                            version="1.1"
+                            xmlns="http://www.w3.org/2000/svg"
+                            xmlns:xlink="http://www.w3.org/1999/xlink"
+                        >
+                            <g
+                                :fill="iconColor"
+                                transform="
+                                    translate(24.742540, 24.002542)
+                                    rotate(45.000000)
+                                    translate(-24.742540, -24.002542)
+                                    translate(10.242540, 10.002542)
+                                "
+                                fill-rule="nonzero"
+                            >
+                                <path
+                                    id="Oval-Copy-3"
+                                    class="c-audio-line0"
+                                    d="
+                                        M30.0146615,27.5146615,
+                                        C30.0146615,28.3430887,
+                                        29.3430887,29.0146615,
+                                        28.5146615,29.0146615,
+                                        C27.6862344,29.0146615,
+                                        27.0146615,28.3430887,
+                                        27.0146615,27.5146615,
+                                        C27.0146615,13.4853155,
+                                        14.8874597,2.34279293,
+                                        0.157207067,2.34279293,
+                                        C-0.671220057,2.34279293,
+                                        -1.34279293,1.67122006,
+                                        -1.34279293,0.842792933,
+                                        C-1.34279293,0.0143658079,
+                                        -0.671220057,-0.657207067,
+                                        0.157207067,-0.657207067,
+                                        C16.4902523,-0.657207067,
+                                        30.0146615,11.7690753,
+                                        30.0146615,27.5146615,
+                                        Z
+                                    "
+                                />
+                                <path
+                                    id="Oval-Copy-2"
+                                    class="c-audio-line1"
+                                    d="
+                                        M20.3772222,27.420545,
+                                        C20.3772222,28.2489721,
+                                        19.7056493,28.920545,
+                                        18.8772222,28.920545,
+                                        C18.048795,28.920545,
+                                        17.3772222,28.2489721,
+                                        17.3772222,27.420545,
+                                        C17.3772222,18.4517081,
+                                        10.1065434,11.1810294,
+                                        1.13770656,11.1810294,
+                                        C0.309279434,11.1810294,
+                                        -0.362293441,10.5094565,
+                                        -0.362293441,9.68102935,
+                                        C-0.362293441,8.85260223,
+                                        0.309279434,8.18102935,
+                                        1.13770656,8.18102935,
+                                        C11.7633976,8.18102935,
+                                        20.3772222,16.7948539,
+                                        20.3772222,27.420545,
+                                        Z
+                                    "
+                                />
+                                <path
+                                    id="Oval-Copy"
+                                    d="
+                                        M11.5925025,27.6470131,
+                                        C11.5925025,28.4754402,
+                                        10.9209296,29.1470131,
+                                        10.0925025,29.1470131,
+                                        C9.26407539,29.1470131,
+                                        8.59250251,28.4754402,
+                                        8.59250251,27.6470131,
+                                        C8.59250251,23.5768082,
+                                        5.29294955,20.2772553,
+                                        1.22274471,20.2772553,
+                                        C0.394317584,20.2772553,
+                                        -0.277255291,19.6056824,
+                                        -0.277255291,18.7772553,
+                                        C-0.277255291,17.9488282,
+                                        0.394317584,17.2772553,
+                                        1.22274471,17.2772553,
+                                        C6.9498038,17.2772553,
+                                        11.5925025,21.919954,
+                                        11.5925025,27.6470131,
+                                        Z
+                                    "
+                                />
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                <!-- 文字 -->
+                <span
+                    :style="{
+                        color: textColor
+                    }"
+                    :class="
+                        isOpacity ? 'c-audio-opacity' : ''
+                    "
+                    class="c-audio-clamp-inner c-gap-left-middle c-color-link c-font-normal"
+                >
+                    {{ audioText }}
+                </span>
+                <!-- 时间 -->
+                <span
+                    a-if="showTime && time"
+                    :style="{
+                        color: timeColor
+                    }"
+                    :class="
+                        isOpacity ? 'c-audio-opacity' : ''
+                    "
+                    class="c-audio-time c-gap-left c-color-gray c-font-small"
+                >
+                    {{ transTime }}
+                </span>
+            </div>
+            <!-- 方形箭头 -->
+            <!-- 为啥用方的？因为有需求需要加边框，所以得用方的，然后旋转 -->
+            <!-- 透明的时候不能用！右半个屁股露出来啦 -->
+            <div
+                a-if="!isOpacity"
+                :style="[
+                    {
+                        backgroundColor: active ? activeBackgroundColor : backgroundColor,
+                        borderLeft: border,
+                        borderBottom: border
+                    }
+                ]"
+                class="c-audio-arrow-rectangle"
+            >
+            </div>
+            <!-- 三角形箭头，这个箭头是为了在透明的时候出来救场 -->
+            <div
+                a-else
+                :style="{
+                    'border-right': active ? '5px solid rgba(0,0,0,.08)' : '5px solid rgba(255,255,255,.2)'
+                }"
+                class="c-audio-arrow-triangle"
+            >
+            </div>
+
+            <!-- progress -->
+            <!-- 三角形箭头，这个箭头是为了在 progress 的时候挡住方形箭头的一半 -->
+            <transition name="fade">
+                <div
+                    a-if="isProgress"
+                    a-show="progressWidth"
+                    :style="{
+                        'border-right': '5px solid ' + progressColor
+                    }"
+                    class="c-audio-arrow-triangle"
+                >
+                </div>
+            </transition>
+            <!-- progress wrapper -->
+            <div
+                a-if="isProgress"
+                class="c-audio-progress-wrapper"
+            >
+                <div
+                    :style="{
+                        width: progressWidth
+                    }"
+                    class="c-audio-progress"
+                >
+                </div>
+            </div>
+        </div>
+    </c-link>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 音频地址
+         */
+        audioUrl: {
+            type: String
+        },
+
+        /**
+         * 是否使用透明背景；透明背景不能加边框
+         */
+        isOpacity: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 是否使用进度条样式，默认开启
+         */
+        isProgress: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 音频时长
+         */
+        time: {
+            type: [Number, String]
+        },
+
+        /**
+         * 是否显示时间，默认显示
+         */
+        showTime: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 是否使用自定义显示文案
+         */
+        customText: {
+            type: String
+        },
+
+        /**
+         * 跳转链接（不播放音频，直接跳转）
+         */
+        url: {
+            type: String
+        },
+
+        /**
+         * 跳转链接参数
+         *
+         * @see See [Link](./Link#API)
+         */
+        params: {
+            type: Object
+        },
+
+        /**
+         * 图标颜色
+         */
+        iconColor: {
+            type: String
+        },
+
+        /**
+         * 文案颜色
+         */
+        textColor: {
+            type: String
+        },
+
+        /**
+         * 时间颜色
+         */
+        timeColor: {
+            type: String
+        },
+
+        /**
+         * 背景颜色
+         */
+        backgroundColor: {
+            type: String,
+            default: '#f5f5f5'
+        },
+
+        /**
+         * 点击态背景色
+         */
+        activeBackgroundColor: {
+            type: String,
+            default: '#ebebeb'
+        },
+
+        /**
+         * 进度条颜色
+         */
+        progressColor: {
+            type: String,
+            default: 'rgba(0,0,0,.03)'
+        },
+
+        /**
+         * 边线
+         */
+        border: {
+            type: String
+        }
+
+    },
+    data: {
+        // player instance
+        playerObj: null,
+        // 是否播放标志
+        isPlaying: false,
+        // 音频的宽度
+        audioWidth: 'auto',
+        // 当前状态
+        status: '',
+        // 文案
+        playText: '正在播放',
+        pauseText: '点击播放',
+        continueText: '继续播放',
+        // 用户自定义文案
+        mCustomText: customText ? customText : '',
+        // 最终要显示的文案嗷
+        displayText: '',
+        // 时间
+        mTime: time ? time : '',
+        // 就是一个判断是否显示时间的标志，没有什么软用
+        mShowTime: showTime ? showTime : '',
+        // 是否在点击态中
+        active: false,
+
+        // progress 进度条相关
+
+        // 这个是一个标志位，感觉并没有什么软用
+        progressing: false,
+        // 进度条的宽度
+        progressWidth: 0
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-icon': '../Icon/Icon',
+        'c-link': '../Link/Link'
+    }
+}
+</script>
+<script type="php">
+function computed_transTime($ctx){
+    if (empty($ctx->_d['time'])) {
+        return '';
+    }
+    $time = $ctx->_d['time'];
+    $time = intval($time);
+    $minute = intval($time / 60);
+    $second = intval($time % 60);
+    $minute = $minute < 10 ? '0' . $minute : $minute;
+    $second = $second < 10 ? '0' . $second : $second;
+    return $minute . ':' . $second;
+}
+function computed_audioText($ctx){
+    return $ctx->_d['displayText'] = $ctx->_d['mCustomText'] ? $ctx->_d['mCustomText'] : $ctx->_d['pauseText'] ;
+}
+function computed_setPadding($ctx){
+    if (empty($ctx->_d['time'])) {
+        $ctx->_d['showTime'] = false;
+    }
+    return $ctx->_d['showTime'] ? '50px' : '10px';
+}
+</script>
+<script>
+import Player from '@baidu/audio-player';
+export default {
+    mounted() {
+        let vm = this;
+        // 如果是直接跳转的，就不初始化啦
+        if (vm.url || vm.params) {
+            return;
+        }
+        if (vm.audioUrl && vm.time) {
+            vm.audioPlayer();
+            // 六合,情景页暂停播放
+            vm.$root.$on('detach', () => {
+                vm.playerObj && vm.playerObj.pause();
+            });
+        }
+    },
+    computed: {
+        // 将秒数转换为分钟显示
+        transTime() {
+            if (!this.mTime || !parseInt(this.mTime, 10)) {
+                return;
+            }
+            this.mTime = parseInt(this.mTime, 10);
+            let minute = parseInt(this.mTime / 60, 10);
+            let second = this.mTime % 60;
+            minute = minute < 10 ? '0' + minute : minute;
+            second = second < 10 ? '0' + second : second;
+            return minute + ':' + second;
+        },
+
+        // 最终显示的文案
+        audioText() {
+            return this.displayText = this.mCustomText || this.displayText || this.pauseText;
+        },
+
+        // 根据是否显示时间设置右侧的 padding
+        setPadding() {
+            if (!this.mTime) {
+                this.mShowTime = false;
+            }
+            return this.mShowTime ? '50px' : '10px';
+        }
+    },
+
+    /**
+     * 销毁
+     */
+    beforeDestroy() {
+        this.playerObj.destroy();
+        this.playerObj = null;
+    },
+    methods: {
+
+        /**
+         * 初始化 audio player
+         */
+        audioPlayer() {
+            let vm = this;
+            vm.playerObj = new Player();
+            vm.playerObj.playList = [
+                {
+                    audioUrl: vm.audioUrl
+                }
+            ];
+
+            // 状态改变监听
+            vm.playerObj.on('statusChange', e => {
+                vm.status = e.status;
+
+                // 播放
+                if (e.status === 'PLAYING') {
+                    vm.mCustomText = '';
+                    vm.displayText = vm.playText;
+                    vm.audioWidth = vm.$refs.audioContainer.offsetWidth + 'px';
+                    vm.playAnimate();
+                }
+
+                // 持续播放时的轮询时间更新
+                else if (e.status === 'TIME_UPDATE') {
+                    if (vm.isProgress) {
+                        let time = parseInt(vm.mTime, 10);
+                        let rate = vm.playerObj.currentTime / time;
+                        vm.progressWidth = vm.$refs.audioContainer.offsetWidth * rate + 'px';
+                    }
+                }
+
+                // 暂停
+                else if (e.status === 'PAUSE') {
+                    vm.displayText = vm.continueText;
+                    vm.playStop();
+                }
+
+                // 结束
+                else if (e.status === 'ENDED' || vm.playerObj.currentTime >= vm.time) {
+                    vm.displayText = vm.customText || vm.pauseText;
+                    vm.playStop();
+                    if (vm.isProgress) {
+                        vm.progressWidth = 0;
+                    }
+                    return;
+                }
+            });
+        },
+
+        /**
+         * 播放
+         */
+        play() {
+            let vm = this;
+            if (!vm.audioUrl) {
+                return;
+            }
+            // 如果需要进度条的话，调用 player 的方法
+            if (vm.isProgress) {
+                vm.playerObj.toggle();
+            }
+            else {
+                vm.playerObj.play();
+                if (vm.status === 'PLAYING' || vm.status === 'TIME_UPDATE') {
+                    vm.playerObj.currentTime = 0;
+                    vm.playerObj.pause();
+                }
+                else if (vm.status === 'PAUSE' || vm.status === 'ENDED') {
+                    vm.playerObj.play();
+                }
+            }
+
+            /**
+             * 播放状态更新事件
+             *
+             * @event play
+             * @property {object} param1 事件对象
+             * @property {string} param1.status 音频的状态, PLAYING (正在播放)，PAUSE (暂停)，ENDED (播放结束)，TIME_UPDATE (时间更新)
+             */
+            vm.$emit('play', {
+                status: vm.status || 'PLAYING'
+            });
+        },
+        playAnimate() {
+            this.isPlaying = true;
+        },
+        playStop() {
+            this.isPlaying = false;
+        },
+        handleTouchStart(e) {
+            this.active = true;
+        },
+        handleTouchEnd(e) {
+            this.active = false;
+        }
+    }
+};
+</script>
+
+<style scoped lang="less">
+// 容器
+.c-audio-container {
+    position: relative;
+    display: inline-block;
+    width: auto;
+    max-width: calc(100% - 5px);
+    height: 38px;
+    // csshint-enable
+    line-height: 38px;
+    // csshint-enable
+    background: #f5f5f5;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+// 内部容器
+.c-audio-inner {
+    position: relative;
+    height: 100%;
+    // 需要加不换号，否则小屏手机下会自动换行
+    white-space: nowrap;
+
+    // 图标
+    .c-audio-playing-wrap {
+        width: 16px;
+        display: inline-block;
+
+        .c-audio-svg {
+            position: relative;
+            top: 2px;
+        }
+    }
+
+    // 图标动效
+    .c-audio-playing .c-audio-line0 {
+        visibility: hidden;
+        animation: animating 1s .4s infinite linear;
+    }
+    .c-audio-playing .c-audio-line1 {
+        visibility: hidden;
+        animation: animating1 1s .1s infinite linear;
+    }
+    @keyframes animating {
+        0% {
+            visibility: hidden;
+        }
+        20%,
+        30% {
+            visibility: visible;
+        }
+        31%,
+        100% {
+            visibility: hidden;
+        }
+    }
+    @keyframes animating1 {
+        0% {
+            visibility: hidden;
+        }
+        50%,
+        60% {
+            visibility: visible;
+        }
+        61%,
+        100% {
+            visibility: hidden;
+        }
+    }
+
+    // 截断
+    .c-audio-clamp-inner {
+        display: inline-block;
+        overflow: hidden;
+        max-width: 92%;
+        position: relative;
+        top: 6px;
+        vertical-align: top;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    // 时间
+    .c-audio-time {
+        position: absolute;
+        right: 10px;
+        top: 7px;
+    }
+}
+
+// 方形箭头
+.c-audio-arrow-rectangle {
+    width: 8px;
+    height: 8px;
+    background-color: #f5f5f5;
+    // 这里用 translate 是为了更好的贴紧，绝对定位贴不紧嗷
+    transform: rotate(45deg) translate(-19px, -12px);
+    box-sizing: border-box;
+}
+
+// 透明模式
+.c-audio-opacity,
+.c-audio-opacity path {
+    color: rgba(255, 255, 255, .6);
+    fill: rgba(255, 255, 255, .6);
+}
+
+// 进度条
+
+// 进度条 wrapper 这里包起来是为了圆角
+.c-audio-progress-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 5px;
+
+    .c-audio-progress {
+        background-color: rgba(0, 0, 0, .03);
+        width: 0;
+        height: 100%;
+        box-sizing: border-box;
+        transition: all .3s linear;
+    }
+}
+
+// 三角形箭头，这个箭头是为了在 progress 的时候挡住方形箭头的一半
+.c-audio-arrow-triangle {
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    width: 0;
+    height: 0;
+    margin-top: -5px;
+    border: 5px solid transparent;
+}
+// 渐显动画
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 1s;
+}
+.fade-enter,
+.fade-leave-to {
+    opacity: 0;
+}
+
+</style>

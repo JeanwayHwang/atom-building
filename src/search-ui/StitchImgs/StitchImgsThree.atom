@@ -1,0 +1,93 @@
+<!-- @ignore -->
+<template>
+    <c-row>
+        <c-span a-for="idx in 3" :key="idx">
+            <c-touchable-feedback
+                :open="!!(imgList[idx-1].url || (imgList[idx-1].params && imgList[idx-1].params.tcUrl))"
+                :top="-.05"
+                :bottom="-.05"
+                :left="-.04"
+                :right="-.04"
+                is-jump
+            >
+                <c-link
+                    :url="imgList[idx-1].url"
+                    :params="imgList[idx-1].params"
+                >
+                    <c-img
+                        :img-src="imgList[idx-1].src"
+                        :src="imgList[idx-1].src"
+                        :type="imgList[idx-1].type"
+                        class="c-stitch-imgs-three-rel c-color-link"
+                        @click="onImgClick(imgList[idx-1])"
+                    >
+                        <div a-if="imgList[idx-1].imgNum" class="c-stitch-imgs-three-mask">
+                            <span class="c-stitch-imgs-three-collection">
+                                <c-icon :type="imgs" class="c-gap-right-small"/>
+                                {{ imgList[idx-1].imgNum }}
+                            </span>
+                        </div>
+                    </c-img>
+                </c-link>
+            </c-touchable-feedback>
+        </c-span>
+    </c-row>
+</template>
+
+<config>
+    {
+        props: {
+            imgList: {
+                type: Array
+            }
+        },
+        data: {
+            imgs: 'imgs'
+        },
+        components: {
+            'c-row': '../Row/Row',
+            'c-span': '../Row/Span',
+            'c-link': '../Link/Link',
+            'c-img': '../Image/Image',
+            'c-icon': '../Icon/Icon',
+            'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+        }
+    }
+</config>
+
+<script>
+module.exports = {
+    methods: {
+        onImgClick(item) {
+            this.$emit('imgClick', item);
+        }
+    }
+};
+</script>
+
+
+<style scope>
+    .c-stitch-imgs-three-rel {
+        position: relative;
+    }
+
+    .c-stitch-imgs-three-collection {
+        color: #fff;
+        font-size: .1rem;
+        vertical-align: text-bottom;
+    }
+    /* csshint-disable require-number */
+    .c-stitch-imgs-three-mask {
+        border-radius: 10px;
+        padding: 0 .09rem;
+        background: rgba(0, 0, 0, .4);
+        margin-bottom: .02rem;
+        position: absolute;
+        bottom: 0;
+        right: .02rem;
+        height: 20px;
+        z-index: 90;
+        line-height: 20px;
+    }
+    /* csshint-enable require-number */
+</style>

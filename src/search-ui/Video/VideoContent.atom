@@ -1,0 +1,665 @@
+<template>
+    <c-link
+        ref="container"
+        :aria-modal="isExpanded"
+        class="video-content"
+        role="alertdialog"
+    >
+        <c-touchable-stop style="margin-bottom: .05rem">
+            <div
+                ref="posterWrapper"
+                :style="{
+                    height: width ? width / 3 + 'px' : 'auto',
+                    background: isGif ? '#4c4c4c' : 'white'
+                }"
+                :class="[$style[`${video.imgType}PosterWrapper`], noMotion ? $style.noMotion : '']"
+                class="poster-wrapper"
+                @click.native="handlePlay"
+            >
+                <c-img
+                    ref="poster"
+                    :src="video.poster"
+                    :type="video.posterType ? video.posterType : 'w'"
+                    :style="{
+                        width: video.zoom ? '100%' : ((isGif ? width / 16 * 9 : width) + 'px'),
+                        transform: isGif ? `translateX(${width / 32 * 7}px)` : 'none',
+                        padding: isGif ? '.15rem' : '0',
+                        display: isGif ? 'none' : 'block'
+                    }"
+                    aria-hidden="true"
+                    class="poster c-gap-top-zero"
+                    @click.native="handleExpand"
+                />
+                <c-img
+                    :src="video.poster"
+                    :type="video.imgType === 'b' ? 's' : video.imgType"
+                    :padding-bottom="video.imgType === 'b' ? 50.75 : ''"
+                    class="hidden c-gap-top-zero c-gap-bottom-zero"
+                    aria-hidden="true"
+                    @click.native="handleExpand"
+                />
+                <div
+                    :style="{
+                        width: width + 'px',
+                        height: width / 16 * 9 + 'px'
+                    }"
+                    class="slot-abs"
+                >
+                    <div a-if="isPlayFront" ref="playFront" class="slot-wrapper">
+                        <!-- @slot 播放之前内容 -->
+                        <slot name="player-front"/>
+                    </div>
+                    <div a-if="isPlayEnd" ref="playEnd" class="slot-wrapper">
+                        <!-- @slot 播放结束内容 -->
+                        <slot name="player-end"/>
+                    </div>
+                </div>
+                <div a-if="isPlayFront && !isGif" ref="playFrontMask" class="player-mask"/>
+                <div a-if="isPlayEnd" class="player-mask player-mask-light"/>
+            </div>
+            <c-icon
+                ref="closeIcon"
+                :class="[(isAndroid && !isGif) ? $style.whiteClose : '']"
+                class="c-icon player-close-icon"
+                type="multiply"
+                role="button"
+                aria-roledescription="关闭视频.按钮"
+                @click="handleShrink"
+            />
+            <div
+                ref="videoWrapper"
+                :style="{ width: width + 'px' }"
+                class="video-wrapper"
+            >
+                <div
+                    class="player-wrapper"
+                >
+                    <b-player
+                        a-if="!isGif"
+                        ref="player"
+                        :src="video.src"
+                        :poster="video.poster"
+                        :height="width / 16 * 9"
+                        :t7playerinline="isLowBox"
+                        playsinline="true"
+                        autoplay="autoplay"
+                        preload="none"
+                        class="player"
+                    />
+                </div>
+            </div>
+        </c-touchable-stop>
+        <c-row class="main-wrapper">
+            <c-span
+                :col="video.col"
+                :aria-roledescription="`${video.title ? video.title : ''}.视频`"
+                :aria-hidden="isExpanded"
+                style="padding-left: .01rem"
+                role="button"
+                data-module="c-v-pl"
+            >
+                <c-touchable-stop style="position: relative">
+                    <c-img
+                        :style="{
+                            opacity: isExpanded ? 0 : 1
+                        }"
+                        :class="[video.logo && !video.smallLogo ? $style.logoWrapper : '']"
+                        :src="video.thumb"
+                        :circle-mask-icon="video.iconType ? video.iconType : 'video_play3'"
+                        :circle-mask-text="video.iconTxt"
+                        :type="video.imgType === 'b' ? 's' : video.imgType"
+                        :show-num="video.time"
+                        :padding-bottom="video.imgType === 'b' ? 50.75 : ''"
+                        class="thumb"
+                        @click.native="handleExpand"
+                    />
+                    <img
+                        a-show="!isExpanded && video.logo"
+                        :src="video.logo"
+                        :class="video.smallLogo ? $style.smallLogo : $style.logo"
+                    >
+                </c-touchable-stop>
+            </c-span>
+            <c-span
+                ref="rightWrapper"
+                :col="12 - video.col"
+                class="right-wrapper"
+            >
+                <div
+                    ref="rightText"
+                    :class="[noMotion ? $style.noMotion : '']"
+                    class="right-text"
+                >
+                    <!-- @slot 右侧区域 -->
+                    <slot name="player-right">
+                        <c-touchable-feedback :url="text.url" is-jump>
+                            <c-text-line
+                                :text="text.text"
+                                :color="text.textColor"
+                                :clamp="text.textClamp ? text.textClamp : 4"
+                            />
+                        </c-touchable-feedback>
+                    </slot>
+                </div>
+            </c-span>
+        </c-row>
+        <c-row
+            a-show="!vanish"
+            ref="areaBelow"
+            :class="[noMotion ? $style.noMotion : '']"
+            class="area-below"
+        >
+            <c-span
+                a-if="video.posterType !== 's' || video.vanish"
+                col="12"
+            >
+                <!-- @slot 右侧区域 -->
+                <slot name="player-right">
+                    <c-touchable-feedback
+                        :url="text.url"
+                        is-jump
+                    >
+                        <c-text-line
+                            :text="text.text"
+                            :color="text.textColor"
+                            :clamp="text.textClamp ? text.textClamp : 4"
+                        />
+                    </c-touchable-feedback>
+                </slot>
+            </c-span>
+        </c-row>
+    </c-link>
+</template>
+<script type="config">
+{
+    props: {
+        /**
+         * 视频参数
+         *
+         * @property {string} title 标题，用于无障碍读屏器，'.' 表示停顿，输入 'aaa.bbb' 会朗读 'aaa bbb 视频'
+         * @property {string} src 视频地址 若不设置则只显示视频播放前的 slot
+         * @property {string | number} thumb 描述图片右下角遮罩内自定义文案及数字，与duration互斥，优先显示showTxt
+         * @property {string} poster 描述图片右下角遮罩内自定义icon图标
+         * @property {string} icontype 描述图片居中遮罩自定义icon, 不传时，默认值为 ‘video_play3' 默认值 'video_play3'
+         * @property {string} icontxt 描述图片居中遮罩自定义文案内容, 与icontypeDefined只能出现一个，否则都显示，影响展现
+         * @property {string | number} col 描述自定义小图栅格数 默认值 4
+         * @property {string} imgType 图片比例，默认为s，1:1 默认值 's'
+         * @property {string} logo 1:1小图下方的蒙层 logo 默认值 'http://m.baidu.com/se/static/aladdin/bk_polysemy/miaodong-logo_d5aa8ae.png'
+         * @property {boolean} wait 是否等待点击播放 默认值 false
+         * @property {boolean} zoom 展开是否为图片放大（默认为图片不变 框变大） 默认值 false
+         * @property {boolean} shift 展开时右侧元素是否右移（默认下移） 默认值 false
+         * @property {boolean} vanish 展开时下侧区域是否不显示（默认为 false 代表显示） 默认值 false
+         * @property {boolean} smallLogo 右侧文字几行折断 默认值 4
+         * @property {string} text 右侧文字内容
+         * @property {string} textColor 右侧文字颜色 默认值 '#555'
+         * @property {string} textClamp 右侧文字几行折断 默认值 4
+         */
+        video: {
+            type: Object,
+            default: {}
+        },
+        /**
+         * 右侧文本参数
+         *
+         * @property {string} text 右侧文字内容
+         * @property {string} textColor 右侧文字颜色 默认值 '#555'
+         * @property {string} textClamp 右侧文字几行折断 默认值 4
+         */
+        text: {
+            type: Object,
+            default: {}
+        }
+    },
+    components: {
+        'c-line': '../Line/Line',
+        'c-link': '../Link/Link',
+        'c-icon': '../Icon/Icon',
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-img': '../Image/Image',
+        'c-timespan': '../Timespan/Timespan',
+        'c-text-line': '../TextLine/TextLine',
+        'c-touchable-stop': '../TouchableFeedback/TouchableStop',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    },
+    data: {
+        isExpanded: false,
+        isPlayEnd: false,
+        isPlayFront: false,
+        width: 0,
+        isAndroid: false,
+        isGif: false,
+        isLowBox: false,
+        noMotion: false,
+        vanish: false
+    }
+}
+</script>
+<script>
+import 'fusion/b-player/b-player';
+import flip from '../util/orientationMixin';
+const THUBMNAIL_WIDTH = {
+    s: '32%',
+    b: '65%'
+};
+export default {
+    methods: {
+
+        /**
+         * 展开动效
+         * 0ms-300ms 16:9大图 展开
+         * 0ms-180ms 右侧区域 下移
+         * 0ms-180ms 右侧区域 渐隐
+         * 0ms-300ms 下侧区域 高度增加
+         * 0ms-300ms 下侧区域 渐显
+         * 300ms-380ms 关闭按钮渐显
+         * 48ms-348ms 蒙层渐显 (多 48ms 解决部分机型 300ms 未完全展开问题)
+         */
+        handleExpand() {
+            this.isPlayEnd = false;
+
+            /**
+             * 点击展开事件
+             *
+             * @event expand
+             */
+            this.$emit('expand');
+            setTimeout(() => {
+                this.isExpanded = true;
+            }, this.noMotion ? 0 : 50);
+            let height = this.width / 16 * 9 + 'px';
+            let posterWrapper = this.$refs.posterWrapper;
+            let areaBelow = this.$refs.areaBelow.$el;
+            let rightText = this.$refs.rightText;
+            let closeIcon = this.$refs.closeIcon.$el;
+            posterWrapper.style.opacity = 1;
+            posterWrapper.style.zIndex = 4;
+            posterWrapper.style.width = '100%';
+            posterWrapper.style.height = height;
+            if (this.video.shift) {
+                rightText.style.marginLeft = '105%';
+            }
+            else {
+                rightText.style.marginTop = height;
+            }
+            rightText.style.opacity = 0;
+            areaBelow.style.height = areaBelow.scrollHeight + 'px';
+            areaBelow.style.paddingTop = '0.15rem';
+            areaBelow.style.opacity = 1;
+            closeIcon.style.display = 'block';
+            if (!this.video.wait) {
+                this.play();
+            }
+            else {
+                this.isPlayFront = true;
+            }
+            setTimeout(() => {
+                if (this.isPlayFront) {
+                    this.$refs.playFront.style.opacity = 1;
+                    if (!this.isGif) {
+                        this.$refs.playFrontMask.style.opacity = 1;
+                    }
+                }
+            }, this.noMotion ? 0 : 48);
+            setTimeout(() => {
+                closeIcon.style.opacity = 1;
+                rightText.className = [
+                    this.isGif ? this.$style.rightTextDisappear : this.$style.rightText,
+                    this.noMotion ? this.$style.noMotion : ''
+                ].join(' ');
+            }, this.noMotion ? 0 : 300);
+        },
+
+        /**
+         * 收起动效
+         * 0ms 蒙层消失
+         * 0ms 关闭按钮消失
+         * 0ms-300ms 16:9大图 收缩
+         * 0ms-120ms 右侧区域 上移
+         * 0ms-180ms 右侧区域 渐显
+         * 0ms-200ms 下侧区域 高度减少
+         * 0ms-200ms 下侧区域 渐隐
+         * 300-420ms 16:9大图 渐隐
+         *
+         * @param {event} e 事件
+         */
+        handleShrink(e) {
+            e && e.preventDefault();
+            this.isExpanded = false;
+            this.isPlayEnd = false;
+
+            /**
+             * 点击收起事件
+             *
+             * @event shrink
+             */
+            this.$emit('shrink');
+            let videoWrapper = this.$refs.videoWrapper;
+            let posterWrapper = this.$refs.posterWrapper;
+            let areaBelow = this.$refs.areaBelow.$el;
+            let rightText = this.$refs.rightText;
+            let closeIcon = this.$refs.closeIcon.$el;
+            let playFront = this.$refs.playFront;
+            let playFrontMask = this.$refs.playFrontMask;
+            posterWrapper.style.opacity = 1;
+            posterWrapper.style.zIndex = 4;
+            videoWrapper.style.opacity = 0;
+            videoWrapper.style.height = 0;
+            posterWrapper.style.width = THUBMNAIL_WIDTH[this.video.imgType ? this.video.imgType : 's'];
+            posterWrapper.style.height = this.width / 3 + (this.video.col / 4 - 2) * 5 + 'px';
+            rightText.style.opacity = 1;
+            if (this.video.shift) {
+                rightText.style.marginLeft = '0%';
+            }
+            else {
+                rightText.style.marginTop = 0;
+            }
+            areaBelow.style.height = 0;
+            areaBelow.style.paddingTop = 0;
+            areaBelow.style.opacity = 0;
+            closeIcon.style.display = 'none';
+            closeIcon.style.opacity = 0;
+            if (playFront) {
+                playFront.style.opacity = 0;
+            }
+            if (playFrontMask) {
+                playFrontMask.style.opacity = 0;
+            }
+            if (!this.isGif) {
+                let player = this.$refs.player;
+                player.fusion.remove();
+                player.innerHTML = '';
+                player.style.height = 0;
+                player.style.width = 0;
+            }
+            setTimeout(() => {
+                posterWrapper.style.opacity = 0;
+                rightText.className = [this.$style.rightText, this.noMotion ? this.$style.noMotion : ''].join(' ');
+            }, this.isGif || this.noMotion ? 0 : 300);
+            setTimeout(() => {
+                this.isPlayFront = false;
+                posterWrapper.style.zIndex = -1;
+            }, this.noMotion ? 0 : 480);
+        },
+
+        /**
+         * 播放动效
+         * 0ms-240ma 蒙层渐隐
+         *
+         * @return {null}
+         */
+        play() {
+            if (!this.video.src) {
+                return void 0;
+            }
+            let height = this.width / 16 * 9 + 'px';
+            let videoWrapper = this.$refs.videoWrapper;
+            let posterWrapper = this.$refs.posterWrapper;
+            let closeIcon = this.$refs.closeIcon.$el;
+
+            /**
+             * 开始播放事件
+             *
+             * @event playStart
+             */
+            this.$emit('playStart');
+            let player = this.$refs.player;
+            player.setAttribute('src', this.video.src + '?t=' + new Date().getTime());
+            player.style.height = 'auto';
+            player.style.width = '100%';
+            player.fusionReady = () => {
+                player.fusion.play();
+                player.fusion.on('playend', () => {
+                    this.isPlayEnd = true;
+                    this.$nextTick(() => {
+                        if (this.$refs.playEnd) {
+                            this.$refs.playEnd.style.opacity = 1;
+                        }
+                    });
+
+                    /**
+                     * 播放结束事件
+                     *
+                     * @event playEnd
+                     */
+                    this.$emit('playEnd');
+                    posterWrapper.style.opacity = 1;
+                    posterWrapper.style.zIndex = 4;
+                    player.fusion.remove();
+                    player.innerHTML = '';
+                });
+            };
+            setTimeout(() => {
+                posterWrapper.style.opacity = 0;
+                closeIcon.style.opacity = 1;
+                videoWrapper.style.opacity = 1;
+                videoWrapper.style.height = height;
+            }, this.noMotion ? 0 : 300);
+            setTimeout(() => {
+                this.isPlayEnd = false;
+                this.isPlayFront = false;
+                let posterWrapper = this.$refs.posterWrapper;
+                posterWrapper.style.zIndex = -1;
+                posterWrapper.style.opacity = 1;
+            }, this.noMotion ? 0 : 600);
+        },
+        mediaQueryOrientationListenerMixin(mediaQueryList) {
+            setTimeout(() => {
+                this.width = this.$refs.container.$el.clientWidth;
+                this.$nextTick(() => {
+                    this.$refs.posterWrapper.style.height
+                        = this.isExpanded
+                            ? this.width / 16 * 9 + 'px'
+                            : (this.isGif ? 'auto' : this.width / 3 - 5) + 'px';
+                });
+            }, this.noMotion ? 0 : 500);
+        }
+    },
+    mixins: [flip],
+    mounted() {
+        let ua = navigator.userAgent.toLowerCase();
+        this.isAndroid = /android/.test(ua);
+        this.isBox = /baiduboxapp/.test(ua);
+        // 安卓 5 6 手百 video 播放器无法触发 fusion playend 事件，此情况下改为手百不劫持播放器
+        this.isLowBox = (/android 5/.test(ua) || /android 6/.test(ua)) && /baiduboxapp/i.test(ua);
+        this.width = this.$refs.container.$el.clientWidth;
+        this.isGif = this.video.posterType === 's';
+        this.noMotion = this.isAndroid && (!this.isBox || this.isLowBox);
+        this.vanish = this.isGif || this.video.vanish;
+    },
+    deactivated() {
+        if (this.isExpanded && !this.isGif) {
+            this.handleShrink(null);
+        }
+    }
+};
+</script>
+<style module>
+    /* 本组件 z-index 取值范围为 -1 至 7 */
+    .video-content {
+        position: relative;
+        padding-bottom: .05rem;
+    }
+    .main-wrapper {
+        top: 0;
+        width: 100%;
+        position: absolute;
+        margin: auto auto auto -.01rem;
+    }
+    .video-wrapper {
+        top: 0;
+        opacity: 0;
+        position: absolute;
+        width: 100%;
+        top: .05rem;
+        width: 100%;
+        height: 0;
+        transition: opacity .08s;
+        transform: translate3d(0, 0, 0);
+        z-index: 1;
+    }
+    .poster-wrapper {
+        width: 33.33%;
+        overflow: hidden;
+        position: relative;
+        top: .05rem;
+        margin-bottom: -.05rem;
+        z-index: -1;
+        opacity: 1;
+        background: #fff;
+        transform: translate3d(0, 0, 0);
+        transition:
+            height .3s cubic-bezier(.18, 0, .26, 1) 0s,
+            width .3s cubic-bezier(.18, 0, .26, 1) 0s,
+            opacity .20s cubic-bezier(.12, 0, .02, 1) 0s;
+    }
+    .poster {
+        box-sizing: border-box;
+        position: absolute;
+    }
+    .hidden {
+        visibility: hidden;
+    }
+    .player {
+        position: absolute;
+        width: 100%;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 0;
+        z-index: 1;
+        overflow: hidden;
+    }
+    .player-mask {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: rgba(0, 0, 0, .7);
+        z-index: 5;
+        opacity: 0;
+        transition: opacity .3s;
+    }
+    .player-mask-light {
+        background: rgba(0, 0, 0, .5);
+        opacity: 1;
+    }
+    .player-close-icon {
+        position: absolute;
+        right: -.05rem;
+        top: 0;
+        width: .28rem;
+        height: .28rem;
+        font-size: .14rem;
+        line-height: 2;
+        background: rgba(0, 0, 0, .6);
+        color: #fff;
+        text-align: center;
+        z-index: 7;
+        box-sizing: border-box;
+        margin: 5px;
+        transition: opacity .24s;
+        opacity: 0;
+    }
+    .white-close {
+        top: -.29rem;
+        color: #555;
+        border: 1px solid #eee;
+        background: #fff;
+    }
+    .logo-wrapper {
+        position: relative;
+    }
+    .logo-wrapper:after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: .16rem;
+        background: rgba(110, 88, 88, .4);
+        z-index: 1;
+        border-bottom-left-radius: 3px;
+        border-bottom-right-radius: 3px;
+    }
+    .logo  {
+        height: .12rem;
+        width: auto;
+        margin: .02rem;
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+    }
+    .small-logo {
+        height: .16rem;
+        width: auto;
+        padding: .02rem .04rem;
+        position: absolute;
+        top: .05rem;
+        left: .02rem;
+        z-index: 2;
+        background: rgba(0, 0, 0, .4);
+    }
+    .right-wrapper {
+        padding-right: 0;
+        padding-left: .0275rem;
+    }
+    .area-below {
+        height: 0;
+        transition: height .2s cubic-bezier(.18, 0, .26, 1) 0s, opacity .2s;
+        overflow: hidden;
+        box-sizing: content-box;
+    }
+    .slot-abs {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 6;
+    }
+    .slot-wrapper {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        box-sizing: border-box;
+        opacity: 0;
+        transition: opacity .18s;
+    }
+    .right-text {
+        width: 100%;
+        margin-top: 0;
+        opacity: 1;
+        position: absolute;
+        transition:
+            margin-top .18s cubic-bezier(.4, .4, .6, 1) 0s,
+            margin-left .3s cubic-bezier(.18, 0, .26, 1) 0s,
+            opacity .3s cubic-bezier(.18, 0, .26, 1) 0s;
+    }
+    .right-text-disappear {
+        width: 100%;
+        margin-top: 0;
+        opacity: 1;
+        position: absolute;
+        transition:
+            opacity 0s;
+    }
+    .no-motion {
+        transition:
+            width 0s,
+            height 0s,
+            margin-top 0s,
+            margin-left 0s,
+            opacity 0s;
+    }
+    .s-poster-wrapper {
+        width: 33.33%;
+    }
+    .b-poster-wrapper {
+        width: 66.66%;
+    }
+</style>

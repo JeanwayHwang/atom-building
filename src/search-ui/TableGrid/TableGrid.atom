@@ -1,0 +1,62 @@
+<template>
+    <!-- 网格表格 -->
+    <div>
+        <div
+            a-for="(trItem, rowIndex) in content.tRow"
+            :key="rowIndex"
+            class="c-row"
+        >
+            <div
+                a-for="(tdItem, itemIndex) in trItem.tCell"
+                :key="rowIndex + '' + itemIndex"
+                :class="'c-span' + gridClass"
+            >
+                <c-btn
+                    a-if="tdItem.text"
+                    :url="tdItem.url"
+                    :text="tdItem.text"
+                    :params="tdItem.params"
+                    class="c-table-grid-border"
+                />
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 表格数据
+         *
+         * @property {Array} tRow 表行数组
+         * @property {String} tRow.url 整行可点的链接
+         * @property {object} tRow.params 整行可点的链接类型
+         * @property {String} tRow.params.type 链接参数中的类型
+         * @property {String} tRow.params.sfUrl 链接参数中的链接
+         * @property {String} tRow.params.options 链接参数中的选项
+         * @property {Array} tRow.tCell 表单行内容数组
+         * @property {String} tRow.tCell.url 表单元格可点的链接
+         * @property {object} tRow.tCell.params 表单元格可点的链接类型
+         * @property {String} tRow.tCell.params.type 链接参数中的类型
+         * @property {String} tRow.tCell.params.sfUrl 链接参数中的链接
+         * @property {String} tRow.tCell.params.options 链接参数中的选项
+         * @property {String} tRow.tCell.text 表单元格文案内容
+         * @property {String} tRow.tCell.abstract 表单元格灰色文案内容
+         */
+        content: Object
+    },
+    components: {
+        'c-btn': '../Button/Button'
+    },
+    data: {
+        gridClass: 12 / content.tRow[0].tCell.length
+    }
+}
+</script>
+
+<style scoped>
+.c-table-grid-border {
+    border: 1px solid #eee;
+}
+</style>

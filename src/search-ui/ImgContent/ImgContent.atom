@@ -1,0 +1,234 @@
+<template>
+    <c-row>
+        <c-span :col="imgCol" :data-module="imgDataModule">
+            <c-link :url="imgUrl" :params="imgUrlParams">
+                <c-touchable-feedback
+                    :open="imgTouchable && (imgUrl ? true : false)"
+                    background-color="rgba(0, 0, 0, .08)"
+                >
+                    <c-img
+                        :src="imgSrc"
+                        :hack-white-stroke="imgHackWhiteStroke"
+                        :lazy="imgLazy"
+                        :type="imgType"
+                        :maskgap-size="imgMaskgapSize"
+                        :show-num="imgShowNum"
+                        :icon-type="imgIconType"
+                        :is-round="imgIsRound"
+                        :default-image-type="defaultImageType"
+                        :grid-size="imgCol"
+                        :progressive="progressive"
+                        :is-background-image="isBackgroundImage"
+                        :background-size="backgroundSize"
+                        aria-hidden="true"
+                        @click.native="handleImgClick"
+                        @load="handleLoad"
+                        @error="handleError"
+                    >
+                        <!-- @slot 图片上的自定义内容 -->
+                        <slot name="img"/>
+                    </c-img>
+                </c-touchable-feedback>
+            </c-link>
+        </c-span>
+        <c-span
+            :col="($platform === 'pc' ? 24 : 12) - imgCol"
+            :class="{'c-span-middle': isVerticalMiddle}"
+        >
+            <!-- @slot 右侧内容区 -->
+            <slot/>
+        </c-span>
+    </c-row>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 图片链接
+         */
+        imgSrc: {
+            type: String
+        },
+
+        /**
+         * 图片比例，值有（s,l,w,x,y）
+         *
+         * @see See [栅格图片](http://pmd.baidu.com/doc/#image)
+         */
+        imgType: {
+            type: String,
+            default: 's'
+        },
+
+        /**
+         * 点击图片跳转链接
+         */
+        imgUrl: String,
+
+        /**
+         * 图片跳转链接所需参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        imgUrlParams: Object,
+
+        /**
+         * 有些图片有白边，需要加这个保证间距的统一
+         */
+        imgHackWhiteStroke: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 图片懒加载
+         */
+        imgLazy: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 图片右下角遮罩与外框的边距
+         *
+         * @see See [Image](./Image#API) `maskgapSize`
+         */
+        imgMaskgapSize: {
+            type: [Number, String],
+            default: ''
+        },
+
+        /**
+         * 胶囊遮罩的文案
+         */
+        imgShowNum: {
+            type: [Number, String],
+            default: ''
+        },
+
+        /**
+         * 胶囊遮罩的图标类型
+         */
+        imgIconType: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 是否是圆形图片
+         */
+        imgIsRound: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 图片所占栅格数
+         */
+        imgCol: {
+            type: Number,
+            default: 4
+        },
+
+        /**
+         * 图片是否有点击态
+         */
+        imgTouchable: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 缺省图类型
+         *
+         * @see See [Image](./Image#API) `defaultImageType`
+         */
+        defaultImageType: String,
+
+        /**
+         * 是否采用背景图片的方式
+         */
+        isBackgroundImage: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 背景图片css background-size，当且仅当采用背景图片时才有效
+         */
+        backgroundSize: {
+            type: String,
+            default: 'cover'
+        },
+
+        /**
+         * 图片显示使用渐显效果
+         */
+        progressive: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 右侧内容是否垂直居中
+         */
+        isVerticalMiddle: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 左侧图片的data-module属性
+         */
+        imgDataModule: {
+            type: String,
+            default: ''
+        }
+    },
+    components: {
+        'c-img': '../Image/Image',
+        'c-span': '../Row/Span',
+        'c-row': '../Row/Row',
+        'c-link': '../Link/Link',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleImgClick() {
+
+            /**
+             * 左侧图片点击事件
+             *
+             * @event imgclick
+             */
+            this.$emit('imgclick');
+        },
+        handleLoad(e) {
+
+            /**
+             * 图片加载完成事件，当使用背景图片的时候不支持
+             *
+             * @event load
+             * @property {Event} param1 透传事件对象
+             */
+            this.$emit('load', e);
+        },
+        handleError(e) {
+
+            /**
+             * 图片加载错误事件，当使用背景图片的时候不支持
+             *
+             * @event error
+             * @property {Event} param1 透传事件对象
+             */
+            this.$emit('error', e);
+        }
+    }
+};
+</script>

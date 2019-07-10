@@ -1,0 +1,169 @@
+<!-- @ignore -->
+<template>
+    <div
+        class="item-wrapper"
+    >
+        <div
+            class="item c-font-normal"
+            @click="handleClick"
+        >
+            <!-- 显示文案的判断条件是 text 存在时才会显示 -->
+            <!--
+                显示选中态的判断条件是
+                1.类型不为 order 且方向为上时
+                    或者
+                2.类型为 order 且方向存在时
+                    或者
+                3.强制选中为 true 时
+            -->
+            <span
+                a-if="text"
+                :style="[
+                    {
+                        color
+                    },
+                    (type !== 'order' && direction === 'up') || (type === 'order' && direction) || selected
+                        ? {
+                            'color': selectedColor,
+                            'font-weight': 'bold'
+                        }
+                        : {}
+                ]"
+                class="text c-line-clamp1"
+            >
+                {{ text }}
+            </span>
+            <!-- order -->
+            <div
+                a-if="type === 'order'"
+                class="order-wrapper c-gap-left-small"
+            >
+                <c-triangle
+                    :direction="2"
+                    :color="
+                        direction === 'up'
+                            ? selectedColor
+                            : color
+                    "
+                    :animation="false"
+                    :default-line-height="false"
+                    class="order-top"
+                />
+                <c-triangle
+                    :direction="1"
+                    :color="
+                        direction === 'down'
+                            ? selectedColor
+                            : color
+                    "
+                    :animation="false"
+                    :default-line-height="false"
+                    class="order-bottom"
+                />
+            </div>
+            <!-- normal -->
+            <c-triangle
+                a-else
+                :direction="
+                    direction === 'up'
+                        ? 2
+                        : 1
+                "
+                :color="
+                    direction === 'up' || selected
+                        ? selectedColor
+                        : color
+                "
+                class="c-gap-left-small"
+            />
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        // 文案
+        text: String,
+        // 索引
+        index: [String, Number],
+        // 类型：normal 正常；order 排序；
+        type: {
+            type: String,
+            default: 'normal'
+        },
+        // 方向：up 向上；down 向下
+        direction: String,
+        // 强制选中
+        selected: {
+            type: Boolean,
+            default: false
+        },
+        // 默认颜色
+        color: {
+            type: String,
+            default: '#666'
+        },
+        // 选中颜色
+        selectedColor: {
+            type: String,
+            default: '#333'
+        }
+    },
+    data: {
+        // 展开收起按钮点击保护
+        clickProtect: false,
+        // timeout 句柄
+        clickProtectTimeout: null
+    },
+    components: {
+        'c-triangle': '../AnimateIcon/Triangle'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleClick() {
+
+            // 点击保护
+            if (this.clickProtect) {
+                return;
+            }
+            this.clickProtect = true;
+            this.clickProtectTimeout = setTimeout(() => {
+                this.clickProtect = false;
+            }, 300);
+
+            this.$emit('click', {
+                text: this.text,
+                index: this.index,
+                type: this.type,
+                direction: this.direction
+            });
+        }
+    }
+};
+</script>
+
+<style lang="less" module>
+.item-wrapper {
+    flex: 1;
+}
+.item {
+    display: flex;
+    justify-content: center;
+}
+.order-wrapper {
+    display: flex;
+    padding-top: 7px;
+    flex-direction: column;
+    .order-top,
+    .order-bottom {
+    }
+    .order-bottom {
+        margin-top: 2px;
+    }
+}
+</style>

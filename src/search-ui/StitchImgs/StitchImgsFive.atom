@@ -1,0 +1,188 @@
+<!-- @ignore -->
+<template>
+    <c-row>
+        <c-span>
+            <div class="c-stitch-imgs-five">
+                <div a-for="idx in 5" :class="'c-stitch-imgs-five-box c-stitch-imgs-five-' + idx" :key="idx">
+                    <c-touchable-feedback
+                        :open="!!(imgList[idx-1].url || (imgList[idx-1].params && imgList[idx-1].params.tcUrl))"
+                        is-jump
+                    >
+                        <c-link :url="imgList[idx-1].url" :params="imgList[idx-1].params">
+                            <c-img
+                                :img-src="imgList[idx-1].src"
+                                :src="imgList[idx-1].src"
+                                :border-radius="{
+                                    tl: idx === 1,
+                                    tr: idx === 3,
+                                    bl: idx === 1,
+                                    br: idx === 5
+                                }"
+                                type="s"
+                                class="c-stitch-imgs-five-rel c-stitch-imgs-five-load c-color-link"
+                                @click="onImgClick(imgList[idx-1])"
+                            >
+                                <div a-if="imgList[idx-1].imgNum" class="c-stitch-imgs-five-mask">
+                                    <span class="c-stitch-imgs-five-collection">
+                                        <c-icon :type="imgs" class="c-gap-right-small"/>
+                                        {{ imgList[idx-1].imgNum }}
+                                    </span>
+                                </div>
+                            </c-img>
+                        </c-link>
+                    </c-touchable-feedback>
+                </div>
+            </div>
+        </c-span>
+    </c-row>
+</template>
+
+<config>
+    {
+        props: {
+            imgList: {
+                type: Array
+            }
+        },
+        data: {
+            imgs: 'imgs'
+        },
+        components: {
+            'c-row': '../Row/Row',
+            'c-span': '../Row/Span',
+            'c-link': '../Link/Link',
+            'c-img': '../Image/Image',
+            'c-icon': '../Icon/Icon',
+            'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+        }
+    }
+</config>
+
+<script>
+export default {
+    methods: {
+        onImgClick(item) {
+            this.$emit('imgClick', item);
+        }
+    }
+};
+</script>
+
+<style scope>
+    .c-stitch-imgs-five {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .c-stitch-imgs-five .c-stitch-imgs-five-box {
+        position: absolute;
+        height: 0;
+        overflow: hidden;
+    }
+    .c-stitch-imgs-five .c-stitch-imgs-five-1 {
+        width: 50%;
+        position: static;
+        padding-bottom: 50%;
+        left: 0;
+        top: 0;
+    }
+    .c-stitch-imgs-five-2,
+    .c-stitch-imgs-five-3,
+    .c-stitch-imgs-five-4,
+    .c-stitch-imgs-five-5 {
+        width: 25%;
+        padding-bottom: 25%;
+    }
+    .c-stitch-imgs-five-2 {
+        top: 0;
+        left: 50%;
+    }
+    .c-stitch-imgs-five-3 {
+        right: 0;
+        top: 0;
+    }
+    .c-stitch-imgs-five-4 {
+        left: 50%;
+        top: 50%;
+    }
+    .c-stitch-imgs-five-5 {
+        right: 0;
+        top: 50%;
+    }
+    .c-stitch-imgs-five .c-stitch-imgs-five-1::before {
+        content: "";
+        width: 1px;
+        height: 100%;
+        background: #fff;
+        position: absolute;
+        top: 0;
+        left: 50%;
+        z-index: 1;
+    }
+    .c-stitch-imgs-five .c-stitch-imgs-five-1::after {
+        content: "";
+        width: 1px;
+        height: 100%;
+        background: #fff;
+        position: absolute;
+        top: 0;
+        left: 75%;
+        z-index: 1;
+    }
+    .c-stitch-imgs-five .c-stitch-imgs-five-3::after {
+        content: "";
+        width: 200%;
+        height: 1px;
+        background: #fff;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        z-index: 1;
+    }
+    .c-stitch-imgs-five .c-stitch-imgs-five-2::after {
+        content: "";
+        width: 200%;
+        height: 1px;
+        background: #fff;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        z-index: 1;
+    }
+
+    .c-stitch-imgs-five .c-img {
+        border-right: none;
+        margin: 0;
+    }
+    .c-stitch-imgs-five-load {
+        height: 0;
+        overflow: hidden;
+        padding-bottom: 100%;
+        background-size: cover;
+        background-position: top center;
+    }
+    .c-stitch-imgs-five-rel {
+        position: relative;
+    }
+    .c-stitch-imgs-five-collection {
+        color: #fff;
+        font-size: .1rem;
+        vertical-align: text-bottom;
+    }
+    .c-stitch-imgs-five-mask {
+        border-radius: 10px;
+        padding: 0 .09rem;
+        background: rgba(0, 0, 0, .4);
+        margin-bottom: .03rem;
+        position: absolute;
+        bottom: 0;
+        right: .02rem;
+        height: 20px;
+        z-index: 90;
+        /* csshint-disable */
+        line-height: 20px;
+        /* csshint-enable */
+    }
+</style>

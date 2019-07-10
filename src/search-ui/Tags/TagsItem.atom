@@ -1,0 +1,49 @@
+<!--@ignore-->
+<template>
+    <div class="c-tags-item">
+        <slot a-if="!isLoading"/>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        label: {
+            type: String
+        },
+        icon: {
+            type: String,
+            default: ''
+        },
+        isLoading: {
+            type: Boolean,
+            default: false
+        },
+        logContent: {
+            type: Object,
+            default: {}
+        },
+        params: {
+            type: Object,
+            default: {}
+        }
+    }
+}
+</script>
+
+<script type="php">
+    function created ($ctx) {
+        $ctx->dispatch('tag-item-data', $ctx->_d);
+        $ctx->dispatch('tag-content-item-data', array('isLoading' => $ctx->_d['isLoading']));
+    }
+</script>
+
+<style lang="less" scoped>
+.c-tags-item {
+    padding: 0 .17rem;
+    background-color: #fff;
+    overflow: hidden;
+}
+</style>
+
+

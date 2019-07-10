@@ -1,0 +1,67 @@
+<template>
+    <c-stitch-imgs-two
+        a-if="imgNum == 2 && !(imgType=='combImg')"
+        :img-list="imgList"
+    />
+    <c-stitch-imgs-two-revert
+        a-else-if="imgNum == 2 && imgType=='combImg'"
+        :img-list="imgList"
+    >
+        <!-- @slot combImg图集的自定义内容 -->
+        <slot name="img"></slot>
+    </c-stitch-imgs-two-revert>
+    <c-stitch-imgs-three
+        a-else-if="imgNum == 3"
+        :img-list="imgList"
+    />
+    <c-stitch-imgs-five
+        a-else-if="imgNum == 5"
+        :img-list="imgList"
+    />
+    <span a-else/>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 按几图展示，包括2、3、5三种
+         */
+        num: {
+            type: Number,
+            required: true
+        },
+
+        /**
+         * 图片列表
+         *
+         * @property {number} imgNum 显示图集个数
+         * @property {string} url 图片的跳转链接
+         * @property {Object} params 图片的跳转链接所需参数
+         * @property {string} src 图片地址
+         * @property {string} type 图片比例，值有（s,l,w,x,y）
+         */
+        imgList: {
+            type: Array,
+            required: true
+        },
+
+        /**
+         * 8n+4n二图集：combImg
+         */
+        imgType: {
+            type: String
+        }
+    },
+    data: {
+        imgNum: num > 0 ? num : imgList.length
+    },
+    components: {
+        'c-stitch-imgs-two': './StitchImgsTwo',
+        'c-stitch-imgs-two-revert': './StitchImgsRevertTwo',
+        'c-stitch-imgs-three': './StitchImgsThree',
+        'c-stitch-imgs-five': './StitchImgsFive'
+    }
+}
+</script>

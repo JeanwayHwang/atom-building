@@ -1,0 +1,163 @@
+<template>
+    <c-transition
+        :enter="{
+            animations: {
+                fadeIn: {}
+            },
+            options: {
+                duration: enterAnimationDuration,
+                easing: 'cubic-bezier(0, 0, 1, 1)'
+            }
+        }"
+        :leave="{
+            animations: {
+                fadeIn: {
+                    reverse: true,
+                    fill: 'end'
+                }
+            },
+            options: {
+                duration: leaveAnimationDuration,
+                easing: 'cubic-bezier(0, 0, 1, 1)'
+            }
+        }"
+        @beforeLeave="handleBeforeLeave"
+        @leave="handleLeave"
+        @afterLeave="handleAfterLeave"
+    >
+        <div
+            :class="[
+                type === 1
+                    ? 'c-row-tile'
+                    : {}
+            ]"
+            class="c-tombstone"
+        >
+            <!-- 图片 -->
+            <template a-if="type === 1">
+                <c-img-tombstone
+                    a-for="i in imgNum"
+                    :key="i"
+                    :type="imgType"
+                    :row-tile="rowTile"
+                />
+            </template>
+            <!-- 资讯、问答、图文 -->
+            <template a-else>
+                <c-tombstone-item
+                    a-for="(item, index) in num"
+                    :key="index"
+                    :type="type"
+                    :index="index"
+                    :animation-type="animationType"
+                />
+            </template>
+        </div>
+    </c-transition>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 占位加载图类型；1：图片；2：资讯；3：问答列表；4：图文列表
+         */
+        type: {
+            type: Number,
+            default: 1
+        },
+        /**
+         * 是否是通栏；默认为 false
+         */
+        rowTile: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 进入动画持续时间；默认 0
+         */
+        enterAnimationDuration: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * 离开动画持续时间；默认 80
+         */
+        leaveAnimationDuration: {
+            type: Number,
+            default: 80
+        },
+        /**
+         * 图片占位图占的屏幕数量；默认1屏；当且仅当为图片类型 type === 1 时生效
+         */
+        imgNum: {
+            type: Number,
+            default: 1
+        },
+        /**
+         * 图片占位类型；'waterfall' 瀑布流；'same' 相同；默认为 'waterfall'，当且仅当为图片类型 type === 1 时生效
+         */
+        imgType: {
+            type: String,
+            default: 'waterfall'
+        },
+        /**
+         * 除图片类型外，其他类型占位加载的条数；默认6条；当且仅当不为图片类型 type !== 1 时生效
+         */
+        num: {
+            type: Number,
+            default: 6
+        },
+
+        /**
+         * 动效类型；'vertical' 竖直动效
+         */
+        animationType: {
+            type: String
+        }
+    },
+    components: {
+        'c-img-tombstone': './ImgTombstone',
+        'c-tombstone-item': './TombstoneItem',
+        'c-transition': '../Motion/Transition'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file 占位加载（墓碑）
+ * @author wangkai <wangkai37@baidu.com>
+ */
+export default {
+    methods: {
+
+        /**
+         * 组件移除之前的回调.
+         *
+         * @event beforeleave
+         */
+        handleBeforeLeave() {
+            this.$emit('beforeleave');
+        },
+
+        /**
+         * 组件移除的回调.
+         *
+         * @event leave
+         */
+        handleLeave() {
+            this.$emit('leave');
+        },
+
+        /**
+         * 组件移除之后的回调.
+         *
+         * @event afterleave
+         */
+        handleAfterLeave() {
+            this.$emit('afterleave');
+        }
+    }
+};
+</script>

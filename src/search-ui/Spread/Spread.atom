@@ -1,0 +1,58 @@
+<template>
+    <div a-show="isShow" class="c-spread-button c-color WA_LOG_OTHER" @click="handleClick">
+        <span a-if="spreadText || foldText" class="c-font-normal">{{ isSpread ? spreadText : foldText }}</span>
+        <c-icon a-if="hasIcon" class="c-gap-left-small icon" :type="isSpread ? 'down' : 'top'"></c-icon>
+    </div>
+</template>
+
+<style scoped>
+
+    .c-spread-button {
+        text-align: center;
+    }
+
+    .c-spread-icon {
+        font-size: .16rem;
+    }
+
+</style>
+
+<script type="config">
+    {
+        props: {
+            'isShow': {
+                type: Boolean,
+                default: true
+            },
+            'isSpread': {
+                type: Boolean,
+                default: true
+            },
+            'hasIcon': {
+                type: Boolean,
+                default: true
+            },
+            'spreadText': {
+                type: String,
+                default: '展开'
+            },
+            'foldText': {
+                type: String,
+                default: '收起'
+            }
+        },
+        components: {
+            'c-icon': '../Icon/Icon'
+        }
+    }
+</script>
+
+<script>
+    module.exports = {
+        methods: {
+            handleClick(e) {
+                this.$emit('click', e);
+            }
+        }
+    };
+</script>

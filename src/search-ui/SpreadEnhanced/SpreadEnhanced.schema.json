@@ -1,0 +1,73 @@
+{
+    "alias": [
+        "c-spread-enhanced"
+    ],
+    "type": "object",
+    "properties": {
+        "spreadenhanced": {
+            "type": "object",
+            "properties": {
+                "spreadText": {
+                    "type": "string",
+                    "@ChineseName": "收起状态时，展示内容文案配置",
+                    "description": "收起状态时，展示内容文案配置",
+                    "@Demo": "展开"
+                },
+                "foldText": {
+                    "type": "string",
+                    "@ChineseName": "展开状态时，收起内容文案配置",
+                    "description": "展开状态时，收起内容文案配置",
+                    "@Demo": "收起"
+                },
+                "list": {
+                    "type": "array",
+                    "@ChineseName": "内容数据list",
+                    "description": "内容数据list，当type为list时使用",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "key": {
+                                "type": "string",
+                                "@ChineseName": "内容信息简介",
+                                "description": "内容信息简介",
+                                "@Demo": "开放时间"
+                            },
+                            "value": {
+                                "type": "string",
+                                "@ChineseName": "内容简介描述",
+                                "description": "内容简介描述",
+                                "@Demo": "旺季（4-10月）8:30-16:10，16:00停止售票，17:00清场；淡季（11月-次年3月）8:30-15:40，15:30停止售票，16:30清场；周一闭馆（法定节假日、暑期除外）。"
+                            }
+                        }
+                    }
+                },
+                "paragraph": {
+                    "type": "string",
+                    "@ChineseName": "段落展现的内容",
+                    "description": "段落展现的内容，当type为paragraph或height",
+                    "@Demo": "故宫位于北京城的正中心，在市内可以通过公交，地铁等方式到达。地铁：乘坐地铁1号线在“天安门东”站下车，步行约900米，即可从午门进入故宫。（故宫博物院的南门）  PS：故宫不设停车场，周边的公共停车场也较远，故不建议驾车前来。"
+                },
+                "paragraph1": {
+                    "type": "string",
+                    "@ChineseName": "段落隐藏的内容",
+                    "description": "段落隐藏的内容，当type为paragraph或height",
+                    "@Demo": "故宫位于北京城的正中心，在市内可以通过公交，地铁等方式到达。"
+                },
+                "type": {
+                    "type": "string",
+                    "@ChineseName": "展开收起类型",
+                    "description": "展开收起类型，目前支持3种类型，列表类型 list，文字段落类型 paragraph，自定义收起高度类型 height。默认为 list 类型",
+                    "@Demo": "list"
+                }
+            },
+            "propsData": [
+                "spreadText",
+                "foldText",
+                "list",
+                "paragraph",
+                "paragraph1",
+                "type"
+            ]
+        }
+    }
+}

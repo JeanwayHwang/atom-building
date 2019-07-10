@@ -1,0 +1,110 @@
+{
+  "name": "atom-building",
+  "version": "1.0.0",
+  "dependencies": {
+    "@baidu/Boxjs-amd": {
+      "version": "1.2.88",
+      "integrity": "sha512-XK71P1POCkLtHtXhxPKoeOhiog46B2GTaaMhbrRf0cVRpccNylLKQrYoDxTjLdW7QGLbXdw5qM5wBY0tKlQRcw=="
+    },
+    "@baidu/Boxjs-search": {
+      "version": "1.1.95",
+      "integrity": "sha512-i0uQ5IlHV3oXzAqDGvkmjgV3vFQ3q+3Qa325/rIBXTvuk8J4sCmyu0W9hRVs33vpqIRvahyCsZeOMFSSEDNu7w=="
+    },
+    "@baidu/ala-util": {
+      "version": "1.1.10",
+      "integrity": "sha512-Qu3HSS+/Ke/PoyqzzYiQq7BfN6ajm1mdNKwqzSw9EZIY+8h0SRoD6r+oOcTA3lZrDcy9UAF4oKoBGI6p/+GnDA=="
+    },
+    "@baidu/atom-web-runtime": {
+      "version": "2.1.14",
+      "integrity": "sha512-0mXiezaEEyF979Qs4/EzM2sBdGKyNs8lg/5DNrb3exlR2HnGfg8cPoJppaQEHTg7Fd5Hrglxz6NQIPVtUnKVDw=="
+    },
+    "@baidu/audio-player": {
+      "version": "0.0.9",
+      "integrity": "sha512-RYZWneekrzlws+ewM3zZkEAN2M6rYHdMJSEAUMxNCcJqcfMxZW19CEeEtdeid51eNNnckZwmcGNOiKUmUeGVeQ=="
+    },
+    "@baidu/better-scroll": {
+      "version": "1.11.5",
+      "integrity": "sha512-Yfg/s6e3XD2qC8ZNO2EzTAi5pOrYHo02FxbQ0lk1EqH4sh1YkGWjlqszIbjIOavKld/WWsf8nMEUzCP5lFA3vw=="
+    },
+    "@baidu/fusion-components": {
+      "version": "0.2.26",
+      "integrity": "sha512-cUJj+/vzU2mKcEVny/UIkVDAGprYsCsethLJizUE7q+v8KNDOYvMp9lLlHbPI7n7drH47JfDjvmRgli1O6uHKw=="
+    },
+    "@baidu/iconfont": {
+      "version": "1.0.24",
+      "integrity": "sha512-D7c44sXk5zR+v2FCOZYrUJIKIN+OZ1CaWazHtaoOtXJV3U1MOeD14fnfqTmfr9sLkXJjE/li5g8uxV1CkhWEYA=="
+    },
+    "@baidu/jssdk": {
+      "version": "1.0.5",
+      "integrity": "sha512-DUeKV8E7xNkMgSojh1bkkGoBE7cFdMK8zCL9GFa9GFxe5e1uBkW5FM9reY9NK9vexo4SYWb4YNGDnJaFnuRlpQ=="
+    },
+    "@baidu/pmd": {
+      "version": "1.0.1",
+      "integrity": "sha512-W7XvjFA5rAB7e+wWiETTPh3Alo08lsfSfXULGBmRjqpR//CTzIdqmVoKQG/8yzIZVGVTehxwi6+Y/UlSV6tVZg=="
+    },
+    "@baidu/pst-log": {
+      "version": "1.0.1",
+      "integrity": "sha512-L292UPPwOK4nbJne8DXpFGozQpGtccseswcCb6cNHG2WkD5LHqomAMqdAWR8NzZtwwNOIcfy1UUPzwoJy8EV4A=="
+    },
+    "@baidu/responsive-link": {
+      "version": "0.1.7",
+      "integrity": "sha512-aaFFF21uwACSMF7QruBNpQWwKZrsLBT+SzxEuRsq6lyloP59CSVInOjL2DqBkwsiaNbG2dK950F32y6bEm0Dhg=="
+    },
+    "@baidu/secr-sdk": {
+      "version": "1.0.7",
+      "integrity": "sha512-MgSMUQi1G64qV4ZNVLKKiyxq18eeL1vobxVlgK97sLOp3iQm2ZoYl/X6RUoIMZxSdncXfLyZGlE1N4yw14Y1Rg=="
+    },
+    "@baidu/share": {
+      "version": "1.0.0",
+      "integrity": "sha512-PLzt1ri4upa4WRJr+1+2nCtKkRCmxje0CnAO35R9nJxVNb7RNIuifHfQ88KM5bEoZJ4AU9ZkuMy+9pwMmVWd6w=="
+    },
+    "@baidu/smartapp": {
+      "version": "1.0.8",
+      "integrity": "sha512-UHiqqmdpjf/DZ+ERK6TXElYOjIz33KyUtZKVLY2t3IUGuihKYccx8Y8+fSurw8rjOpDRQoYuI1GfVR/A4kp01Q=="
+    },
+    "@baidu/toast": {
+      "version": "1.0.0",
+      "integrity": "sha512-La7kJIiFWbhJPqsi4aCUVqRlBaRxYuyFBiRrSRdSqeFPyPUtv9mcxKBkFEwJ/Mpwipr1Ra+4V3YRqdn3w6ikyg=="
+    },
+    "@baidu/view-image": {
+      "version": "1.0.11",
+      "integrity": "sha512-9jpuBpuFitNVq+/yohE+3GSFWYyf69VpG/X/PqU8cf5Ykdm6cW5FFzLF+e45lPtJzC8jU+ctlmRWvRS39l3PuQ=="
+    },
+    "@baidu/vsl": {
+      "version": "1.0.20",
+      "integrity": "sha512-f7nUfxabqUzLNh8kZPavok01gAg+A5KqhgDtwEBYkULCNpbDq09TWi/KkkMnjGt+b+mgDI5Kn6LkWhcoStvLAA=="
+    },
+    "@baidu/web-animations-js": {
+      "version": "2.3.1",
+      "integrity": "sha512-/w0pEqxm7e+lwAB+AuJ7NCCzrjFPt7dIaeR38vgYFDlgS21tCc+J+77wTXenooqPPzdJickqLlM2lIcL0u36+g=="
+    },
+    "@searchfe/assert": {
+      "version": "1.0.0",
+      "integrity": "sha512-INeZlzcMK1ainjU9FpBf8jrqq7wzFF0eDb5JCrHpp/fMzdIlbdDfhM3bprtzrSmOo/rA7AdP4Ch8p4RNxuj2jg=="
+    },
+    "@searchfe/promise": {
+      "version": "1.0.6",
+      "integrity": "sha512-HAds3MkVMIVS9uMcT6wqOQitUePBQvB0dupcT2gbydrJBIDEl9LSpiXghqOmkjzSbFhcwxtF45r6IqlTUFhSRw=="
+    },
+    "@searchfe/user-agent": {
+      "version": "1.2.5",
+      "integrity": "sha512-2e1BBQIOlSvDxATzsnJKUUpWeFX5l977WDw4kkMGBqvRwkFwQDhFuIXfUGiHBPdz38Krv/sE0qTwgVyEB0JAfQ=="
+    },
+    "lottie-web": {
+      "version": "5.5.6",
+      "integrity": "sha512-UUUIjKT9BncCHFIJEfb+1glvd+8MLjrAP1mbX2atE7A9TAtZn3yEz96k5K/n2pC20tEL7Q4xKaN1qyXp+6YSDg=="
+    },
+    "promise-polyfill": {
+      "version": "7.1.2",
+      "integrity": "sha512-FuEc12/eKqqoRYIGBrUptCBRhobL19PS2U31vMNTfyck1FxPyMfgsXyW4Mav85y/ZN1hop3hOwRlUDok23oYfQ=="
+    },
+    "versions-compare": {
+      "version": "1.0.5",
+      "integrity": "sha512-dnoNhuoEuZk3949mQnEmuxRf4SDBU6Fatf0HDyDBC6bhfveqDSFonKbNKL0bNAGg+nLfUWOVKPL7O2v1zTcN8A=="
+    },
+    "whatwg-fetch": {
+      "version": "2.0.4",
+      "integrity": "sha512-dcQ1GWpOD/eEQ97k66aiEVpNnapVj90/+R+SXTPYGHpYBBypfKJEQjLrvMZ7YXbKm21gXd4NcuxUTjiv1YtLng=="
+    }
+  }
+}

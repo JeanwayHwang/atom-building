@@ -1,0 +1,311 @@
+<template>
+    <section
+        ref="carouselFrame"
+        class="carousel-frame"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
+        @touchend="handleTouchEnd"
+    >
+        <!-- 轮播栏 -->
+        <!-- 硬件加速回导致在一些 iOS 和 Android 的设备上闪屏 -->
+        <div
+            ref="carouselLayout"
+            :style="{
+                '-webkit-transform': 'translateX(' + disX + 'px) scale(1)',
+                'transform': 'translateX(' + disX + 'px) scale(1)'
+            }"
+            class="carousel-layout"
+        >
+            <div
+                a-for="(i, index) in slotsLength"
+                :key="index"
+                class="carousel-item"
+            >
+                <!-- @slot:default 轮播内容区域 -->
+                <slot :name="'carouselItem' + index"/>
+            </div>
+        </div>
+        <div class="indicator">
+            <c-indicator
+                :length="slotsLength"
+                :cur-index="activeIndex"
+            />
+        </div>
+    </section>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 是否循环
+         */
+        loop: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 动效配置
+         *
+         * @property {number} [animationTime=300] 动效时长
+         */
+        transitionOpts: {
+            type: Object,
+            default: {
+                animationTime: 300
+            }
+        }
+    },
+    data: {
+        // 当前轮播项的索引
+        activeIndex: 0,
+        // 因为在 mounted 里会添加两个额外的 dom，所以需要记录原始长度
+        slotsLength: 0,
+        // 轮播图宽度
+        width: 0,
+        // 最小改变滑动宽度
+        minChangeWidth: 50,
+        // 开始位置
+        startX: 0,
+        startY: 0,
+        // 滑动时距离浏览器左/上侧实时距离
+        moveX: 0,
+        moveY: 0,
+        // 手指实时偏移距离
+        disX: 0,
+        disY: 0,
+        // 滑动保护
+        slideProtect: false,
+        // 滑动保护延时执行句柄
+        slideProtectTimeout: null,
+        // 修复循环的延时执行句柄
+        fixLoopTimeout: null
+    },
+    components: {
+        'c-indicator': './Indicator'
+    }
+}
+</script>
+
+<script>
+import orientationMixin from '../util/orientationMixin';
+
+export default {
+    mixins: [orientationMixin],
+    mounted() {
+        // 计算横滑的宽度
+        this.width = this.$refs.carouselFrame.offsetWidth;
+    },
+    render() {
+        let vnodes = this.$slots.default;
+        if (vnodes && vnodes.length) {
+            vnodes.forEach((vnode, index) => {
+                // 放入指定 slot
+                this.$slots['carouselItem' + index] = vnode;
+            });
+            // 设置 slots 长度
+            this.slotsLength = vnodes.length;
+        }
+        return this.$super.render();
+    },
+    methods: {
+        // 横竖屏切换监听
+        mediaQueryOrientationListenerMixin(mediaQueryList) {
+            // 这里的延迟是为了计算出准确的翻转手机后的 width、height
+            setTimeout(() => {
+                // 计算横滑的宽度
+                this.width = this.$refs.carouselFrame.offsetWidth;
+            }, 500);
+        },
+        handleTouchStart(e) {
+            // 滑动保护
+            if (this.slideProtect) {
+                return;
+            }
+            e = e || event;
+            // tounches 类数组，等于1时表示此时有只有一只手指在触摸屏幕
+            if (e.changedTouches.length !== 1) {
+                return;
+            }
+            // 记录开始位置
+            this.startX = e.touches[0].clientX;
+            this.startY = e.touches[0].clientY;
+        },
+        handleTouchMove(e) {
+            // 滑动保护
+            if (this.slideProtect) {
+                e.cancelable && e.preventDefault();
+                e.stopPropagation();
+                return true;
+            }
+            e = e || event;
+            // tounches 类数组，等于1时表示此时有只有一只手指在触摸屏幕
+            if (e.changedTouches.length !== 1) {
+                return true;
+            }
+            // 滑动时距离浏览器左侧实时距离
+            this.moveX = e.touches[0].clientX;
+            this.moveY = e.touches[0].clientY;
+            // 起始位置减去 实时的滑动的距离，得到手指实时偏移距离
+            let disX = this.moveX - this.startX;
+            let disY = this.moveY - this.startY;
+
+            // 增加不循环时对手势的判断
+            if (this.loopTouchJudgement(disX)) {
+                return true;
+            }
+
+            // 每次滑动的时候都计算方向
+            let direction = this.getDirection(disX, disY);
+            // 水平滑动时阻止点击事件透传；手百兼容
+            if (direction === 3 || direction === 4) {
+                e.cancelable && e.preventDefault();
+                e.stopPropagation();
+                this.disX = disX - this.activeIndex * this.width;
+            }
+            return true;
+        },
+        handleTouchEnd(e) {
+            // 滑动保护
+            if (this.slideProtect) {
+                return;
+            }
+            e = e || event;
+            // tounches 类数组，等于1时表示此时有只有一只手指在触摸屏幕
+            if (e.changedTouches.length !== 1) {
+                return;
+            }
+            this.endX = e.changedTouches[0].clientX;
+            this.endY = e.changedTouches[0].clientY;
+            let disX = this.endX - this.startX;
+            let disY = this.endY - this.startY;
+
+            // 增加循环时对手势的判断
+            if (this.loopTouchJudgement(disX)) {
+                return true;
+            }
+
+            this.disX = disX;
+            this.disY = disY;
+
+            // 移动的距离大于最小距离
+            if (Math.abs(this.disX) > this.minChangeWidth) {
+                // 往左移
+                if (this.disX > 0) {
+                    this.activeIndex -= 1;
+                }
+                // 往右移
+                else {
+                    this.activeIndex += 1;
+                }
+            }
+            this.disX = -this.activeIndex * this.width;
+
+            // 打开动画保护
+            this.setSlideProtect();
+        },
+
+        // 滑动保护
+        setSlideProtect() {
+            if (this.slideProtectTimeout) {
+                this.clearSlideProtect();
+            }
+            // 打开标志位
+            this.slideProtect = true;
+            // 延迟动画时间清除滑动保护
+            this.slideProtectTimeout = setTimeout(() => {
+                this.clearSlideProtect();
+            }, 300);
+        },
+        clearSlideProtect() {
+            this.slideProtect = false;
+            if (this.slideProtectTimeout) {
+                clearTimeout(this.slideProtectTimeout);
+                this.slideProtectTimeout = null;
+            }
+        },
+
+        // 不循环时对手势的判断
+        loopTouchJudgement(disX) {
+            // 如果不循环
+            if (!this.loop) {
+                // 如果 dix 为负（代表往右划）并且 当前划动项的索引+1后与原始长度相等
+                if (disX < 0 && this.activeIndex + 1 === this.slotsLength) {
+                    // 直接返回
+                    return true;
+                }
+                // 如果 dix 为正（代表往左划）并且 当前划动项的索引为0
+                if (disX > 0 && this.activeIndex === 0) {
+                    // 直接返回
+                    return true;
+                }
+            }
+            // 不直接 return
+            return false;
+        },
+
+        // ** 判断滑动手势方向；对手百做兼容
+        // 根据起点终点返回方向 1向上 2向下 3向左 4向右 0未滑动
+        getDirection(angx, angy) {
+            let result = 0;
+            // 如果滑动距离太短
+            if (Math.abs(angx) < 2 && Math.abs(angy) < 2) {
+                return result;
+            }
+            let angle = this.getAngle(angx, angy);
+            if (angle >= -135 && angle <= -45) {
+                result = 1;
+            }
+            else if (angle > 45 && angle < 135) {
+                result = 2;
+            }
+            else if ((angle >= 135 && angle <= 180) || (angle >= -180 && angle < -135)) {
+                result = 3;
+            }
+            else if (angle >= -45 && angle <= 45) {
+                result = 4;
+            }
+            return result;
+        },
+        // 获得角度
+        getAngle(angx, angy) {
+            return Math.atan2(angy, angx) * 180 / Math.PI;
+        }
+    }
+};
+</script>
+
+<script type="php">
+function render($ctx, $isXml = false) {
+    $vnodes = $ctx->slots['default'];
+    if ($vnodes && count($vnodes)) {
+        foreach ($vnodes as $index => $vnode) {
+            // 放入指定 slot
+            $ctx->slots['carouselItem' . $index] = $vnode;
+        }
+        // 设置 slots 长度
+        $ctx->_d['slotsLength'] = count($vnodes);
+    }
+    return parent::render($ctx);
+}
+</script>
+
+<style lang="less" module>
+.carousel-frame {
+    position: relative;
+    overflow: hidden;
+}
+.carousel-layout {
+    // 强制不换行
+    white-space: nowrap;
+    transition: all .3s cubic-bezier(.42, 0, .58, 1);
+}
+.carousel-item {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+}
+.indicator {
+    text-align: center;
+}
+</style>

@@ -1,0 +1,124 @@
+{
+    "alias": [
+        "c-dropdown"
+    ],
+    "type": "object",
+    "properties": {
+        "dropdown": {
+            "type": "object",
+            "@ChineseName": "Dropdown 组件实例",
+            "description": "Dropdown 组件实例，Dropdown 的基础相关数据",
+            "properties": {
+                "label": {
+                    "type": "string",
+                    "@ChineseName": "下拉框上方的标签名",
+                    "@Demo": "标签一",
+                    "description": "下拉框上方的标签名"
+                },
+                "disabled": {
+                    "type": "boolean",
+                    "@ChineseName": "是否禁用",
+                    "@Demo": false,
+                    "description": "是否禁用"
+                },
+                "value": {
+                    "type": [
+                        "number",
+                        "string"
+                    ],
+                    "@ChineseName": "初始状态下选中的值",
+                    "@Demo": "选项1",
+                    "description": "初始状态下选中的值，数字类型或字符串"
+                },
+                "name": {
+                    "type": "string",
+                    "@ChineseName": "下拉框组件 select 标签的 name 属性",
+                    "@Demo": "selectName1",
+                    "description": "下拉框组件 select 标签的 name 属性"
+                },
+                "direction": {
+                    "type": "string",
+                    "@ChineseName": "文字方向",
+                    "@Demo": "ltr",
+                    "description": "文字方向，可选值：ltr|rtl"
+                },
+                "noBorder": {
+                    "type": "boolean",
+                    "@ChineseName": "是否去掉边框",
+                    "@Demo": false,
+                    "description": "是否去掉边框"
+                },
+                "options": {
+                    "type": "array",
+                    "@ChineseName": "选择列表数据",
+                    "description": "选择列表数据",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "@ChineseName": "列表项的显示文案",
+                                "@Demo": "文案1",
+                                "description": "列表项的显示文案"
+                            },
+                            "value": {
+                                "type": "string",
+                                "@ChineseName": "列表项的值",
+                                "@Demo": "value1",
+                                "description": "列表项的值"
+                            }
+                        }
+                    }
+                },
+                "optGroup": {
+                    "type": "array",
+                    "@ChineseName": "optGroup 选项分组列表的值",
+                    "description": "optGroup 选项分组列表的值",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "options": {
+                                "type": "array",
+                                "@ChineseName": "选择列表数据",
+                                "description": "选择列表数据",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "text": {
+                                            "type": "string",
+                                            "@ChineseName": "列表项的显示文案",
+                                            "@Demo": "文案1",
+                                            "description": "列表项的显示文案"
+                                        },
+                                        "value": {
+                                            "type": "string",
+                                            "@ChineseName": "列表项的值",
+                                            "@Demo": "value1",
+                                            "description": "列表项的值"
+                                        }
+                                    }
+                                }
+                            },
+                            "label": {
+                                "type": "string",
+                                "@ChineseName": "选项组的标签",
+                                "@Demo": "地点",
+                                "description": "选项组的标签"
+                            }
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "label",
+                "disabled",
+                "value",
+                "options",
+                "optGroup",
+                "name",
+                "direction",
+                "noBorder"
+            ]
+        }
+    }
+}

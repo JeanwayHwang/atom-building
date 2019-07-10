@@ -1,0 +1,97 @@
+{
+    "alias": [
+        "c-letter-sort"
+    ],
+    "type": "object",
+    "properties": {
+        "letterSort": {
+            "type": "object",
+            "@ChineseName": "LetterSort 组件实例",
+            "description": "LetterSort 组件实例，LetterSort 的基础相关数据",
+            "properties": {
+                "letterData": {
+                    "type": "array",
+                    "@ChineseName": "LetterSort 内容数据",
+                    "description": "LetterSort 内容数据",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "label" : {
+                                "type": "string",
+                                "@ChineseName": "LetterSort 右侧导航字母",
+                                "@Demo": "A",
+                                "description": "LetterSort 右侧导航字母"
+                            },
+                            "isDiy" : {
+                                "type": "boolean",
+                                "@ChineseName": "LetterSort 该数据项是否是自定义内容，目前仅支持一个自定义内容列表项",
+                                "@Demo": false,
+                                "description": "LetterSort 该数据项是否是自定义内容，目前仅支持一个自定义内容列表项"
+                            },
+                            "item" : {
+                                "type": "array",
+                                "@ChineseName": "LetterSort 右侧导航字母item项",
+                                "description": "LetterSort 右侧导航字母item项",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name" : {
+                                            "type": "string",
+                                            "@ChineseName": "LetterSort 数据项具体显示的名称",
+                                            "@Demo": "北京",
+                                            "description": "LetterSort 数据项具体显示的名称"
+                                        },
+                                        "url" : {
+                                            "type": "string",
+                                            "@ChineseName": "LetterSort 数据项的跳转链接，同Link组件",
+                                            "@Demo": "www.baidu.com",
+                                            "description": "LetterSort 数据项的跳转链接，同Link组件"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "color": {
+                    "type": "string",
+                    "@ChineseName": "LetterSort 自定义字母选中颜色和Toast背景颜色",
+                    "@Demo": "rgba(0, 0, 0, .8)",
+                    "description": "LetterSort 自定义字母选中颜色和Toast背景颜色"
+                },
+                "top": {
+                    "type": "string",
+                    "@ChineseName": "LetterSort 自定义距离浏览器窗口的距离，默认为0，置顶",
+                    "@Demo": "0",
+                    "description": "LetterSort 自定义距离浏览器窗口的距离，默认为0，置顶"
+                },
+                "bottom": {
+                    "type": "string",
+                    "@ChineseName": "LetterSort 自定义距离浏览器窗口底部的距离，默认为0",
+                    "@Demo": "0",
+                    "description": "LetterSort 自定义距离浏览器窗口底部的距离，默认为0"
+                },
+                "isMove": {
+                    "type": "boolean",
+                    "@ChineseName": "LetterSort 是否启用字母上下滑动事件，默认关闭，注意（在ios手百滑动偶尔会卡顿，数据量大于150条不建议开启）",
+                    "@Demo": false,
+                    "description": "LetterSort 是否启用字母上下滑动事件，默认关闭，注意（在ios手百滑动偶尔会卡顿，数据量大于150条不建议开启）"
+                },
+                "zIndex": {
+                    "type": "string",
+                    "@ChineseName": "LetterSort 自定义元素CSS中的z-index值",
+                    "@Demo": "500",
+                    "description": "LetterSort 自定义元素CSS中的z-index值"
+                }
+            },
+            "propsData": [
+                "letterData",
+                "color",
+                "top",
+                "bottom",
+                "isMove",
+                "zIndex"
+            ]
+        }
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "alias": [
+        "c-tags"
+    ],
+    "type": "object",
+    "properties": {
+        "tags": {
+            "type": "object",
+            "properties": {
+                "labelList": {
+                    "type": "array",
+                    "@ChineseName": "标签数组",
+                    "description": "标签数组",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "@ChineseName": "标签名称",
+                                "description": "展示的标签文字",
+                                "@Demo": "新闻"
+                            },
+                            "type": {
+                                "enum": [
+                                    "default",
+                                    "negative"
+                                ],
+                                "@ChineseName": "标签类型",
+                                "description": "有正向和反向两种样式",
+                                "@Demo": "default"
+                            }
+                        }
+                    }
+                },
+                "selectedIndex": {
+                    "type": "number",
+                    "@ChineseName": "选中的标签索引",
+                    "description": "选中的标签索引",
+                    "@Demo": 0
+                }
+            },
+            "propsData": [
+                "labelList",
+                "selectedIndex"
+            ]
+        }
+    }
+}

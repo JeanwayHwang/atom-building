@@ -1,0 +1,32 @@
+{
+    "alias": [
+        "c-tabs-item"
+    ],
+    "type": "object",
+    "properties": {
+        "tabsItems": {
+            "type": "array",
+            "minItems": 1,
+            "@ChineseName": "tabs 组件中单个选项组件",
+            "description": "tabs 组件中单个选项",
+            "items": {
+                "type": "object",
+                "isContainer": true,
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "@ChineseName": "选项卡的标题",
+                        "@Demo": "简介",
+                        "description": "选项卡的标题"
+                    },
+                    "icon": {
+                        "type": "string",
+                        "@ChineseName": "tabbar上的图标",
+                        "@Demo": "baidu",
+                        "description": "tabbar上的图标，宽高14px"
+                    }
+                }
+            }
+        }
+    }
+}

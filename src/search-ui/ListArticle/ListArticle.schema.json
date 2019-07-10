@@ -1,0 +1,74 @@
+{
+    "alias": [
+        "c-list-article"
+    ],
+    "type": "object",
+    "properties": {
+        "listArticle": {
+            "type": "object",
+            "@ChineseName": "list-article 文章列表组件",
+            "description": "list-article 文章列表组件",
+            "properties": {
+                "articleList": {
+                    "type": "array",
+                    "@ChineseName": "article 文章列表",
+                    "description": "article 文章列表",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": [
+                                    "string",
+                                    "object"
+                                ],
+                                "@ChineseName": "article 标题链接",
+                                "@Demo": "https://m.baidu.com/search?url=xxx",
+                                "description": "article 标题链接"
+                            },
+                            "title": {
+                                "type": "string",
+                                "@ChineseName": "article 标题内容",
+                                "@Demo": "这里是 article 标题",
+                                "description": "article 标题内容"
+                            },
+                            "abstract": {
+                                "type": "string",
+                                "@ChineseName": "article 内容文本",
+                                "@Demo": "这里是 article 内容文本",
+                                "description": "article 内容文本"
+                            },
+                            "source": {
+                                "type": "string",
+                                "@ChineseName": "article 内容文本",
+                                "@Demo": "这里是 article 文章来源",
+                                "description": "article 文章来源"
+                            },
+                            "readNum": {
+                                "type": "number",
+                                "@ChineseName": "article 内容文本",
+                                "@Demo": 250,
+                                "description": "article 文章阅读数"
+                            },
+                            "time": {
+                                "type": "number",
+                                "@ChineseName": "article 内容文本",
+                                "@Demo": 12345678,
+                                "description": "article 时间戳"
+                            },
+                            "labelText": {
+                                "type": "string",
+                                "@ChineseName": "article 内容文本",
+                                "@Demo": "这里是 article 标签文案",
+                                "description": "article 标签文案"
+                            }
+                        }
+                    },
+                    "minItems": 1
+                }
+            },
+            "propsData": [
+                "articleList"
+            ]
+        }
+    }
+}

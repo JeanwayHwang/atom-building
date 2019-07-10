@@ -1,0 +1,150 @@
+{
+    "alias": [
+        "c-aladdin"
+    ],
+    "type": "object",
+    "properties": {
+        "aladdin": {
+            "type": "object",
+            "@ChineseName": "aladdin 组件实例",
+            "description": "aladdin 组件实例，aladdin的基础相关数据",
+            "properties": {
+                "url": {
+                    "type": [
+                        "string",
+                        "object"
+                    ],
+                    "@ChineseName": "aladdin 标题链接",
+                    "@Demo": "https://m.baidu.com/search?url=xxx",
+                    "description": "aladdin 标题链接，兼容 string 和 object 方式传入"
+                },
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "aladdin 标题内容",
+                    "@Demo": "这里是 aladdin 标题",
+                    "description": "aladdin 标题内容"
+                },
+                "titleClamp": {
+                    "type": [
+                        "string",
+                        "number"
+                    ],
+                    "@ChineseName": "标题截断显示行数，范围为1-5",
+                    "@Demo": "1",
+                    "description": "标题截断显示行数，范围为1-5"
+                },
+                "titleLabel": {
+                    "type": "string",
+                    "@ChineseName": "标题后面的标签",
+                    "@Demo": "标签1",
+                    "description": "标题后面的标签"
+                },
+                "titleLabelType": {
+                    "type": "string",
+                    "@ChineseName": "标题后面的标签的类型",
+                    "@Demo": "public",
+                    "description": "标题后面的标签的类型"
+                },
+                "titleArrow": {
+                    "type": "boolean",
+                    "@ChineseName": "标题是否有箭头",
+                    "@Demo": false,
+                    "description": "标题是否有箭头"
+                },
+                "titleSize": {
+                    "type": "string",
+                    "@ChineseName": "标题尺寸",
+                    "@Demo": "t1",
+                    "description": "标题尺寸，支持 t1 t2"
+                },
+                "titleIcon": {
+                    "type": "string",
+                    "@ChineseName": "标题图标",
+                    "@Demo": "baidu",
+                    "description": "标题图标"
+                },
+                "titleFeedback": {
+                    "type": "boolean",
+                    "@ChineseName": "标题是否添加点击态",
+                    "@Demo": false,
+                    "description": "标题是否添加点击态，true 为添加；false 时会判断 url 是否存在，存在则添加点击态，否则不添加"
+                },
+                "showUrl": {
+                    "type": "string",
+                    "@ChineseName": "脚注显示的资源方链接",
+                    "@Demo": "m.baidu.com",
+                    "description": "脚注显示的资源方链接"
+                },
+                "showLeftText": {
+                    "type": "string",
+                    "@ChineseName": "脚注左侧文字",
+                    "@Demo": "脚注左侧文字",
+                    "description": "脚注左侧文字"
+                },
+                "showLeftIcon": {
+                    "type": "string",
+                    "@ChineseName": "脚注左侧文字后面的图标",
+                    "@Demo": "baidu",
+                    "description": "脚注左侧文字后面的图标"
+                },
+                "showRightText": {
+                    "type": "string",
+                    "@ChineseName": "脚注右侧跳转显示的文字",
+                    "@Demo": "查看更多",
+                    "description": "脚注右侧跳转显示的文字"
+                },
+                "showRightUrl": {
+                    "type": [
+                        "string",
+                        "object"
+                    ],
+                    "@ChineseName": "脚注右侧跳转链接",
+                    "@Demo": "https://m.baidu.com/search?url=xxx",
+                    "description": "脚注右侧跳转链接，兼容 string 和 object 方式传入"
+                },
+                "footerDivider": {
+                    "type": "boolean",
+                    "@ChineseName": "脚注是否有分割线",
+                    "@Demo": false,
+                    "description": "脚注是否有分割线"
+                },
+                "hideFooter": {
+                    "type": "boolean",
+                    "@ChineseName": "是否去掉教主区域",
+                    "@Demo": false,
+                    "description": "是否去掉教主区域"
+                },
+                "hideHeader": {
+                    "type": "boolean",
+                    "@ChineseName": "是否去掉标题区域",
+                    "@Demo": false,
+                    "description": "是否去掉标题区域"
+                },
+                "feedback": {
+                    "$ref": "../Footer/Feedback.schema.json#/properties/feedback"
+                }
+            },
+            "propsData": [
+                "title",
+                "titleClamp",
+                "titleLabel",
+                "titleLabelType",
+                "titleArrow",
+                "titleSize",
+                "titleIcon",
+                "titleFeedback",
+                "url",
+                "showUrl",
+                "showLeftText",
+                "showLeftIcon",
+                "showRightText",
+                "showRightUrl",
+                "footerDivider",
+                "hideFooter",
+                "hideHeader",
+                "tplInfo",
+                "feedback"
+            ]
+        }
+    }
+}

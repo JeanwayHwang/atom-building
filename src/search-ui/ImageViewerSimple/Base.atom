@@ -1,0 +1,394 @@
+<template>
+    <div
+        :class="{
+            [$style.blackBg]: isShowBg
+        }"
+        class="viewer-base"
+        @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
+        @click="onClick"
+    >
+        <!-- 图片区 -->
+        <c-image-viewer-content
+            ref="content"
+            :store="store"
+            :state="state"
+            :is-leaving="isLeaving"
+            :enter-position="enterPosition"
+            :leave-position="leavePosition"
+            :inner-width="innerWidth"
+            :inner-height="innerHeight"
+            :image-clip-type="imageClipType"
+            @enter-start="onEnterStart"
+            @enter-end="onEnterEnd"
+            @leave-start="onLeaveStart"
+            @leave-end="onLeaveEnd"
+            @tap="onTap"
+            @hide-toast="onHideToast"
+            @swipe-x="onSwipeX"
+            @swipe-first="onSwipeFirst"
+            @swipe-last="onSwipeLast"
+            @swipe-down-start="onSwipeDownStart"
+            @swipe-down-end="onSwipeDownEnd"
+            @swipe-down-cancel="onSwipeDownCancel"
+        />
+
+        <!-- 提示 -->
+        <c-toast
+            :state="toast.state"
+            :content="toast.msg"
+            :duration="1500"
+            auto-close
+            @change="onToastChange"
+        />
+
+        <!-- 自定义区域 -->
+        <slot name="feature"></slot>
+    </div>
+</template>
+
+<script type="config">
+    {
+        props: {
+            list: {
+                type: Array,
+                required: true
+            },
+            startIndex: {
+                type: Number,
+                default: 0
+            },
+            isSwipeFirstLeave: {
+                type: Boolean,
+                default: false
+            },
+            imageClipType: {
+                type: String,
+                default: 'none'
+            }
+        },
+        data: {
+            pn: startIndex,
+            state: {},
+            isLeaving: false,
+            isEventStart: false,
+            enterPosition: {},
+            leavePosition: {},
+            toast: {
+                state: false,
+                msg: ''
+            },
+            store: {},
+            innerWidth: 0,
+            innerHeight: 0,
+            resizeTimer: 0,
+            isShowBg: true
+        },
+        components: {
+            'c-image-viewer-content': '../ImageViewer/ImageViewerContent',
+            'c-toast': '../Toast/Toast'
+        }
+    }
+</script>
+
+<script>
+    /**
+     * @file H5 图片查看器
+     * @author rongweiwei@baidu.com
+     */
+    import Store from '../ImageViewer/asset/js/store.js';
+
+    export default {
+        beforeMount() {
+            this.innerWidth = window.innerWidth;
+            this.innerHeight = window.innerHeight;
+            this.store = Store.create();
+            this.state = this.getInitialState();
+            this.emitEnterStartEvent();
+        },
+
+        mounted() {
+            this.initEvent();
+        },
+
+        activated() {
+            this.initEvent();
+        },
+
+        deactivated() {
+            this.dispose();
+        },
+
+        beforeDestroy() {
+            this.store.destroy();
+            this.dispose();
+        },
+
+        watch: {
+            pn(newVal) {
+                this.emitSwitchEvent();
+            },
+            list(newVal) {
+                let nextData = this.getDataFromList(this.pn + 1);
+                let nextShow = this.state.item3.isSet;
+
+                // 拿到后续图片了，更新图片item
+                if (nextData && !nextShow) {
+                    this.state.item3 = {
+                        isSet: !!nextData,
+                        item: nextData
+                    };
+                }
+            }
+        },
+
+        methods: {
+            // 对外接口
+            triggerLeaveEvent(opt) {
+                this.emitLeaveStartEvent(opt);
+            },
+            showToast(msg) {
+                this.toast = {
+                    state: true,
+                    msg: msg
+                };
+            },
+
+            // 事件绑定和销毁
+            initEvent() {
+                if (this.isEventStart) {
+                    return;
+                }
+                this.isEventStart = true;
+                window.addEventListener('resize', this.onResize, false);
+                window.addEventListener('orientationchange', this.onResize, false);
+            },
+            onResize() {
+                if (this.innerHeight === window.innerHeight) {
+                    return;
+                }
+                this.resizeTimer && clearTimeout(this.resizeTimer);
+                this.resizeTimer = setTimeout(() => {
+                    this.innerWidth = window.innerWidth;
+                    this.innerHeight = window.innerHeight;
+                    this.resizeTimer = 0;
+                }, 50);
+            },
+            dispose() {
+                this.resizeTimer && clearTimeout(this.resizeTimer);
+                this.isEventStart = false;
+                window.removeEventListener('resize', this.onResize, false);
+                window.removeEventListener('orientationchange', this.onResize, false);
+            },
+
+            // 数据相关
+            getInitialState() {
+                let item1 = this.getDataFromList(this.pn - 1);
+                let item2 = this.getDataFromList(this.pn);
+                let item3 = this.getDataFromList(this.pn + 1);
+                let state = {
+                    item1: {
+                        isSet: !!item1,
+                        item: item1
+                    },
+                    item2: {
+                        isSet: !!item2,
+                        item: item2
+                    },
+                    item3: {
+                        isSet: !!item3,
+                        item: item3
+                    }
+                };
+
+                return state;
+            },
+            updateState(data) {
+                let itemName = data.name;
+                let itemData = this.getDataFromList(this.pn + data.dir * 2);
+                // 更新其中一个item
+                this.state[itemName] = {
+                    isSet: !!itemData,
+                    item: itemData || null
+                };
+                // 更新pn
+                this.pn += data.dir;
+            },
+            getDataFromList(index) {
+                let len = this.list.length;
+                if (0 <= index && index < len) {
+                    let item = this.list[index];
+                    if (typeof item.index === 'undefined') {
+                        item.index = index;
+                    }
+                    return item;
+                }
+
+                return null;
+            },
+            resetListProps() {
+                for (let i = 0, len = this.list.length; i < len; i++) {
+                    let item = this.list[i];
+                    if (typeof item.index !== 'undefined') {
+                        delete item.index;
+                    }
+                }
+            },
+
+            // 翻页相关
+            onSwipeX(data) {
+                // 更新state
+                this.updateState(data);
+            },
+            onSwipeFirst(obj) {
+                if (this.isSwipeFirstLeave) {
+                    this.emitLeaveStartEvent({
+                        type: 'swipe-first'
+                    });
+                }
+                else {
+                    this.$refs.content.resetPosition();
+                }
+            },
+            onSwipeLast() {
+                this.toast = {
+                    state: true,
+                    msg: '已是最后一张'
+                };
+            },
+            emitSwitchEvent() {
+                let data = this.getDataFromList(this.pn);
+
+                // 翻页事件，传递当前图片信息
+                // TODO data考虑复制一份
+                this.$emit('switch', {
+                    index: this.pn,
+                    data: data
+                });
+            },
+
+            // 进场相关
+            onEnterStart(data) {
+                this.$emit('enter');
+            },
+            onEnterEnd(data) {
+                this.$emit('after-enter');
+            },
+            emitEnterStartEvent() {
+                // 通过钩子获取进场动画参数
+                this.$emit('before-enter', {
+                    index: this.pn
+                }, el => {
+                    if (el && el.getBoundingClientRect) {
+                        const {left, top, width, height} = el.getBoundingClientRect();
+                        this.enterPosition = {
+                            left,
+                            top,
+                            width,
+                            height
+                        };
+                    }
+                });
+            },
+
+            // 退场相关
+            onLeaveStart(data) {
+                this.$emit('leave');
+            },
+            onLeaveEnd(data) {
+                this.isLeaving = false;
+                this.resetListProps();
+                this.$emit('after-leave');
+            },
+            emitLeaveStartEvent(opt) {
+                opt = Object.assign({
+                    index: this.pn
+                }, opt);
+
+                // 通过钩子获取退场动画参数
+                this.$emit('before-leave', opt, el => {
+                    if (el && el.getBoundingClientRect) {
+                        const {left, top, width, height} = el.getBoundingClientRect();
+                        this.leavePosition = {
+                            left,
+                            top,
+                            width,
+                            height
+                        };
+                    }
+                });
+
+                this.isShowBg = false;
+                this.isLeaving = true;
+            },
+
+            // 滑动相关
+            onTouchStart(event) {
+                this.$refs.content.onTouchStart(event);
+                this.hideToast();
+            },
+            onTouchMove(event) {
+                this.$refs.content.onTouchMove(event);
+            },
+            onTouchEnd(event) {
+                this.$refs.content.onTouchEnd(event);
+            },
+
+            // toast相关
+            onHideToast() {
+                // 清除toast
+                this.hideToast();
+            },
+            onClick() {
+                // 清除toast
+                this.hideToast();
+            },
+            onToastChange(val) {
+                if (val !== this.toast.state) {
+                    this.toast.state = val;
+                }
+            },
+            hideToast() {
+                this.toast.state = false;
+            },
+
+            // 下拉退场相关
+            onSwipeDownStart() {
+                this.isShowBg = false;
+
+                this.$emit('swipe-down-start');
+            },
+            onSwipeDownEnd() {
+                this.emitLeaveStartEvent({
+                    type: 'swipe-down'
+                });
+            },
+            onSwipeDownCancel() {
+                this.isShowBg = true;
+
+                this.$emit('swipe-down-cancel');
+            },
+            onTap(data) {
+                this.$emit('tap');
+            }
+        }
+    };
+</script>
+
+<style lang="less" module>
+.viewer-base {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 501;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    outline: 0;
+}
+
+.black-bg {
+    background-color: #000;
+}
+</style>

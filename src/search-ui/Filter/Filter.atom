@@ -1,0 +1,334 @@
+<template>
+    <div class="c-row-tile">
+        <div class="c-filter">
+            <div class="c-gap-top-small">
+                <div class="c-slink c-filter-top c-line-bottom">
+                    <div
+                        a-for="(sec, index) in selection"
+                        :key="index"
+                        :class="['c-slink-elem','WA_LOG_TAB']"
+                    >
+                        <div a-if="sec.type === 'normal'" class="c-filter-tag">
+                            <c-filter-normal :sec="sec" @itemChanged="changeVal"/>
+                        </div>
+                        <div a-else class="c-filter-tag" @click="change(index)">
+                            <span
+                                :class="index == showDrop ? 'c-filter-tag-text-selected' : ''"
+                                class="c-filter-tag-text c-line-clamp1"
+                            >
+                                {{ sec.defaultText && sec.defaultText !== '' ? sec.defaultText : sec.label }}
+                            </span>
+                            <i
+                                :class="index == showDrop ? 'c-filter-tag-icon-up' : 'c-filter-tag-icon-down'"
+                                class="c-gap-left"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div
+                    a-for="(sec, index) in selection"
+                    a-show="index==showDrop"
+                    :key="index"
+                    class="c-filter-list"
+                >
+                    <c-filter-list-multi
+                        a-if="selectConfig[index] && selectConfig[index].type == 'multi'"
+                        :sec="sec"
+                        @itemChanged="changeVal"
+                    />
+                    <c-filter-list-three
+                        a-else-if="selectConfig[index] && selectConfig[index].type == 'three'"
+                        :sec="sec"
+                        @itemChanged="changeVal"
+                    />
+                    <c-filter-list-two
+                        a-else-if="selectConfig[index] && selectConfig[index].type == 'two'"
+                        :sec="sec"
+                        @itemChanged="changeVal"
+                    />
+                    <c-filter-list-one
+                        a-else-if="selectConfig[index] && selectConfig[index].type == 'one'"
+                        :sec="sec"
+                        @itemChanged="changeVal"
+                    />
+                    <div a-show="showDrop != -1" class="c-filter-mask" @click="changeHidden()"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 选项数组
+         *
+         * @property {string} type 扩展字段，必选，设置筛选的类型：一级筛选（one）、二级筛选（two）、三级筛选（three）、更多筛选（multi）、不展开样式（normal）
+         * @property {string} defaultText 扩展字段，可选，标题文本说明，优先`label`显示
+         * @property {string} label 扩展字段，必选，标题文本说明
+         * @property {string} filterKey 必选，筛选相关key，一级筛选的key
+         * @property {string} default 可选，默认选中值，与value对应
+         * @property {Array} values 必选，筛选项数组
+         * @property {string} values[].value 筛选值，必选，用于与后端交互
+         * @property {string} values[].text 必选，用于页面展现的文案
+         * @property {Object} values[].subCate 可选，二级筛选，用来显示在右侧
+         * @property {string} values[].subCate.filterKey 筛选相关key
+         * @property {Array} values[].subCate.default 默认选中值，与value对应，兼容单选和多选
+         * @property {string} values[].subCate.type 更多筛选项的类型，目前支持三种类型：`list`表示列表型；`rangeInput`表示范围输入型；`multi`多选型。默认`list`列表型
+         * @property {boolean} values[].subCate.spreadLevel 可选，多选里边控制默认展开收起字段
+         * @property {number|string} values[].subCate.defShowNum 可选，每行默认展示的列表个数
+         * @property {Object} values[].subCate.input 二级内容，`rangeInput`型的筛选项值
+         * @property {string} values[].subCate.input.unit 可选，输入框的单位
+         * @property {string} values[].subCate.input.placeHold 可选，输入框里的默认文案
+         * @property {string} values[].subCate.input.placeHold2 可选，右侧显示文案，用于左右文案不一样的情况
+         * @property {string} values[].subCate.input.listButton 可选，显示在input下边的可选列表button 筛选相关key
+         * @property {string} values[].subCate.input.leftNum 必选，显示在listButton中的左侧文案
+         * @property {string} values[].subCate.input.rightNum 必选，显示在listButton中的右侧文案
+         * @property {Array} values[].subCate.values 二级内容，列表型的筛选项值，当筛选类型是`rangeInput`时，无此字段
+         * @property {string} values[].subCate.values[].filterKey 可选，更多里多选的key值
+         * @property {string} values[].subCate.values[].value 必选，用于后端交互
+         * @property {string} values[].subCate.values[].text 必选，用于展现
+         * @property {Object} values[].subCate.values[].subCate 可选，三级筛选，用来显示三级筛选
+         * @property {string} values[].subCate.values[].subCate.filterKey 必选，三级筛选相关key
+         * @property {string} values[].subCate.values[].subCate.default 可选，默认选中值，与value对应
+         * @property {Array} values[].subCate.values[].subCate.values 必选，筛选项数组
+         * @property {string} values[].subCate.values[].subCate.values[].value 必选，用于后端交互
+         * @property {string} values[].subCate.values[].subCate.values[].text 必选，用于展现
+         */
+        selection: Array
+    },
+    data: {
+        showDrop: -1,
+        lastSelectedPanel: 0,
+        selectConfig: [],
+        normalIdx: 0
+    },
+    components: {
+        'c-filter-list-one': './FilterListPanel',
+        'c-filter-list-two': './FilterTwoListPanel',
+        'c-filter-list-three': './FilterThreeListPanel',
+        'c-filter-list-multi': './FilterMultiListPanel',
+        'c-filter-normal': './FilterNormal'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file 多选组件
+ * @author lixiao12@baidu.com
+ */
+
+export default {
+    mounted() {
+        /* 初始化配置数据 */
+        for (let i = 0; i < this.selection.length; i++) {
+            this.selectConfig[i] = {};
+            if (this.selection[i].type === 'normal') {
+                this.normalIdx = i;
+            }
+            this.selectConfig[i].type = this.selection[i].type;
+            this.selectConfig[i].selectedVal = {};
+        }
+    },
+    methods: {
+        /**
+         * 父组件控制子组件展开收起
+         *
+         * @param {Number} index 展开筛选索引
+         */
+        change(index) {
+            if (this.showDrop !== index) {
+                this.showDrop = index;
+                this.lastSelectedPanel = index;
+            }
+            else {
+                this.showDrop = -1;
+            }
+            let filters = this.getFilters();
+            this.$emit('fliterStatus', this.showDrop, filters);
+        },
+        /**
+         * 根据操作option返回被选中信息
+         *
+         * @param {Object} option 当前处理option-list
+         * @param {Number} index 当前option选中索引
+         * @return {Object} 返回选中的信息
+         */
+        getSelVal(option, index) {
+            let selectedValData = {
+                [option.filterKey]: option.values[index].value
+            };
+            // selectedValData[option.filterKey] = option.values[index].value;
+            /* 容错处理 */
+            return {
+                text: option.values[index].value && option.values[index].text ? option.values[index].text : '',
+                selectedVal: selectedValData
+            };
+        },
+        /**
+         * 重新渲染当前面板选中信息
+         *
+         * @param {Array} selIndex 操作面板的选中index列表
+         */
+        renderLastSelectedPanel(selIndex) {
+            if (selIndex.type === 'normal') {
+                this.lastSelectedPanel = this.normalIdx;
+                selIndex = selIndex.key;
+            }
+            let sec = this.selection[this.lastSelectedPanel];
+            let secConfig = this.selectConfig[this.lastSelectedPanel];
+            /* 初始化，每次新渲染 */
+            secConfig.selectedVal = {};
+            if (!selIndex) {
+                return;
+            }
+            /* 临时当前选中option变量 */
+            let nowOptions;
+            /* 多选：横向二维递进、纵向多选平铺 */
+            if (selIndex.length) {
+                for (let i = 0; i < selIndex.length; i++) {
+                    if (i === 0) {
+                        /* 一维 */
+                        nowOptions = sec;
+                    }
+                    else if (nowOptions.values[selIndex[i - 1]].subCate) {
+                        nowOptions = nowOptions.values[selIndex[i - 1]].subCate;
+                    }
+                    let temp = this.getSelVal(nowOptions, selIndex[i]);
+                    /* 多维筛选选中值不随选中内容变化 */
+                    if (secConfig.type !== 'multi') {
+                        this.selection[this.lastSelectedPanel].defaultText = temp.text;
+                    }
+                    secConfig.selectedVal = Object.assign(secConfig.selectedVal, temp.selectedVal);
+                }
+            }
+            else {
+                secConfig.selectedVal = Object.assign(secConfig.selectedVal, selIndex);
+            }
+        },
+        /**
+         * 获取整个筛选选中项
+         *
+         * @return {Object} 返回整体筛选选中键值对
+         */
+        getFilters() {
+            let filters = {};
+            for (let i = 0; i < this.selectConfig.length; i++) {
+                filters = Object.assign(filters, this.selectConfig[i].selectedVal);
+            }
+            return filters;
+        },
+        /**
+         * 子组件=>父组件通信
+         *
+         * @param {Array} selIndex 操作面板的选中index列表
+         */
+        changeVal(selIndex, event) {
+            this.renderLastSelectedPanel(selIndex);
+            let filters = this.getFilters();
+
+            /**
+             * 筛选后触发
+             *
+             * @event change
+             */
+            this.$emit('change', filters);
+            this.showDrop = -1;
+
+            /**
+             * 筛选状态返回`info`，当`Filter`组件筛选状态函数值
+             * 当值不为-1的时候为打开状态，-1时候为关闭筛选状态
+             *
+             * @event fliterStatus
+             */
+            this.$emit('fliterStatus', this.showDrop, filters);
+        },
+        changeHidden() {
+            this.showDrop = -1;
+            let filters = this.getFilters();
+            this.$emit('fliterStatus', this.showDrop, filters);
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.c-filter {
+    width: 100%;
+    position: relative;
+    left: 0;
+    z-index: 10;
+    background-color: #fff;
+}
+.c-filter-top {
+    padding-bottom: .05rem;
+}
+.c-filter .c-slink-elem {
+    padding: 0;
+    height: .28rem;
+    line-height: .28rem;
+    color: #555;
+}
+.c-filter .c-slink-elem:after,
+.c-filter .c-slink-elem:before {
+    background-color: #e7e7e7;
+    top: 0;
+    height: 0;
+}
+.c-filter .c-slink-elem:first-child {
+    padding-left: .1rem;
+}
+.c-filter .c-slink-elem:last-child {
+    padding-right: .1rem;
+}
+.c-filter-tag .c-filter-tag-text {
+    display: inline-block;
+    vertical-align: top;
+    max-width: 75%;
+    font-size: 15px;
+}
+.c-filter-tag i {
+    display: inline-block;
+    vertical-align: top;
+}
+.c-filter-tag-text-selected {
+    color: #000;
+    font-weight: 700;
+}
+.c-filter-tag-icon-down {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+}
+.c-filter-tag-icon-down,
+.c-filter-tag-icon-up {
+    width: 0;
+    height: 0;
+    border-width: 4px 4px 0;
+    border-style: solid;
+    border-color: #999 transparent transparent;
+    margin-top: 11px;
+}
+.c-filter-tag-icon-up {
+    -webkit-transform: rotate(180deg);
+            transform: rotate(180deg);
+    border-color: #333 transparent transparent;
+}
+.c-filter-mask {
+    position: fixed;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, .15);
+    z-index: 55;
+}
+.c-filter-list {
+    position: fixed;
+    left: 0;
+    z-index: 102;
+    width: 100%;
+    height: 100%;
+}
+</style>

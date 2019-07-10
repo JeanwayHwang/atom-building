@@ -1,0 +1,190 @@
+<template>
+    <div
+        :class="[
+            {
+                'c-line-top': border.top,
+                'c-line-bottom': border.bottom
+            }
+        ]"
+        class="tag-layout"
+        @touchmove="handleTouchMove"
+    >
+        <tag-layout-item
+            a-for="(option, optionIndex) in options"
+            :key="optionIndex"
+            :index="optionIndex"
+            :text="option.text"
+            :direction="option.direction"
+            :type="option.type"
+            :selected-color="primaryColor"
+            :selected="option.selected"
+            :style="{
+                width: 100 / options.length + '%'
+            }"
+            @click="handleTagLayoutItemClick({
+                option,
+                optionIndex
+            })"
+        />
+        <!-- @slot 右侧自定义区域 -->
+        <slot/>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 标签数据数组
+         *
+         * @property {string} text 标签文案
+         * @property {string} [type=normal] 标签的类型：normal，正常；order，排序
+         * @property {string} [direction=down] 标签箭头的方向：up，向上；down，向下
+         * @property {boolean} [selected=false] 是否强制选中
+         * @property {string} [color=#666] 默认颜色
+         * @property {string} [selectedColor=#333] 选中的颜色
+         */
+        options: Array,
+
+        /**
+         * 分割线
+         *
+         * @property {boolean} [top=false] 上分割线
+         * @property {boolean} [bottom=true] 下分割线
+         */
+        border: {
+            type: Object,
+            default: {
+                top: false,
+                bottom: true
+            }
+        },
+
+        /**
+         * 是否阻止`touchmove`事件
+         */
+        preventDefaultTouchMove: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 主颜色
+         */
+        primaryColor: String
+    },
+    data: {
+        // 选中的项索引
+        selectedIndex: -1
+    },
+    components: {
+        'tag-layout-item': './FilterTagLayoutItem'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        // item 点击
+        handleTagLayoutItemClick(obj) {
+            // 如果阻止默认事件
+            if (obj.option.preventDefault) {
+                // 触发事件
+                this.emitClick(obj);
+                return;
+            }
+            // 记录上一次选中的索引
+            this.lastSelectedIndex = this.selectedIndex;
+            // 如果方向向上
+            if (obj.option.direction === 'up') {
+                // 改为向下
+                this.$set(obj.option, 'direction', 'down');
+                // 如果是 order 类型
+                if (obj.option.type === 'order') {
+                    // clear
+                    this.clearTagItemDirection();
+                    // 设置选中项索引
+                    this.selectedIndex = obj.optionIndex;
+                }
+                // 如果是 normal 类型
+                else {
+                    // 设置选中项索引
+                    this.selectedIndex = -1;
+                }
+            }
+            // 如果方向向下或者为空
+            else {
+                // clear
+                this.clearTagItemDirection();
+                // 改为向上
+                this.$set(obj.option, 'direction', 'up');
+                // 设置选中项索引
+                this.selectedIndex = obj.optionIndex;
+            }
+            // 触发事件
+            this.emitClick(obj);
+        },
+        // 清空所有 tagItem 的方向
+        clearTagItemDirection() {
+            this.options.forEach((option, optionIndex) => {
+                // 如果是正常类型
+                if (option.type !== 'order') {
+                    // 全部置为 down
+                    this.$set(option, 'direction', 'down');
+                }
+            });
+        },
+        // touchmove 事件
+        handleTouchMove(e) {
+            // 阻止默认 TouchMove 事件
+            if (this.preventDefaultTouchMove) {
+                e.cancelable && e.preventDefault();
+            }
+        },
+        // 触发 change 事件
+        emitClick(obj) {
+
+            /**
+             * 改变事件，点击标签项时触发
+             *
+             * @event click
+             * @property {number|string} param1.selectedIndex 选中索引
+             * @property {number|string} param1.lastSelectedIndex 上一次的选中项索引
+             * @property {string} param1.type 选中项类型
+             * @property {string} param1.direction 选中项方向
+             */
+            this.$emit('click', {
+                selectedIndex: this.selectedIndex,
+                lastSelectedIndex: this.lastSelectedIndex,
+                type: obj.option.type || 'normal',
+                direction: obj.option.direction,
+                option: obj.option
+            });
+        },
+        // 改变 selectedIndex
+        changeSelectedIndex(selectedIndex) {
+            this.selectedIndex = selectedIndex;
+        }
+    }
+};
+</script>
+
+<style module>
+.tag-layout-wrapper {
+    position: relative;
+}
+.tag-layout {
+    display: flex;
+    padding: 7px .17rem;
+    background-color: #fff;
+    box-sizing: border-box;
+}
+.mask {
+    position: absolute;
+    width: 100%;
+    height: 1500px;
+    background-color: rgba(0, 0, 0, .5);
+}
+</style>

@@ -1,0 +1,54 @@
+{
+    "alias": [
+        "c-btn-layout"
+    ],
+    "type": "object",
+    "properties": {
+        "btnLayout": {
+            "type": "object",
+            "@ChineseName": "BtnLayout 按钮组组件实例",
+            "description": "BtnLayout 按钮组组件实例，BtnLayout 的基础相关数据",
+            "properties": {
+                "options": {
+                    "type": "array",
+                    "@ChineseName": "按钮栏的配置项",
+                    "description": "按钮栏的配置项",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "@ChineseName": "选项的文案",
+                                "@Demo": "选项1",
+                                "description": "选项的文案"
+                            },
+                            "value": {
+                                "type": "string",
+                                "@ChineseName": "选项的值",
+                                "@Demo": "option1",
+                                "description": "选项的值"
+                            }
+                        }
+                    }
+                },
+                "borderTop": {
+                    "type": "string",
+                    "@ChineseName": "上边线的 css 样式",
+                    "@Demo": "1px solid #eee",
+                    "description": "上边线的 css 样式"
+                },
+                "borderBottom": {
+                    "type": "string",
+                    "@ChineseName": "下边线的 css 样式",
+                    "@Demo": "1px solid #eee",
+                    "description": "下边线的 css 样式"
+                }
+            },
+            "propsData": [
+                "options",
+                "borderTop",
+                "borderBottom"
+            ]
+        }
+    }
+}

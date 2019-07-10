@@ -1,0 +1,113 @@
+<template>
+    <div class="c-flexbox c-filter-two-content-s2">
+        <ul class="c-filter-two-s2-nav">
+            <li a-for="(option, index) in sec.values" 
+                :class="['c-filter-two-s2-label WA_LOG_OTHER', {'c-filter-two-s2-label-selected' : option.value == sec.default}]"
+                @click="changeLeft(index, option.value)"
+            >
+                {{ option.text }}
+            </li>
+        </ul>
+
+        <ul a-for="(option, index) in sec.values" 
+            a-if="option.value == sec.default" 
+            class="c-filter-two-s2-cont"
+        >
+            <li a-for="(subOpt, subIndex) in option.subCate.values" 
+                :class="['c-row c-filter-two-item WA_LOG_OTHER', {'c-filter-two-single-selected' : subOpt.vclassalue == option.subCate.default}]"
+                @click="changeRight(subIndex, subOpt.value)"
+            >
+                <div class="c-span10 c-filter-two-l">{{ subOpt.text }}</div>
+                <div a-if="subOpt.value == option.subCate.default" class="c-span2 c-filter-two-r">
+                    <i class="c-icon" >&#xe608</i>
+                </div>
+            </li>
+        </ul>
+    </div>
+</template>
+
+<style>
+.c-filter-two-content-s2 {
+    position: relative;
+    z-index: 100;
+    background-color: #fff;
+    text-align: left;
+    max-height: 75%;
+}
+.c-filter-two-s2-nav,
+.c-filter-two-s2-cont {
+    width: 50%;
+    list-style: none;
+    overflow-y: scroll;
+}
+.c-filter-two-s2-nav {
+    background-color: #f8f8f8;
+}
+.c-filter-two-s2-nav 
+.c-filter-two-s2-label-selected {
+    color: #000;
+    font-weight: 700;
+    background-color: #fff;
+    border-right-color: #fff;
+    margin-right: -1px;
+}
+.c-filter-two-content-s2 .c-filter-two-s2-nav li,
+.c-filter-two-content-s2 .c-filter-two-s2-cont li {
+    padding-left: .16rem;
+    padding-right: .16rem;
+    padding-top: .1rem;
+    padding-bottom: .1rem;
+}
+.c-filter-two-content-s2 .c-filter-two-s2-cont li {
+    padding-left: .12rem;
+}
+.c-filter-two-s2-nav li {
+    border-right: 1px solid #e7e7e7;
+}
+.c-filter-two-l {
+    text-align: left;
+}
+.c-filter-two-r {
+    text-align: right;
+}
+</style>
+
+<config>
+    {
+        props: [
+            'sec'
+        ],
+        data: {
+            'selIndex' : [0,0]
+        }
+    }
+</config>
+
+<script>
+    module.exports = {
+        methods: {
+            changeLeft(index, val) {
+                this.sec.default = val;
+                this.selIndex[0] = index;
+                this.sec.values[index].subCate.default = '';
+            },
+            changeRight(index, subVal) {
+                for (let i = 0; i < this.sec.values.length; i++) {
+                    if (i !== this.selIndex[0]
+                        && this.sec.values[i]
+                        && this.sec.values[i].subCate
+                        && this.sec.values[i].subCate.default) {
+                        this.sec.values[i].subCate.default = '';
+                    }
+                    if (this.sec.default === this.sec.values[i].value) {
+                        this.selIndex[0] = i;
+                    }
+                }
+                this.selIndex[1] = index;
+                let subCate = this.sec.values[this.selIndex[0]].subCate;
+                subCate.default = subVal;
+                this.$emit('itemChanged', this.selIndex);
+            }
+        }
+    };
+</script>

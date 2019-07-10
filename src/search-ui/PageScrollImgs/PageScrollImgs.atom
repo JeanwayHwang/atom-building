@@ -1,0 +1,76 @@
+<template>
+    <c-page-scroll class="c-page-scroll-imgs" :col="showCol">
+        <c-page-scroll-item a-for="page in math_ceil(imgList.length / (12 / col))">
+            <c-row>
+                <template a-for="idx in ( 12 / showCol )">
+                    <c-span a-if="( page - 1 ) * 12 / showCol + ( idx - 1 ) < imgLen">
+                        <c-page-scroll-img :idx="( page - 1 ) * 12 / showCol + ( idx - 1 )"
+                                           :col="showCol"
+                                           :item="imgList[( page - 1 ) * 12 / showCol + ( idx - 1 )]">
+                                           <slot :name="'c-page-scroll-imgs'+(( page - 1 ) * 12 / showCol + ( idx - 1 ))" ></slot>
+                        </c-page-scroll-img>
+                        <slot :name="'c-page-scroll-imgs-ext'+(( page - 1 ) * 12 / showCol + ( idx - 1 ))" ></slot>
+                    </c-span>
+                    <c-span a-else-if="( page - 1 ) * 12 /showCol + ( idx - 1 ) == imgLen">
+                        <c-link :url="moreUrl"
+                                :params="moreUrlParams" @click="showMore" class="c-color">
+                            <div class="c-page-scroll-imgs-more">
+                                <i class="c-icon c-page-scroll-imgs-icon">&#xe605</i>
+                                <div>查看更多</div>
+                            </div>
+                        </c-link>
+                    </c-span>
+                    <c-span a-else></c-span>
+                </template>
+            </c-row>
+        </c-page-scroll-item>
+    </c-page-scroll>
+</template>
+
+<style scope>
+    .c-page-scroll-imgs-icon {
+        font-size: 42px;
+        display: inline-block;
+        height: 42px;
+        line-height: 42px;
+    }
+    .c-page-scroll-imgs-more {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        text-align: center;
+        width: 100%;
+    }
+   .c-page-scroll-imgs .c-scroll-element-gap:last-child {
+        position: relative;
+    }
+</style>
+
+<config>
+    {
+        props: ['col','pageNum','imgList','moreUrl','moreUrlParams'],
+        data: {
+            showCol: col ? col : 3,
+            imgLen: imgList.length
+        },
+        components: {
+            'c-page-scroll': '../PageScroll/PageScroll',
+            'c-page-scroll-item': '../PageScroll/PageScrollItem',
+            'c-page-scroll-img': './PageScrollImgsItem',
+            'c-row': '../Row/Row',
+            'c-span': '../Row/Span',
+            'c-link': '../Link/Link'
+        }
+    }
+</config>
+
+<script>
+
+    export default {
+        methods: {
+            showMore() {
+                this.$emit('showMore');
+            }
+        }
+    };
+</script>

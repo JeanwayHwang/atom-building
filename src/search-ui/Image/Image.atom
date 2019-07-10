@@ -1,0 +1,760 @@
+<template>
+    <div
+        :aria-label="title ? title : '图片'"
+        role="img"
+        class="c-img-wrapper"
+    >
+        <div
+            :style="[
+                {
+                    'background-color': backgroundColor,
+                    'overflow': 'hidden'
+                },
+                src && complete
+                    ? {
+                        background: 'none'
+                    }
+                    : {},
+                paddingBottom
+                    ? {
+                        paddingBottom: paddingBottom + '%'
+                    }
+                    : {},
+                loadingImageTypeMap[defaultImageType]
+                    ? {
+                        backgroundImage: bgImageBaseUrl
+                            + 'loading-'
+                            + loadingImageTypeMap[defaultImageType]
+                            + bgImageBasePostfix
+                    }
+                    : {},
+                isBackgroundImage && src
+                    ? {
+                        background: 'no-repeat center',
+                        backgroundImage: finalLazy
+                            ? null
+                            : 'url(' + src + ')',
+                        backgroundSize,
+                        backgroundPosition
+                    }
+                    : {},
+                isBackgroundImage && !src
+                    ? {
+                        backgroundImage: 'url(' + defaultImageSrc + ')',
+                        backgroundSize: 'auto',
+                        backgroundPosition: 'center'
+                    }
+                    : {},
+                defaultImageSrc && !isBackgroundImage
+                    ? {
+                        backgroundImage: 'url(' + defaultImageSrc + ')',
+                        backgroundSize: 'auto',
+                        backgroundPosition: 'center'
+                    }
+                    : {},
+                !isShowDefaultImage
+                    ? {
+                        'background-image': 'none'
+                    }
+                    : {},
+                border
+                    ? {
+                        border
+                    }
+                    : {},
+                borderRadius
+                    ? {
+                        'border-top-left-radius': borderRadius.tl ? borderRadius.tlRadius : null,
+                        'border-top-right-radius': borderRadius.tr ? borderRadius.trRadius : null,
+                        'border-bottom-left-radius': borderRadius.bl ? borderRadius.blRadius : null,
+                        'border-bottom-right-radius': borderRadius.br ? borderRadius.brRadius : null
+                    }
+                    : {}
+            ]"
+            :class="[
+                loadingImageTypeMap[defaultImageType]
+                    ? imgClassName + 'loading'
+                    : '',
+                imgClassName + type,
+                {
+                    'c-img-type-round': isRound
+                },
+                $platform !== 'pc'
+                    ? {
+                        'c-img-radius-tl': borderRadius && borderRadius.tl,
+                        'c-img-radius-tr': borderRadius && borderRadius.tr,
+                        'c-img-radius-bl': borderRadius && borderRadius.bl,
+                        'c-img-radius-br': borderRadius && borderRadius.br
+                    }
+                    : {}
+            ]"
+            :data-bgimagedelaysrc="(finalLazy && src && isBackgroundImage) ? src : null"
+            class="c-img c-img-item"
+        >
+            <!-- 渐进加载 -->
+            <img
+                a-if="progressive && src && imgLoaded && !finalLazy && !error"
+                ref="img"
+                :src="src"
+                :style="[
+                    borderRadius
+                        ? {
+                            'border-top-left-radius': borderRadius.tl ? borderRadius.tlRadius : null,
+                            'border-top-right-radius': borderRadius.tr ? borderRadius.trRadius : null,
+                            'border-bottom-left-radius': borderRadius.bl ? borderRadius.blRadius : null,
+                            'border-bottom-right-radius': borderRadius.br ? borderRadius.brRadius : null
+                        }
+                        : {}
+                ]"
+                :class="[
+                    blur
+                        ? 'c-img-progressive-blur'
+                        : 'c-img-progressive'
+                ]"
+                class="c-img-img"
+                @load="onLoad"
+                @error="onError"
+            >
+            <!-- 非渐进加载 -->
+            <template a-if="!progressive">
+                <!-- 转义 -->
+                <img
+                    a-if="src && !error && !isBackgroundImage"
+                    ref="img"
+                    a-bind="{
+                        [finalLazy ? 'data-imagedelaysrc' : 'src']: src
+                    }"
+                    :style="[
+                        borderRadius
+                            ? {
+                                'border-top-left-radius': borderRadius.tl ? borderRadius.tlRadius : null,
+                                'border-top-right-radius': borderRadius.tr ? borderRadius.trRadius : null,
+                                'border-bottom-left-radius': borderRadius.bl ? borderRadius.blRadius : null,
+                                'border-bottom-right-radius': borderRadius.br ? borderRadius.brRadius : null
+                            }
+                            : {}
+                    ]"
+                    class="c-img-img"
+                    @load="onLoad"
+                    @error="onError"
+                >
+                <!-- 没有 src 有默认图 -->
+                <div
+                    a-else-if="!src && defaultImageType && defaultImageTypeMap[type]"
+                    :style="[
+                        isRound ? {borderRadius: '50%'} : {},
+                        {backgroundImage: bgImageBaseUrl + defaultImageType + '_' + type + bgImageBasePostfix}
+                    ]"
+                    :class="[
+                        imgClassName + 'default'
+                    ]"
+                    class="c-img-img"
+                />
+                <!-- 非默认图 且 采用背景图片的方式 -->
+                <img
+                    a-else-if="isBackgroundImage && !finalLazy"
+                    :style="{
+                        width: '100%',
+                        height: '100%',
+                        opacity: 0
+                    }"
+                    :src="src"
+                    class="c-img-img"
+                    @load="onLoad"
+                    @error="onError"
+                >
+            </template>
+            <!-- @slot 图片内部自定义内容 -->
+            <slot/>
+            <!-- 左下角胶囊遮罩 -->
+            <!-- eslint-disable atom/attribute-object-format -->
+            <c-image-mask
+                a-if="
+                    lbPillOpts.text
+                        || lbPillOpts.icon
+                "
+                :text="lbPillOpts.text"
+                :icon="lbPillOpts.icon"
+                :class="{
+                    'c-img-mask-lb-gap-large': lbPillOpts.gapSize == 12
+                }"
+                class="c-img-mask-lb"
+            />
+            <!-- 右下角胶囊遮罩 -->
+            <!-- eslint-disable atom/attribute-object-format -->
+            <c-image-mask
+                a-if="showNum || showNum === '0' || icon"
+                :class="{'c-img-mask-gap-large': maskgapSize == 12}"
+                :icon="icon"
+                :pill-big-text="pillBigText"
+                :text="showNum"
+                class="c-img-mask"
+            />
+            <!-- 中间圆形遮罩 -->
+            <!-- eslint-enable atom/attribute-object-format -->
+            <c-image-mask
+                a-if="circleMaskText || circleMaskIcon"
+                :size="circleMaskSize ? circleMaskSize : (gridSize >= 12 ? 'large' : 'small')"
+                :icon="circleMaskIcon"
+                :text="circleMaskText"
+                type="circle"
+                class="c-img-circle-mask"
+            />
+            <!-- 信息 -->
+            <p a-if="info" class="c-img-text">
+                {{ info }}
+            </p>
+            <!-- 背景色层 -->
+            <div a-if="hackWhiteStroke" class="c-img-hack-white-stroke"/>
+        </div>
+        <!-- 标题 -->
+        <c-text-line
+            a-if="title"
+            :clamp="titleClamp"
+            :align="titleAlign"
+            :fix-height="!!titleFixHeight"
+            :text="title"
+        />
+        <!-- 副标题 -->
+        <c-text-line
+            a-if="subTitle"
+            :clamp="subTitleClamp"
+            :align="subTitleAlign"
+            :fix-height="!!subTitleFixHeight"
+            :text="subTitle"
+            class="c-gray"
+        />
+    </div>
+</template>
+
+<script type="config">
+{
+    name: 'c-img',
+    props: {
+
+        /**
+         * 图片链接
+         */
+        src: String,
+
+        // 图片比例相关
+
+        /**
+         * 图片比例，值有（s,l,w,x,y）
+         *
+         * @see See [栅格图片](http://pmd.baidu.com/doc/#image)
+         */
+        type: {
+            type: String,
+            default: 's'
+        },
+
+        /**
+         * 图片自定义 padding-bottom
+         */
+        paddingBottom: {
+            type: [String, Number]
+        },
+
+        // 背景图片相关
+
+        /**
+         * 是否采用背景图片的方式
+         */
+        isBackgroundImage: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 背景图片css background-size，当且仅当采用背景图片时才有效
+         */
+        backgroundSize: {
+            type: String,
+            default: 'cover'
+        },
+
+        /**
+         * 背景图片css background-position，当且仅当采用背景图片时才有效
+         */
+        backgroundPosition: {
+            type: String
+        },
+
+        // 懒加载相关
+
+        /**
+         * 是否配置懒加载
+         */
+        lazy: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 是否使用默认的懒加载配置（非首屏则懒加载生效）
+         */
+        noAutoLazy: {
+            type: Boolean,
+            default: false
+        },
+
+        // 图片形状相关
+
+        /**
+         * 是否是圆形图片
+         */
+        isRound: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 圆角配置
+         *
+         * @property {boolean} [tl=true] 左上角是否有圆角
+         * @property {boolean} [tr=true] 右上角是否有圆角
+         * @property {boolean} [bl=true] 左下角是否有圆角
+         * @property {boolean} [br=true] 右下角是否有圆角
+         * @property {string} tlRadius 左上角圆角半径值，默认为 3px
+         * @property {string} trRadius 右上角圆角半径值，默认为 3px
+         * @property {string} blRadius 左下角圆角半径值，默认为 3px
+         * @property {string} brRadius 右下角圆角半径值，默认为 3px
+         */
+        borderRadius: {
+            type: Object,
+            default: {
+                tl: true,
+                tr: true,
+                bl: true,
+                br: true
+            }
+        },
+
+        /**
+         * 边线
+         */
+        border: {
+            type: String
+        },
+
+        // 图片动效相关
+
+        /**
+         * 图片显示使用渐显效果
+         */
+        progressive: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 图片显示使用模糊效果
+         */
+        blur: {
+            type: Boolean,
+            default: false
+        },
+
+        // 默认图相关
+
+        /**
+         * 背景颜色
+         */
+        backgroundColor: {
+            type: String,
+            default: '#f7f7f7'
+        },
+
+        /**
+         * 是否显示默认图
+         */
+        isShowDefaultImage: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 默认图路径
+         */
+        defaultImageSrc: {
+            type: String
+        },
+
+        /**
+         * 垂类默认图 & 加载图类型（见示例）
+         */
+        defaultImageType: String,
+
+        // 标题相关
+
+        /**
+         * 标题，支持高亮
+         */
+        title: String,
+
+        /**
+         * 标题截断行数
+         */
+        titleClamp: {
+            type: [Number, String],
+            default: 2
+        },
+
+        /**
+         * 标题对齐方式
+         */
+        titleAlign: {
+            type: String,
+            default: 'center'
+        },
+
+        /**
+         * 标题是否根据截断行数定高
+         */
+        titleFixHeight: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 图片副标题，支持高亮
+         */
+        subTitle: String,
+
+        /**
+         * 副标题截断行数
+         */
+        subTitleClamp: {
+            type: [Number, String],
+            default: 1
+        },
+
+        /**
+         * 副标题对齐方式
+         */
+        subTitleAlign: {
+            type: String,
+            default: 'center'
+        },
+
+        /**
+         * 副标题是否根据截断行数定高
+         */
+        subTitleFixHeight: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 加上去白边的蒙层
+         */
+        hackWhiteStroke: {
+            type: Boolean,
+            default: false
+        },
+
+        // 遮罩相关
+
+        /**
+         * 右下角胶囊遮罩大号字体文案
+         */
+        pillBigText: {
+            type: [Number, String],
+            default: ''
+        },
+
+        /**
+         * 胶囊遮罩的文案
+         */
+        showNum: {
+            type: [Number, String],
+            default: ''
+        },
+
+        /**
+         * 胶囊遮罩的图标类型
+         */
+        iconType: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 左下角胶囊配置
+         *
+         * @property {string} text 文字
+         * @property {string} icon 图标
+         * @property {string} gapSize 间距`size`
+         */
+        lbPillOpts: {
+            type: Object,
+            default: {
+                text: '',
+                icon: '',
+                gapSize: null
+            }
+        },
+
+        /**
+         * 当值为12时图片右下角胶囊遮罩与外框的边距为：
+         * bottom: .05rem right: .05rem
+         * 不传默认为 bottom: .02rem right: .02rem
+         */
+        maskgapSize: {
+            type: [Number, String],
+            default: ''
+        },
+
+        /**
+         * 图片所在栅格的大小
+         */
+        gridSize: {
+            type: [String, Number],
+            default: 4
+        },
+
+        /**
+         * 圆形遮罩大小
+         */
+        circleMaskSize: String,
+
+        /**
+         * 圆形遮罩图标
+         */
+        circleMaskIcon: String,
+
+        /**
+         * 圆形遮罩文字
+         */
+        circleMaskText: String,
+
+        /**
+         * 覆盖图片底部的说明文案
+         */
+        info: String
+
+    },
+    data: {
+        imgClassName: 'c-img-',
+        complete: false,
+        error: false,
+        defaultImageTypeMap: {
+            s: 's',
+            y: 'y'
+        },
+        imgLoaded: false,
+        bgImageBaseUrl: 'url(/se/static/atom/search-ui/Image/asset/',
+        bgImageBasePostfix: '.png?v0.1)',
+        loadingImageTypeMap: {
+            hotel: 'hotel',
+            travel: 'travel',
+            traffic: 'traffic',
+            app: 'app',
+            finance: 'finance',
+            food: 'food',
+            game: 'game',
+            goods: 'goods',
+            learn: 'learn',
+            medical: 'medical',
+            music: 'music',
+            news: 'news',
+            novel: 'novel',
+            pro: 'pro',
+            recruit: 'recruit',
+            sport: 'sport',
+            ticket: 'ticket',
+            video: 'video'
+        }
+    },
+    computed: {
+        icon: iconType ? iconType : '',
+        finalLazy: (lazy || (!noAutoLazy && $root.atomRenderFlags && $root.atomRenderFlags.fp === 0))
+            && $root.cardReadyFlag !== true
+    },
+    components: {
+        'c-text-line': '../TextLine/TextLine',
+        'c-image-mask': './ImageMask'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file 图片组件
+ * @author cxtom <cxtom2008@gmail.com>
+ */
+export default {
+    mounted() {
+        this.$nextTick(() => {
+            if (
+                this.$refs.img && this.$refs.img.complete
+                || (this.defaultImageType && !this.src)
+            ) {
+                this.onLoad();
+            }
+        });
+        if (this.progressive && this.src) {
+            this.loadImg();
+        }
+    },
+    methods: {
+        onLoad(e) {
+            if (this.complete) {
+                return;
+            }
+            this.complete = true;
+
+            /**
+             * 图片加载完成事件，当使用背景图片的时候不支持
+             *
+             * @event load
+             * @property {Event} param1 透传事件对象
+             */
+            this.$emit('load', e);
+        },
+        loadImg() {
+            const img = new Image();
+            img.onload = () => {
+                this.imgLoaded = true;
+            };
+            img.src = this.src;
+        },
+        onError(e) {
+            this.complete = false;
+            this.error = true;
+
+            /**
+             * 图片加载错误事件，当使用背景图片的时候不支持
+             *
+             * @event error
+             * @property {Event} param1 透传事件对象
+             */
+            this.$emit('error', e);
+        }
+    }
+};
+</script>
+
+<style scoped lang="less">
+.c-img-item {
+    position: relative;
+    width: 100%;
+}
+.c-img-auto {
+    // 修复 inline-block 元素导致多出间距的问题
+    line-height: 0;
+}
+.c-img-text {
+    white-space: normal;
+}
+// 外层控制消除顶部间距
+.c-img-wrapper.c-gap-top-zero > .c-img {
+    margin-top: 0;
+}
+// 外层控制消除底部间距
+.c-img-wrapper.c-gap-bottom-zero > .c-img {
+    margin-bottom: 0;
+}
+.c-img-radius-tl,
+.c-img-radius-tl > .c-img-img {
+    border-top-left-radius: 3px;
+}
+.c-img-radius-tr,
+.c-img-radius-tr > .c-img-img {
+    border-top-right-radius: 3px;
+}
+.c-img-radius-bl,
+.c-img-radius-bl > .c-img-img {
+    border-bottom-left-radius: 3px;
+}
+.c-img-radius-br,
+.c-img-radius-br > .c-img-img {
+    border-bottom-right-radius: 3px;
+}
+.c-img-hack-white-stroke {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: radial-gradient(rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, .05) 100%);
+}
+// 右下角胶囊遮罩
+.c-img-mask {
+    margin-bottom: .02rem;
+    position: absolute;
+    bottom: 0;
+    right: .02rem;
+    line-height: 2;
+    height: 2em;
+}
+// 左下角胶囊遮罩
+.c-img-mask-lb {
+    margin-bottom: .02rem;
+    position: absolute;
+    bottom: 0;
+    left: .02rem;
+    line-height: 2;
+    height: 2em;
+}
+.c-img-mask-gap-large {
+    right: .05rem;
+    margin-bottom: .05rem;
+}
+.c-img-mask-lb-gap-large {
+    left: .05rem;
+    margin-bottom: .05rem;
+}
+// 中间圆形遮罩
+.c-img-circle-mask {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+.c-img-type-round {
+    border-radius: 50%;
+}
+.c-img-default {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: 100%;
+    background-position: center top;
+    background-repeat: no-repeat;
+}
+.c-img-loading {
+    background-color: #eaeaea;
+    background-position: center bottom;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.c-img-progressive {
+    will-change: opacity;
+    animation: c-img-progressive-origin .32s ease-out;
+}
+@keyframes c-img-progressive-origin {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+.c-img-progressive-blur {
+    filter: blur(15px);
+    // transform: translate(-5%, -5%);
+    animation: progressive-blur 1s ease-out;
+    animation-fill-mode: forwards;
+}
+@keyframes progressive-blur {
+    100% {
+        filter: blur(0px);
+        transform: translate(0, 0);
+    }
+}
+</style>

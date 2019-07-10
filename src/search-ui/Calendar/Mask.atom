@@ -1,0 +1,48 @@
+<!-- @ignore -->
+<template>
+    <section
+        :style="{
+            'top': top,
+            'z-index': zIndex
+        }"
+        class="c-mask"
+        @touchmove.prevent
+        @click="handleMaskClick"
+    />
+</template>
+
+<script type="config">
+{
+    props: {
+        // fixed top
+        top: {
+            type: String
+        },
+        // 蒙层的 z-index
+        zIndex: {
+            type: Number,
+            default: 299
+        }
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleMaskClick() {
+            this.$emit('click');
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+    .c-mask {
+        position: fixed;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, .5);
+    }
+</style>

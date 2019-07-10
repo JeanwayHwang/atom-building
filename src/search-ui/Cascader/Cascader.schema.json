@@ -1,0 +1,82 @@
+{
+    "alias": [
+        "c-cascader"
+    ],
+    "type": "object",
+    "properties": {
+        "cascader": {
+            "type": "object",
+            "@ChineseName": "Cascader 级联选择器组件实例",
+            "description": "Cascader 级联选择器组件实例，Cascader 的基础相关数据",
+            "properties": {
+                "options": {
+                    "type": "array",
+                    "@ChineseName": "按钮栏的配置项",
+                    "description": "按钮栏的配置项",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "@ChineseName": "选项的文案",
+                                "@Demo": "选项1",
+                                "description": "选项的文案"
+                            },
+                            "value": {
+                                "type": "string",
+                                "@ChineseName": "选项的值",
+                                "@Demo": "option1",
+                                "description": "选项的值"
+                            }
+                        }
+                    }
+                },
+                "column": {
+                    "type": "number",
+                    "@ChineseName": "列数",
+                    "@Demo": 1,
+                    "description": "列数"
+                },
+                "columnOverflow": {
+                    "type": "string",
+                    "@ChineseName": "列的 overflow css 样式",
+                    "@Demo": "auto",
+                    "description": "列的 overflow css 样式"
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "@ChineseName": "选中选项的默认值",
+                    "@Demo": "option1",
+                    "description": "选中选项的默认值"
+                },
+                "defaultColor": {
+                    "type": "string",
+                    "@ChineseName": "默认颜色",
+                    "@Demo": "#666",
+                    "description": "默认颜色"
+                },
+                "selectedColor": {
+                    "type": "string",
+                    "@ChineseName": "选中的颜色",
+                    "@Demo": "#333",
+                    "description": "选中的颜色"
+                },
+                "stopScrollThrough": {
+                    "type": "boolean",
+                    "@ChineseName": "是否阻止滚动穿透",
+                    "@Demo": false,
+                    "description": "是否阻止滚动穿透"
+                }
+            },
+            "propsData": [
+                "column",
+                "columnOverflow",
+                "defaultValue",
+                "defaultColor",
+                "selectedColor",
+                "options",
+                "stopScrollThrough"
+            ]
+        }
+    }
+}

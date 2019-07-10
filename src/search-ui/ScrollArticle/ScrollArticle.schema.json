@@ -1,0 +1,114 @@
+{
+    "alias": [
+        "c-scroll-article"
+    ],
+    "type": "object",
+    "properties": {
+        "scrollArticle": {
+            "type": "object",
+            "properties": {
+                "articleList": {
+                    "type": "array",
+                    "@ChineseName": "数据列表",
+                    "description": "数据列表",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "@ChineseName": "每一项的跳转链接",
+                                "description": "每一项的跳转链接",
+                                "@Demo": "https://m.baidu.com"
+                            },
+                            "urlType": {
+                                "enum": [
+                                    "normal",
+                                    "sf",
+                                    "mip"
+                                ],
+                                "@ChineseName": "链接类型",
+                                "description": "链接类型",
+                                "@Demo": "normal"
+                            },
+                            "src": {
+                                "type": "string",
+                                "@ChineseName": "每一项的图片地址",
+                                "description": "每一项的图片地址",
+                                "@Demo": "https://m.baidu.com/static/index/plus/homepage-newlogo.png"
+                            },
+                            "title": {
+                                "type": "string",
+                                "@ChineseName": "文章标题",
+                                "description": "文章标题",
+                                "@Demo": "我是文章标题"
+                            },
+                            "type": {
+                                "enum": [
+                                    "image",
+                                    "video"
+                                ],
+                                "@ChineseName": "item类型",
+                                "description": "item类型",
+                                "@Demo": "image"
+                            },
+                            "time": {
+                                "type": "number",
+                                "@ChineseName": "时间戳(毫秒)",
+                                "description": "时间戳(毫秒)",
+                                "@Demo": "1503400684000"
+                            },
+                            "duration": {
+                                "type": "string",
+                                "@ChineseName": "视频的显示时长",
+                                "description": "视频的显示时长",
+                                "@Demo": "01:20"
+                            },
+                            "content": {
+                                "type": "string",
+                                "@ChineseName": "文章内容",
+                                "description": "文章内容",
+                                "@Demo": "我是文章内容"
+                            },
+                            "labelText": {
+                                "type": "string",
+                                "@ChineseName": "标签文案",
+                                "description": "标签文案",
+                                "@Demo": "热门"
+                            },
+                            "source": {
+                                "type": "string",
+                                "@ChineseName": "文章来源",
+                                "description": "文章来源",
+                                "@Demo": "中关村在线"
+                            }
+                        }
+                    }
+                },
+                "moreUrl": {
+                    "type": "string",
+                    "@ChineseName": "查看更多跳转链接",
+                    "description": "查看更多跳转链接",
+                    "@Demo": "https://m.baidu.com"
+                },
+                "moreUrlType": {
+                    "enum": [
+                        "normal",
+                        "sf",
+                        "mip"
+                    ],
+                    "@ChineseName": "链接类型",
+                    "description": "链接类型",
+                    "@Demo": "normal"
+                }
+            },
+            "propsData": [
+                "col",
+                "articleList",
+                "moreUrl",
+                "moreUrlType",
+                "showExt"
+            ]
+        }
+    }
+}

@@ -1,0 +1,108 @@
+<template>
+    <div
+        :class="{
+            'c-btn-pills': type === 'pills',
+            'c-btn-circle-big': type === 'circle' && size !== 'small',
+            'c-btn-circle': type === 'circle' && size === 'small'
+        }"
+        class="c-btn"
+        @click="handleClick"
+    >
+        <c-icon
+            a-if="type === 'circle' ? (!text && icon) : icon"
+            :type="icon"
+            :style="[
+                {
+                    'margin-right': (text != null && text !== '') ? '.04rem' : 0
+                },
+                $platform === 'pc'
+                    ? {
+                        float: 'none'
+                    }
+                    : {}
+            ]"
+        />
+        <!-- 右下角胶囊遮罩大号字体文案 -->
+        <span
+            a-if="pillBigText"
+            class="pill-big-text c-font-normal"
+        >
+            {{ pillBigText }}
+        </span>
+        <!-- 右下角胶囊遮罩正常字体文案 -->
+        <span
+            a-if="text || text === '0'"
+            :style="[
+                $platform === 'pc'
+                    ? {
+                        color: '#fff'
+                    }
+                    : {}
+            ]"
+        >
+            {{ text }}
+        </span>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 遮罩类型：pills（胶囊遮罩）；circle（圆形遮罩）
+         */
+        type: {
+            type: String,
+            default: 'pills'
+        },
+
+        /**
+         * 胶囊遮罩大号字体文案
+         */
+        pillBigText: [String, Number],
+
+        /**
+         * 遮罩文案
+         */
+        text: [String, Number],
+
+        /**
+         * 遮罩尺寸：default（默认）；small（小尺寸）
+         */
+        size: String,
+
+        /**
+         * 遮罩图标
+         */
+        icon: String
+    },
+    components: {
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleClick(e) {
+            /**
+             * 点击事件
+             *
+             * @event click
+             * @property {Event} param1 透传点击事件对象
+             */
+            this.$emit('click', e);
+        }
+    }
+};
+</script>
+
+<style scoped>
+.c-btn-pills .pill-big-text {
+    font-size: 12px;
+    line-height: 1.1;
+}
+</style>
+

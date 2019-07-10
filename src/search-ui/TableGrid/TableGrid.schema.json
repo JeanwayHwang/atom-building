@@ -1,0 +1,82 @@
+{
+    "alias": [
+        "c-table-grid"
+    ],
+    "type": "object",
+    "properties": {
+        "tableGrid": {
+            "type": "object",
+            "properties": {
+                "tRow": {
+                    "type": "array",
+                    "@ChineseName": "表行数组",
+                    "description": "表行数组",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "@ChineseName": "整行可点的链接",
+                                "description": "整行可点的链接",
+                                "@Demo": "https://m.baidu.com"
+                            },
+                            "urlType": {
+                                "enum": [
+                                    "normal",
+                                    "sf",
+                                    "mip"
+                                ],
+                                "@ChineseName": "整行可点链接的类型",
+                                "description": "整行可点链接的类型",
+                                "@Demo": "normal"
+                            },
+                            "tCell": {
+                                "type": "array",
+                                "@ChineseName": "表单行内容数组",
+                                "description": "表单行内容数组",
+                                "minItems": 1,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "url": {
+                                            "type": "string",
+                                            "@ChineseName": "表单元格可点的链接",
+                                            "description": "表单元格可点的链接",
+                                            "@Demo": "https://m.baidu.com"
+                                        },
+                                        "urlType": {
+                                            "enum": [
+                                                "normal",
+                                                "sf",
+                                                "mip"
+                                            ],
+                                            "@ChineseName": "表单元格可点的链接的类型",
+                                            "description": "表单元格可点的链接的类型",
+                                            "@Demo": "normal"
+                                        },
+                                        "text": {
+                                            "type": "string",
+                                            "@ChineseName": "表单元格文案内容",
+                                            "description": "表单元格文案内容",
+                                            "@Demo": "表单元格文案内容"
+                                        },
+                                        "abstract": {
+                                            "type": "string",
+                                            "@ChineseName": "表单元格灰色文案内容",
+                                            "description": "表单元格灰色文案内容",
+                                            "@Demo": "表单元格灰色文案内容"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "tRow"
+            ]
+        }
+    }
+}

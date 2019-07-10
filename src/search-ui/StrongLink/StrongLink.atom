@@ -1,0 +1,100 @@
+<template>
+    <c-link
+        :url="url"
+        :params="params"
+        class="c-category-box"
+        @click="$emit('click', $event)"
+    >
+        <c-touchable-feedback
+            :is-jump="!!(url || (params && params.tcUrl))"
+            class="c-category-box-inner"
+            role="text"
+        >
+            <p a-if="name && name !== ''" class="c-color-link">{{ name }}</p>
+            <!-- @slot 自定义内容 -->
+            <slot/>
+            <p a-if="num && num !== '' && num !== 0" class="c-color-gray">
+                <template a-if="num">
+                    {{ text1 }}
+                    <span class="c-category-num">{{ num }}</span>
+                    {{ text2 }}
+                </template>
+            </p>
+        </c-touchable-feedback>
+    </c-link>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 整行可点的链接
+         */
+        url: {
+            type: String
+        },
+
+        /**
+         * 整行可点的链接所需参数
+         */
+        params: {
+            type: Object
+        },
+
+        /**
+         * 强链接名称
+         */
+        name: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 强链接数量
+         */
+        num: {
+            type: String
+        },
+
+        /**
+         * 数量前文案
+         */
+        text1: {
+            type: String
+        },
+
+        /**
+         * 数量后文案
+         */
+        text2: {
+            type: String
+        }
+    },
+    components: {
+        'c-link': '../Link/Link',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+/**
+ * 点击事件
+ *
+ * @event click
+ */
+</script>
+
+<style scoped lang="less">
+.c-category-box {
+    height: 100%;
+    text-align: center;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+
+    &-inner {
+        padding: 10px 0;
+    }
+    .c-category-num {
+        color: #38f;
+    }
+}
+</style>

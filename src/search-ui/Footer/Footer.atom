@@ -1,0 +1,347 @@
+<template>
+    <div
+        :role="rightUrl
+            ? 'link'
+            : 'text'
+        "
+        data-module="c-f"
+    >
+        <!-- 分割线 -->
+        <c-divider a-if="useDivider"/>
+        <!-- 自然结果 -->
+        <div
+            a-if="showUrl"
+            class="c-showurl c-line-clamp1"
+        >
+            <!-- showUrl -->
+            <span class="c-showurl c-footer-showurl">
+                {{ showUrl }}
+            </span>
+            <!-- 时间 -->
+            <span
+                a-if="time"
+                class="c-footer-showurl c-gap-left"
+            >
+                <!-- 时间戳 -->
+                <c-timespan
+                    a-if="isTimeNumber"
+                    :time="time"
+                    :server-time="serverTime"
+                />
+                <!-- 时间字符串 -->
+                <span a-else>
+                    {{ time }}
+                </span>
+            </span>
+            <slot/>
+            <!-- 功能按钮 -->
+            <c-tooltip-func-btn
+                a-if="(feedback && feedback.suggest && feedback.suggest.is_show == 1) || evaluate"
+                :feedback="feedback"
+                :evaluate="evaluate"
+                class="func-btn c-gap-left"
+                @feedbackclick="handleFeedbackClick"
+            />
+        </div>
+        <!-- 阿拉丁 -->
+        <c-row
+            a-else
+            :class="useDivider
+                ? 'c-gap-top'
+                : ''
+            "
+            class="c-footer-no-showurl"
+        >
+            <!-- 左侧 -->
+            <c-span
+                class="c-line-clamp1"
+                @click.native="onLeftClick"
+            >
+                <span class="c-color-gray">
+                    {{ leftText }}
+                </span>
+                <span
+                    a-if="leftIcon"
+                    :class="['c-foot-icon-' + leftIcon, 'c-foot-icon-' + leftIcon + '-aladdin']"
+                    class="c-foot-icon c-gap-left-small"
+                />
+                <!-- 需要提前；反馈需要在 mip 标之后；经检查 aladdin-atom 代码使用情况，feedback 和 slot 没有被同时使用，所以可以提前 -->
+                <!-- @slot 脚注自定义内容 -->
+                <slot/>
+                <!-- 旧反馈入口；后续不建议使用该反馈，使用新反馈入口；修改样式 -->
+                <span
+                    a-if="isFeedbackBoolean"
+                    class="c-gap-left c-color-gray c-footer-feedback-text"
+                    @click="feedbackClick"
+                >
+                    反馈
+                </span>
+                <!-- 功能按钮 -->
+                <!-- eslint-disable atom/max-len -->
+                <c-tooltip-func-btn
+                    a-if="(!isFeedbackBoolean && feedback && feedback.suggest && feedback.suggest.is_show == 1) || evaluate"
+                    :feedback="feedback"
+                    :evaluate="evaluate"
+                    class="func-btn c-gap-left"
+                    @feedbackclick="handleFeedbackClick"
+                />
+                <!-- eslint-enable atom/max-len -->
+            </c-span>
+            <!-- 右侧 -->
+            <c-span
+                :data-module="footerMoreDataModule"
+                class="c-footer-moreinfo-wrapper"
+            >
+                <c-touchable-feedback
+                    :open="rightTouchable"
+                    :is-jump="rightTouchable"
+                    background-color="rgba(0, 0, 0, .08)"
+                >
+                    <c-link
+                        :url="rightUrl"
+                        :params="rightUrlParams"
+                        class="c-moreinfo c-footer-moreinfo"
+                        @click="onClick"
+                    >
+                        <div class="c-flexbox c-footer-moreinfo">
+                            <!-- 右侧文案 -->
+                            <!-- 该 padding-right 是预留出右箭头图标的空间 -->
+                            <span
+                                a-if="rightText"
+                                :style="{
+                                    'padding-right': (rightUrl
+                                        || (rightUrlParams && rightUrlParams.tcUrl))
+                                        ? '.2rem'
+                                        : '0'
+                                }"
+                                class="c-line-clamp1 c-footer-moreinfo-text"
+                            >
+                                {{ rightText }}
+                            </span>
+                            <!-- 真正显示的绝对定位的图标；因为在部分手机尤其是QQ浏览器上，会出现右侧按钮部分显示的情况；而且随着字体宽度的不同，图标的位置也有不同，所以为了兼容性做了这样的处理 -->
+                            <c-icon
+                                a-if="rightUrl || (rightUrlParams && rightUrlParams.tcUrl)"
+                                class="c-gap-left-small c-footer-moreinfo-icon-abs"
+                                type="right"
+                            />
+                        </div>
+                    </c-link>
+                </c-touchable-feedback>
+            </c-span>
+        </c-row>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 左侧显示的资源方链接，自然结果专用
+         */
+        showUrl: String,
+
+        /**
+         * 左侧文字
+         */
+        leftText: String,
+
+        /**
+         * 左侧图标，会添加一个`c-font-icon-${leftIcon}`的`class`
+         */
+        leftIcon: String,
+
+        /**
+         * 右侧跳转显示的文字
+         */
+        rightText: String,
+
+        /**
+         * 右侧跳转链接
+         */
+        rightUrl: String,
+
+        /**
+         * 右侧跳转链接所需参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        rightUrlParams: Object,
+
+        /**
+         * 上方是否有分割线
+         *
+         * @see Fix 有默认值false，否则会报前后端渲染不一致的错误
+         */
+        divider: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 时间戳（单位：毫秒）
+         */
+        time: [Number, String],
+
+        /**
+         * 服务器时间戳（单位：毫秒）
+         * 注意：若不提供服务器时间，则以本地时间作为服务器时间
+         */
+        serverTime: [Number, String],
+
+        /**
+         * 反馈参数；详情请参考：[Atom 卡片反馈功能开发规范](http://sfe.baidu.com:8188/standard/feedback.md)；其中 boolean 类型已经废弃使用
+         */
+        feedback: [Boolean, Object],
+
+        /**
+         * 是否开启右侧跳转链接点击态
+         */
+        rightTouchable: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 评价数据；详见 [TooltipFuncBtn 组件文档](http://soy.baidu-int.com/component/TooltipFuncBtn)
+         *
+         * @property {string} url 评价跳转链接
+         * @property {object} params 评价跳转链接的 urlParams
+         */
+        evaluate: Object,
+
+        /**
+         * footer的右侧查看更多的data-module属性，默认是''
+         */
+        footerMoreDataModule: {
+            type: String,
+            default: ''
+        }
+    },
+    data: {
+        useDivider: (divider || rightUrl) && divider !== false
+    },
+    components: {
+        'c-link': '../Link/Link',
+        'c-icon': '../Icon/Icon',
+        'c-divider': '../Divider/Divider',
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-timespan': '../Timespan/Timespan',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback',
+        'c-tooltip-func-btn': '../TooltipFuncBtn/TooltipFuncBtn'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        onLeftClick(e) {
+
+            /**
+             * 脚注左侧点击事件
+             *
+             * @event leftclick
+             * @property {Event} param1 透传点击事件对象
+             */
+            this.$emit('leftclick', e);
+        },
+        onClick(e) {
+
+            /**
+             * 点击事件
+             *
+             * @event click
+             * @property {Event} param1 透传点击事件对象
+             */
+            this.$emit('click', e);
+        },
+        // 旧反馈入口
+        feedbackClick(e) {
+            this.$emit('feedback-click', e);
+        },
+        // 新反馈入口点击
+        handleFeedbackClick(obj) {
+
+            /**
+             * 反馈点击事件
+             *
+             * @event feedbackclick
+             * @property {object} param1 反馈点击事件对象
+             * @property {Event} param1.event 透传点击事件对象
+             * @property {Event} param1.feedback 反馈数据
+             */
+            this.$emit('feedbackclick', obj);
+        }
+    },
+    computed: {
+        // 判断反馈字段 feedback 是否为 boolean 型
+        isFeedbackBoolean() {
+            if (this.feedback) {
+                return typeof this.feedback === 'boolean';
+            }
+            return false;
+        },
+        // 判断时间字段 time 是否为 number 型
+        isTimeNumber() {
+            if (this.time) {
+                return typeof this.time === 'number';
+            }
+            return false;
+        }
+    }
+};
+</script>
+
+<script type="php">
+    // 判断反馈字段 feedback 是否为 boolean 型
+    function computed_isFeedbackBoolean($ctx) {
+        if(isset($ctx->_d["feedback"])) {
+            return is_bool($ctx->_d["feedback"]);
+        }
+        return false;
+    }
+
+    // 判断时间字段 time 是否为 number 型
+    function computed_isTimeNumber($ctx) {
+        if(isset($ctx->_d["time"])) {
+            return is_numeric($ctx->_d["time"]);
+        }
+        return false;
+    }
+</script>
+
+<style lang="less" scoped>
+.c-footer-no-showurl {
+    // 加这个属性是为了解决，当只有右侧图标时，由于元素没有被撑开，导致行高不是24px，导致图标往下偏移的样式问题；目前线上没有该情况的 case ，但是为了保证兼容和稳定性，加一个最小高度
+    min-height: 24px;
+    .c-feedback-wrapper {
+        display: inline-block;
+    }
+}
+.c-footer-moreinfo {
+    display: box;
+    -webkit-box-pack: end;
+    -webkit-justify-content: flex-end;
+    -webkit-box-orient: vertical;
+    -webkit-box-align: center;
+    text-align: right;
+    // 加这个属性是为了解决，当右侧只有图标时，点击范围只有右侧图标的问题
+    min-height: 24px;
+}
+.c-footer-moreinfo-text {
+    -webkit-line-clamp: 1;
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+            flex: 1;
+    width: 100%;
+    text-align: right;
+}
+// 真正显示的绝对定位图标
+.c-footer-moreinfo-icon-abs {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+</style>

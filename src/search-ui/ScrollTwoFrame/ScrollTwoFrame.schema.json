@@ -1,0 +1,59 @@
+{
+    "alias": [
+        "c-scroll-two-frame"
+    ],
+    "type": "object",
+    "properties": {
+        "scrollTwoFrame": {
+            "type": "object",
+            "properties": {
+                "orientation": {
+                    "type": "string",
+                    "enum": [
+                        "horizontal",
+                        "vertical"
+                    ],
+                    "@ChineseName": "排列方式",
+                    "description": "排列方式",
+                    "@Demo": "horizontal"
+                },
+                "col": {
+                    "type": "number",
+                    "@ChineseName": "栅格列数",
+                    "description": "栅格列数",
+                    "@Demo": "4"
+                },
+                "moreUrl": {
+                    "type": "string",
+                    "@ChineseName": "查看更多跳转链接",
+                    "description": "查看更多跳转链接",
+                    "@Demo": "https://m.baidu.com"
+                },
+                "moreUrlType": {
+                    "type": "string",
+                    "enum": [
+                        "normal",
+                        "sf",
+                        "mip"
+                    ],
+                    "@ChineseName": "链接类型",
+                    "description": "链接类型",
+                    "@Demo": "normal"
+                },
+                "length": {
+                    "type": "number",
+                    "@ChineseName": "数据长度",
+                    "description": "数据长度",
+                    "@Demo": "13"
+                }
+            },
+            "propsData": [
+                "moreUrl",
+                "moreUrlType",
+                "orientation",
+                "col",
+                "length"
+            ]
+        }
+    }
+}

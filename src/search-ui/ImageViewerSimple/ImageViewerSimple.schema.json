@@ -1,0 +1,27 @@
+{
+    "alias": [
+        "c-image-viewer-simple"
+    ],
+    "type": "object",
+    "properties": {
+        "imageViewerSimple": {
+            "type": "object",
+            "properties": {
+                "hidePageNum": {
+                    "type": "boolean",
+                    "@Demo": false,
+                    "@ChineseName": "是否隐藏页码",
+                    "description": "是否隐藏页码"
+                },
+                "hideSaveButton": {
+                    "type": "boolean",
+                    "@Demo": false,
+                    "@ChineseName": "是否隐藏保存按钮",
+                    "description": "是否隐藏保存按钮"
+                }
+            },
+            "required": [],
+            "propsData": []
+        }
+    }
+}

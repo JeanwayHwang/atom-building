@@ -1,0 +1,388 @@
+<!-- @ignore -->
+<template>
+    <section class="c-filter">
+        <!-- 这里在增加动画的时候需要设置一个 c-row-tile 属性是因为兼容以前的用法 -->
+        <!-- 下滑动画需要将 bottom-layout 设置为 relative，而不是 fixed，以实现从底部滑出的效果 -->
+        <!-- 而 bottom-layout 的内容，在标准用法里会受到 padding-left 和 padding-right 的影响，所以需要消除这个影响 -->
+        <!-- 上方标签栏 -->
+        <tag-layout
+            a-if="getList"
+            :tag-list="getList"
+            :transition="transition"
+            :mask-z-index="maskZIndex"
+            :cur-tag-index="state.curTagIndex"
+            :selected-color="primaryColor"
+            :store="store"
+            @tagitemclick="handleTagItemClick"
+        >
+            <slot/>
+        </tag-layout>
+        <!-- 阴影蒙层；这里顺序很重要，阴影必须在上方标签栏的正下方；这样可以避免通过试着 fixed 的 top 属性指定阴影的位置，由 css 自动计算 -->
+        <c-mask
+            a-if="state.bottomData"
+            :top="maskTop"
+            :mask-z-index="maskZIndex"
+            :transition="transition"
+            @click="handleMaskClick"
+        />
+        <!-- 这里在增加动画的时候需要设置一个 c-row-tile 属性是因为兼容以前的用法 -->
+        <!-- 下滑动画需要将 bottom-layout 设置为 relative，而不是 fixed，以实现从底部滑出的效果 -->
+        <!-- 而 bottom-layout 的内容，在标准用法里会受到 padding-left 和 padding-right 的影响，所以需要消除这个影响 -->
+        <div
+            :class="{
+                'c-row-tile': transition
+            }"
+            class="wrapper"
+        >
+            <!-- 下方浮层栏 -->
+            <!-- 是否添加 transition 动画 -->
+            <transition
+                :name="transition ? 'bottom-animation' : null"
+                @enter="enter"
+            >
+                <bottom-layout
+                    a-if="state.bottomData"
+                    :transition="transition"
+                    :mask-z-index="maskZIndex"
+                    :bottom-data="state.bottomData"
+                    :primary-color="primaryColor"
+                    :multi-height="multiHeight"
+                    :multi-max-height="multiMaxHeight"
+                    :custom-height="customHeight"
+                    :custom-max-height="customMaxHeight"
+                    :hide-custom-bottom-btn="hideCustomBottomBtn"
+                    :list-layer-max-height="listLayerMaxHeight"
+                    :store="store"
+                >
+                    <!-- 自定义 slot -->
+                    <slot name="customLayout"/>
+                </bottom-layout>
+            </transition>
+        </div>
+    </section>
+</template>
+
+<style lang="less" scoped>
+    .wrapper {
+        position: relative;
+        overflow: hidden;
+    }
+    // 弹层入场
+    .bottom-animation-enter-active {
+        -webkit-transform: translateZ(0);
+                transform: translateZ(0);
+        transition: all .3s cubic-bezier(0.42, 0, 0.52, 1);
+    }
+    // 弹层离场
+    .bottom-animation-leave-active {
+        -webkit-transform: translateZ(0);
+                transform: translateZ(0);
+        transition: all .16s cubic-bezier(0.46, 0, 1, 1);
+    }
+    .bottom-animation-enter,
+    .bottom-animation-leave-to {
+        transform: translateY(-100%);
+    }
+</style>
+
+<script type="config">
+    {
+        props: {
+            // tag 数据列表
+            selections: {
+                type: [Array, String]
+            },
+            // 主颜色
+            primaryColor: {
+                type: String
+            },
+            // 复合布局的高度
+            multiHeight: String,
+            // 复合布局的最大高度
+            multiMaxHeight: {
+                type: String,
+                default: '70%'
+            },
+            // 自定义布局的高度
+            customHeight: String,
+            // 自定义布局的最大高度
+            customMaxHeight: {
+                type: String,
+                default: '70%'
+            },
+            // 是否隐藏 custom 的底部按钮
+            hideCustomBottomBtn: {
+                type: Boolean,
+                default: false
+            },
+            // 列表浮层最大高度
+            listLayerMaxHeight: {
+                type: String
+            },
+            // 是否添加动效，默认关闭；这里主要是为了兼容线上已使用的用法
+            transition: {
+                type: Boolean,
+                default: false
+            },
+            // 蒙层距离顶部的距离
+            maskTop: String,
+            // 蒙层的 z-index
+            maskZIndex: {
+                type: Number,
+                default: 299
+            }
+        },
+        data: {
+            // 数据状态维护
+            state: {
+                // 全部数据
+                list: selections,
+                // 底部的数据
+                bottomData: null,
+                // 当前选中的 tag 的索引
+                curTagIndex: -1
+            },
+            // store 对象
+            store: null,
+            // 记录是否是新渲染
+            isNew: true
+        },
+        components: {
+            'tag-layout': './TagLayout',
+            'bottom-layout': './BottomLayout',
+            'c-mask': './Mask'
+        }
+    }
+</script>
+
+<script>
+    import Store from './store.js';
+
+    export default {
+        mounted() {
+            // 每个 Filter 组件对应一个自己的 store 实例
+            this.store = new Store();
+            // 设置 vm
+            this.store.setRootVM(this);
+            // 为空判断
+            if (!this.selections) {
+                return;
+            }
+            // 深复制模板传入的数据
+            const listCopy = JSON.parse(JSON.stringify(this.selections));
+            // 记录 tagIndex，这个将是 tag 的唯一标识
+            listCopy.forEach((tagItem, index) => {
+                tagItem.index = index;
+            });
+            // 修改 store 里的值
+            this.store.setListAction(listCopy);
+            this.isNew = false;
+        },
+        methods: {
+            // 数据变化
+            onChange(obj) {
+                this.$emit('change', obj);
+            },
+            // 取消事件
+            onCancel(obj) {
+                this.$emit('cancel', obj);
+            },
+            // 蒙层打开
+            onMaskOpen() {
+                this.$emit('maskopen');
+            },
+            // 蒙层关闭
+            onMaskClose() {
+                this.$emit('maskclose');
+            },
+            // 自定义确认
+            onCustomConfirm() {
+                this.$emit('customConfirm');
+            },
+            // 自定义重置
+            onCustomReset() {
+                this.$emit('customReset');
+            },
+            // Bottom 蒙层点击事件
+            handleMaskClick(e) {
+                this.store.closeBottomLayoutAction(false, {
+                    index: this.state.bottomData.index,
+                    type: this.state.bottomData.type
+                });
+            },
+            // 标签项点击事件
+            handleTagItemClick(obj) {
+                this.$emit('tagitemclick', obj);
+            },
+            // 主动关闭浮层
+            closeFloatLayer() {
+                this.store.closeBottomLayoutAction(false);
+            },
+            // 捕获 enter 事件，解决 iOS 低版本内核浏览器上滑动到首屏之外下方筛选布局被蒙层遮挡的问题；参考：https://cn.vuejs.org/v2/guide/transitions.html
+            enter(el, done) {
+            },
+            // 多选项点击事件
+            handleCheckboxClick(obj) {
+                this.$emit('checkboxclick', obj);
+            }
+        },
+        watch: {
+            // 监听 list 变化
+            selections(newList, oldList) {
+                const listCopy = JSON.parse(JSON.stringify(newList));
+                // 记录 tagIndex，这个将是 tag 的唯一标识
+                listCopy.forEach((tagItem, index) => {
+                    tagItem.index = index;
+                    tagItem.originText = tagItem.text;
+                });
+                // 修改 store 里的值
+                this.store.setListAction(listCopy);
+                this.isNew = true;
+            }
+        },
+        computed: {
+            // 该计算属性是为了同步服务器渲染
+            getList() {
+                const vm = this;
+                if (!this.state.list) {
+                    return;
+                }
+                const listCopy = this.state.list;
+                listCopy.forEach((item, index) => {
+                    if (vm.isNew) {
+                        // 记录原始 text
+                        item.originText = item.text;
+                    }
+                    // list
+                    if (item.type === 'list') {
+                        const tagItem = item;
+                        const column = item.column; // 因为 item 会变，所以需要把 colum 单独拿出来
+                        // 找出 checked 的选项，设置默认 curSelectedIndex
+                        for (let i = 0; i < column; i++) {
+                            // 先设置一个初始值
+                            let option = null;
+                            for (let j = 0; j < item.options.length; j++) {
+                                // 如果被选中了，就设置 index
+                                if (item.options[j].value === item.defaultValue) {
+                                    option = item.options[j];
+                                }
+                            }
+                            // 如果是最后一列
+                            // if (i === column - 1 && option) {
+                            if (option && (option.value || option.value === '')) {
+                                tagItem.text = option.text;
+                            }
+                            // 有选项就把 item 赋值给它，层级递归
+                            if (option) {
+                                item = option;
+                            }
+                        }
+                    }
+                    // multi
+                    if (item.type === 'multi') {
+                        item.selected = false;
+                        item.options.forEach(listItem => {
+                            if (listItem.defaultValue && listItem.defaultValue !== ',') {
+                                item.selected = true;
+                            }
+                            // 如果默认值是空字符串 ''，则需要遍历选项，看选项中是否有空字符串 ''
+                            if (listItem.defaultValue === '') {
+                                listItem.options.forEach((option, optionIndex) => {
+                                    if (option.value === '') {
+                                        item.selected = true;
+                                        return true;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    // order
+                    if (item.type === 'order') {
+                        const tagItem = item;
+                        item.options.forEach((option, optionIndex) => {
+                            if (option.value === tagItem.defaultValue) {
+                                tagItem.text = option.text;
+                                return;
+                            }
+                        });
+                    }
+                });
+                vm.isNew = false;
+                return listCopy;
+            }
+        }
+    };
+</script>
+
+<script type="php">
+    function computed_getList($ctx) {
+        // 服务端渲染函数，得到 selections 初始化值
+        $list = $ctx->_d['selections'];
+        if (!isset($list)) {
+            return;
+        }
+        foreach($list as $index => $tagItem) {
+            $list[$index]['originText'] = $tagItem['text'];
+            // list
+            if($list[$index]['type'] === 'list') {
+                // 引用赋值
+                $item = & $list[$index];
+                // 把列数 column 单独拿出来，因为 $item 待会会改变
+                $column = $item['column'];
+                // 找出 checked 的选项，设置默认 curSelectedIndex
+                for($i=0; $i<$column; $i++) {
+                    // 先设置一个初始值
+                    $item['curSelectedIndex'] = -1;
+                    // 循环遍历，找出选中的值
+                    foreach($item['options'] as $optionIndex => $option) {
+                        if($item['defaultValue'] == $option['value']) {
+                            $item['curSelectedIndex'] = $optionIndex;
+                        }
+                    }
+                    // 用个临时变量保存当前索引
+                    $curSelectedIndex = $item['curSelectedIndex'];
+                    // 如果是最后一列
+                    if(($i === ($column - 1)) && $curSelectedIndex !== -1) {
+                        $list[$index]['text'] = $item['options'][$curSelectedIndex]['text'];
+                    }
+                    // 判断如果还有级联的 data
+                    if($item['options'] && $item['options'][$curSelectedIndex]) {
+                        $item = & $item['options'][$curSelectedIndex];
+                    }
+                }
+            }
+            // multi
+            if($list[$index]['type'] === 'multi') {
+                // 引用赋值
+                $item = & $list[$index];
+                // 选中状态
+                $item['select'] = false;
+                foreach($item['options'] as $listItemIndex => $listItem) {
+                    // 如果默认值存在且不等于空字符串 ''
+                    if((isset($listItem['defaultValue']) && $listItem['defaultValue'] !== '') && $listItem['defaultValue'] !== ','){
+                        $item['selected'] = true;
+                    }
+                    // 如果默认值是空字符串 ''，则需要遍历选项，看选项中是否有空字符串 ''
+                    if ($listItem['defaultValue'] === '') {
+                        foreach($listItem['options'] as $optionIndex => $option) {
+                            if ($option['value'] === '') {
+                                $item['selected'] = true;
+                            }
+                        }
+                    }
+                }
+            }
+            // order
+            if ($list[$index]['type'] === 'order') {
+                // 引用赋值
+                $item = & $list[$index];
+                foreach($item['options'] as $optionIndex => $option) {
+                    if($option['value'] === $item['defaultValue']){
+                        $item['text'] = $option['text'];
+                    }
+                }
+            }
+        }
+        return $list;
+    }
+</script>

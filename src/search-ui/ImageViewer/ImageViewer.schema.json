@@ -1,0 +1,94 @@
+{
+    "alias": [
+        "c-image-viewer"
+    ],
+    "type": "object",
+    "properties": {
+        "imgViewer": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "@ChineseName": "列表",
+                    "description": "图片列表",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "src": {
+                                "type": "string",
+                                "@ChineseName": "图片地址",
+                                "description": "图片地址",
+                                "@Demo": "https://ss2.baidu.com/-vo3dSag_xI4khGko9WTAnF6hhy/image/awhcrop%3D250%2C250/sign=70495b0d1b3853439a85da72e17cc043/c995d143ad4bd11336931f5351afa40f4bfb0570.jpg"
+                            },
+                            "width": {
+                                "type": "number",
+                                "@ChineseName": "图片宽度",
+                                "description": "图片宽度",
+                                "@Demo": 225
+                            },
+                            "height": {
+                                "type": "number",
+                                "@ChineseName": "图片高度",
+                                "description": "图片高度",
+                                "@Demo": 225
+                            },
+                            "desc": {
+                                "type": "string",
+                                "@ChineseName": "图片描述",
+                                "description": "图片描述",
+                                "@Demo": "这是一些图片相关描述"
+                            },
+                            "setNum": {
+                                "type": "number",
+                                "@ChineseName": "套图内图片数量",
+                                "description": "套图内图片数量",
+                                "@Demo": 6
+                            }
+                        }
+                    }
+                },
+                "total": {
+                    "type": "number",
+                    "@ChineseName": "图片个数",
+                    "description": "图片个数",
+                    "@Demo": 2
+                },
+                "startIndex": {
+                    "type": "number",
+                    "@Demo": 0,
+                    "@ChineseName": "图片浏览的起始位置",
+                    "description": "图片浏览的起始位置"
+                },
+                "hideInfo": {
+                    "type": "boolean",
+                    "@Demo": false,
+                    "@ChineseName": "是否隐藏信息区",
+                    "description": "是否隐藏信息区"
+                },
+                "hideToolbar": {
+                    "type": "boolean",
+                    "@Demo": false,
+                    "@ChineseName": "是否隐藏功能区",
+                    "description": "是否隐藏功能区"
+                },
+                "hidePageNum": {
+                    "type": "boolean",
+                    "@Demo": false,
+                    "@ChineseName": "是否隐藏沉浸态的页码",
+                    "description": "是否隐藏沉浸态的页码"
+                },
+                "isSwipeFirstLeave": {
+                    "type": "boolean",
+                    "@Demo": false,
+                    "@ChineseName": "左滑第一张图是否退场",
+                    "description": "左滑第一张图是否退场"
+                }
+            },
+            "required": ["list"],
+            "propsData": [
+                "list",
+                "total"
+            ]
+        }
+    }
+}

@@ -1,0 +1,6 @@
+<!--@ignore-->
+<template>
+    <div class="c-page-scroll-item">
+        <slot/>
+    </div>
+</template>

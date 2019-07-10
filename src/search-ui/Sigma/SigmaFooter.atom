@@ -1,0 +1,123 @@
+<template>
+    <div>
+        <c-divider a-if="useDivider"/>
+        <div
+            a-if="type === 'toolBar'"
+            id="onlyshow-bar"
+        >
+            <div class="bar">
+                <div class="bar-l WA_LOG_BTN">
+                    <span a-if="hideOtherResult">
+                        更多搜索结果
+                    </span>
+                    <span a-else>
+                        搜索智能聚合
+                    </span>
+                    <i class="sicon-down"/>
+                </div>
+                <div class="bar-r">
+                    <span class="btn-fb WA_LOG_BTN">
+                        <i class="sicon-fb"/>
+                        反馈
+                    </span>
+                    <span class="slipt">
+                        |
+                    </span>
+                    <span class="btn-share WA_LOG_BTN">
+                        <i class="sicon-share"/>
+                        分享
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div
+            a-else-if="type==='linkBar'"
+            class="wa-onlyshow-kgbar-wrapper c-row-tile c-line-top"
+        >
+            <c-link
+                :url="url"
+                :params="urlParams"
+                class="c-color"
+            >
+                <span
+                    :style="{
+                        color: iconColor
+                            ? iconColor
+                            : ''
+                    }"
+                    class="wa-onlyshow-kgbar-text c-gap-right"
+                >
+                    {{ text }}
+                </span>
+                <span class="wa-onlyshow-kgbar-icon">
+                    <c-icon
+                        :style="{color: iconColor ? iconColor : ''}"
+                        :type="iconType"
+                    />
+                </span>
+            </c-link>
+        </div>
+        <div
+            a-else-if="hideOtherResult"
+            class="onlyshow-bar-wapper"
+        >
+            <div class="onlyshow-bar-seperate"/>
+            <div class="c-color-gray-a WA_LOG_BTN onlyshow-bar-text">
+                展开其他结果
+                <i class="c-icon c-gap-left-small">
+                    &#xe73c
+                </i>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        type: String,
+        text: String,
+        url: String,
+        urlParams: Object,
+        useDivider: Boolean,
+        hideOtherResult: Boolean,
+        iconType: String,
+        iconColor: String
+    },
+    components: {
+        'c-divider': '../Divider/Divider',
+        'c-link': '../Link/Link',
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+
+<style scoped lang="less">
+.wa-onlyshow-kgbar-wrapper {
+    border-bottom: 1px solid #e1e1e1;
+    padding-top: .13rem;
+    padding-bottom: .13rem;
+    background-color: #f9fafa;
+    text-align: center;
+}
+
+.onlyshow-bar-wapper {
+    padding: 0;
+}
+
+.onlyshow-bar-seperate {
+    background-color: #f1f1f1;
+    height: .1rem;
+    margin-right: -.17rem;
+    margin-left: -.17rem;
+}
+
+.onlyshow-bar-text {
+    background-color: #fff;
+    text-align: center;
+    padding-top: .08rem;
+    padding-bottom: .08rem;
+    height: .34rem;
+    line-height: .34rem;
+}
+</style>

@@ -1,0 +1,113 @@
+{
+    "alias": [
+        "c-scroll-imgs"
+    ],
+    "type": "object",
+    "properties": {
+        "scrollImgs": {
+            "type": "object",
+            "properties": {
+                "imgList": {
+                    "type": "array",
+                    "@ChineseName": "数据列表",
+                    "description": "数据列表",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "imgNum": {
+                                "type": [
+                                    "number",
+                                    "string"
+                                ],
+                                "@ChineseName": "显示图集个数",
+                                "description": "显示图集个数",
+                                "@Demo": "13"
+                            },
+                            "imgPillBigText": {
+                                "type": [
+                                    "number",
+                                    "string"
+                                ],
+                                "@ChineseName": "图片右下角胶囊遮罩大号字体文案",
+                                "description": "图片右下角胶囊遮罩大号字体文案",
+                                "@Demo": "13"
+                            },
+                            "iconType": {
+                                "type": "string",
+                                "@ChineseName": "显示图集icon类型",
+                                "description": "显示图集icon类型",
+                                "@Demo": "baidu"
+                            },
+                            "url": {
+                                "type": "string",
+                                "@ChineseName": "每一项的跳转链接",
+                                "description": "每一项的跳转链接",
+                                "@Demo": "https://m.baidu.com"
+                            },
+                            "urlType": {
+                                "enum": [
+                                    "normal",
+                                    "sf",
+                                    "mip"
+                                ],
+                                "@ChineseName": "链接类型",
+                                "description": "链接类型",
+                                "@Demo": "normal"
+                            },
+                            "src": {
+                                "type": "string",
+                                "@ChineseName": "每一项的图片地址",
+                                "description": "每一项的图片地址",
+                                "@Demo": "https://m.baidu.com/static/index/plus/homepage-newlogo.png"
+                            },
+                            "type": {
+                                "type": "string",
+                                "@ChineseName": "图片比例",
+                                "description": "图片比例，值有（s,l,w,x,y）详见[栅格图片](http://pmd.baidu.com/doc/#image)",
+                                "@Demo": "s"
+                            },
+                            "title": {
+                                "type": "string",
+                                "@ChineseName": "图片标题",
+                                "description": "图片标题",
+                                "@Demo": "我是图片标题"
+                            },
+                            "subTitle": {
+                                "type": "string",
+                                "@ChineseName": "图片副标题",
+                                "description": "图片副标题",
+                                "@Demo": "我是图片副标题"
+                            }
+                        }
+                    }
+                },
+                "moreUrl": {
+                    "type": "string",
+                    "@ChineseName": "查看更多跳转链接",
+                    "description": "查看更多跳转链接",
+                    "@Demo": "https://m.baidu.com"
+                },
+                "moreUrlType": {
+                    "enum": [
+                        "normal",
+                        "sf",
+                        "mip"
+                    ],
+                    "@ChineseName": "链接类型",
+                    "description": "链接类型",
+                    "@Demo": "normal"
+                }
+            },
+            "propsData": [
+                "col",
+                "imgList",
+                "moreUrl",
+                "moreUrlType",
+                "moreCol",
+                "titleFixHeight",
+                "defaultImageType"
+            ]
+        }
+    }
+}

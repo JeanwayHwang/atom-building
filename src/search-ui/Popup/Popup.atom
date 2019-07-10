@@ -1,0 +1,476 @@
+<template>
+    <div
+        :style="isFixed ? 'position: fixed' : ''"
+        class="c-popup-wrapper"
+    >
+        <!-- 遮罩 -->
+        <!-- 因为蒙层关闭动效时间较长 isFixed 的切换需要绑定到蒙层上-->
+        <c-transition
+            :enter="{
+                animations: {
+                    fadeIn: {
+                        fill: 'end'
+                    }
+                },
+                options: {
+                    duration: 300,
+                    easing: 'cubic-bezier(0.42, 0, 0.52, 1)'
+                }
+            }"
+            :leave="{
+                animations: {
+                    fadeIn: {
+                        reverse: true,
+                        fill: 'end'
+                    }
+                },
+                options: {
+                    duration: 300,
+                    easing: 'cubic-bezier(0, 0, 0.3, 1)'
+                }
+            }"
+            @after-leave="afterMaskLeave"
+            @before-enter="beforeMaskEnter"
+        >
+            <div
+                a-if="isOpen"
+                class="c-popup-mask"
+                role="button"
+                aria-label="关闭"
+                @click="close"
+                @touchmove.prevent
+            />
+        </c-transition>
+        <!-- 弹层 -->
+        <c-transition
+            :enter="{
+                animations: {
+                    slideUp: {}
+                },
+                options: {
+                    duration: 300,
+                    easing: 'cubic-bezier(0.42, 0, 0.52, 1)'
+                }
+            }"
+            :leave="{
+                animations: {
+                    slideUp: {
+                        reverse: true,
+                        fill: 'end'
+                    }
+                },
+                options: {
+                    duration: 160,
+                    easing: 'cubic-bezier(0.46, 0, 1, 1)'
+                }
+            }"
+        >
+            <div
+                a-if="isOpen"
+                :style="{
+                    'max-height': maxHeight,
+                    'min-height': minHeight
+                }"
+                class="c-popup-box"
+            >
+                <!-- 判断是否给 Header 增加分割线 -->
+                <div
+                    a-if="!isHideHeader"
+                    :class="{
+                        'c-line-bottom': !isHideHeaderBorderBottom
+                    }"
+                    :style="{padding: hasPadding ? '0 .17rem' : '0'}"
+                    class="c-popup-header"
+                    @touchmove.prevent
+                >
+                    <!-- 如果有标题 slot -->
+                    <div
+                        a-if="isHasTitleSlot"
+                        class="c-gap-top c-gap-bottom"
+                    >
+                        <div
+                            class="c-popup-slothd-close"
+                            @click="close"
+                        >
+                            <slot
+                                a-if="isHasCloseSlot"
+                                name="close"
+                            />
+                            <c-icon
+                                a-else
+                                type="close_line"
+                                class="c-font-medium"
+                            />
+                        </div>
+                        <!-- @slot 头部功能区 slot -->
+                        <slot name="title"/>
+                    </div>
+                    <!-- 如果没有标题 slot -->
+                    <c-row a-else>
+                        <!-- 左侧 slot -->
+                        <c-span
+                            a-if="isHasTLeftSlot"
+                            col="3"
+                            class="c-popup-ver-middle"
+                        >
+                            <!-- @slot 头部左功能区 slot -->
+                            <slot name="left"/>
+                        </c-span>
+                        <!-- 判断是否有左侧 slot -->
+                        <c-span :col="isHasTLeftSlot ? 6 : 9">
+                            <div class="c-popup-title">
+                                <!-- 这里如果使用 c-popup-header-center 的话会出现标题和副标题不能截断的问题 -->
+                                <div class="c-popup-header-middle">
+                                    <!-- 主标题 -->
+                                    <c-line
+                                        :align="isHasTLeftSlot ? 'center' : 'left'"
+                                        class="c-title c-color-link"
+                                    >
+                                        {{ title }}
+                                    </c-line>
+                                    <!-- 副标题 -->
+                                    <c-line
+                                        a-if="subtitle"
+                                        :align="isHasTLeftSlot ? 'center' : 'left'"
+                                        class="c-color-gray c-gap-inner-top-small c-popup-subtitle"
+                                    >
+                                        {{ subtitle }}
+                                    </c-line>
+                                </div>
+                            </div>
+                        </c-span>
+                        <!-- 关闭区域 -->
+                        <c-span
+                            col="3"
+                            class="c-popup-tar c-span-middle"
+                        >
+                            <c-touchable-feedback
+                                :top=".15"
+                                :bottom=".15"
+                                :left="-.05"
+                                :right="-.05"
+                                background-color="rgba(0, 0, 0, .08)"
+                                class="c-popup-ib"
+                            >
+                                <div @click="close">
+                                    <!-- @slot 头部功能区右侧关闭区域 slot，宽度3n，当此 slot 为空时，默认为关闭 icon 'x' -->
+                                    <slot
+                                        a-if="isHasCloseSlot"
+                                        name="close"
+                                    />
+                                    <c-icon
+                                        a-else
+                                        type="close_line"
+                                        class="c-font-medium c-popup-close-icon"
+                                    />
+                                </div>
+                            </c-touchable-feedback>
+                        </c-span>
+                    </c-row>
+                </div>
+                <div
+                    ref="content"
+                    :style="{padding: hasPadding ? '0 .17rem' : '0'}"
+                    class="c-popup-content"
+                    @touchstart="handleTouchStart"
+                    @touchmove="handleTouchMove"
+                >
+                    <!-- @slot 内容区域 slot -->
+                    <slot/>
+                </div>
+                <!-- 底部 slot -->
+                <div
+                    a-if="isHasFooterSlot"
+                    :style="{padding: hasPadding ? '0 .17rem' : '0'}"
+                    class="c-popup-footer"
+                    @touchmove.prevent
+                >
+                    <!-- @slot 底部功能区 slot -->
+                    <slot name="footer"/>
+                </div>
+            </div>
+        </c-transition>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 弹层标题(9n)
+         */
+        title: {
+            type: String,
+            default: ''
+        },
+        /**
+         * 弹层副标题(9n)
+         */
+        subtitle: {
+            type: String,
+            default: ''
+        },
+        /**
+         * 是否打开弹层
+         */
+        isOpen: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 是否有左右边距
+         */
+        hasPadding: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 是否有弹出动画
+         */
+        transition: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 是否隐藏 header
+         */
+        isHideHeader: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 是否隐藏头部功能区下边线
+         */
+        isHideHeaderBorderBottom: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 弹层面板最大高度
+         */
+        maxHeight: {
+            type: String
+        },
+        /**
+         * 弹层面板最小高度
+         */
+        minHeight: {
+            type: String
+        },
+        /**
+         * 阻止触摸事件透传开关
+         */
+        stopTouchEventThrough: {
+            type: Boolean,
+            default: true
+        }
+    },
+    data: {
+        isFixed: false
+    },
+    components: {
+        'c-line': '../Line/Line',
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-icon': '../Icon/Icon',
+        'c-transition': '../Motion/Transition',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script type="php">
+    function render ($ctx, $isXml = false) {
+        $closeNodes = $ctx->slots['close'];
+        $titleNodes = $ctx->slots['title'];
+        $tLeftNodes = $ctx->slots['left'];
+        $footerNodes = $ctx->slots['footer'];
+        if(!empty($closeNodes)) {
+            $ctx->_d['isHasCloseSlot'] = true;
+        }
+        if(!empty($titleNodes)) {
+            $ctx->_d['isHasTitleSlot'] = true;
+        }
+        if(!empty($footerNodes)) {
+            $ctx->_d['isHasFooterSlot'] = true;
+        }
+        if(!empty($tLeftNodes)) {
+            $ctx->_d['isHasTLeftSlot'] = true;
+        }
+        return parent::render($ctx, false);
+    }
+</script>
+
+<script>
+/**
+* @file 弹层组件
+* @author haoyan
+*/
+export default {
+    methods: {
+        close() {
+
+            /**
+             * close event.
+             *
+             * @event close
+             */
+            this.$emit('close');
+        },
+        afterMaskLeave() {
+            this.isFixed = false;
+        },
+        beforeMaskEnter() {
+            this.isFixed = true;
+        },
+        handleTouchStart(e) {
+            this.startY = e.touches[0].clientY;
+        },
+        handleTouchMove(e) {
+            if (!this.stopTouchEventThrough) {
+                return true;
+            }
+            this.touchMoveEvent = e;
+            // 0 代表该没有滚动区域；1 代表有滚动区域且滚动到了最上面；2 代表滚动到底部了且滚动到了最下面；3 代表滚动在滚动区域
+            this.status = 3;
+            // 拿到需要滚动的 dom
+            const el = this.$refs.content;
+            const currentY = e.touches[0].clientY;
+            if (el.scrollTop === 0) {
+                // 如果内容小于容器则同时禁止上下滚动
+                this.status = el.offsetHeight >= el.scrollHeight
+                    ? 0
+                    : 1;
+            }
+            else if (el.scrollTop + el.offsetHeight + 1 >= el.scrollHeight) {
+                // 已经滚到底部了只能向上滚动
+                this.status = 2;
+            }
+            if (this.status !== 3) {
+                // 判断当前的滚动方向；10 为向上；01 为向下
+                this.direction = currentY - this.startY > 0
+                    ? 1
+                    : 2;
+                // 没有滚动区域
+                if (this.status === 0) {
+                    e.cancelable && e.preventDefault();
+                }
+                // 已经滑到最上了还滑
+                else if (this.status === 1 && this.direction === 1) {
+                    e.cancelable && e.preventDefault();
+                }
+                // 已经滑到最下了还滑
+                else if (this.status === 2 && this.direction === 2) {
+                    e.cancelable && e.preventDefault();
+                }
+            }
+        }
+    },
+    computed: {
+        isHasCloseSlot() {
+            if (this.$slots.close && this.$slots.close.length) {
+                return true;
+            }
+            return false;
+        },
+        isHasTLeftSlot() {
+            if (this.$slots.left && this.$slots.left.length) {
+                return true;
+            }
+            return false;
+        },
+        isHasTitleSlot() {
+            if (this.$slots.title && this.$slots.title.length) {
+                return true;
+            }
+            return false;
+        },
+        isHasFooterSlot() {
+            if (this.$slots.footer && this.$slots.footer.length) {
+                return true;
+            }
+            return false;
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.c-popup-wrapper {
+    left: 0;
+    right: 0;
+    z-index: 501;
+    bottom: 0;
+    top: 0;
+}
+.c-popup-box {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    max-height: 70%;
+    min-height: 1.67rem;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    background-color: #fff;
+    border-top-left-radius: 13px;
+    border-top-right-radius: 13px;
+}
+.c-popup-header {
+    position: relative;
+}
+
+.c-popup-title {
+    height: .58rem;
+}
+.c-popup-subtitle {
+    margin-top: -.06rem;
+}
+.c-popup-slothd-close {
+    position: absolute;
+    right: .17rem;
+    z-index: 1;
+}
+.c-popup-content {
+    position: relative;
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+            flex: 1;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.c-popup-mask {
+    background-color: rgba(0, 0, 0, 0.4);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+    -webkit-transform-style: preserve-3d;
+}
+.c-popup-tar {
+    text-align: right;
+}
+.c-popup-ib {
+    display: inline-block;
+}
+.c-popup-ver-middle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.c-popup-header-middle {
+    position: relative;
+    transform: translateY(-50%);
+    top: 50%;
+    margin-top: .5px;
+}
+.c-popup-header-center {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    margin-top: .5px;
+}
+</style>

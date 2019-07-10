@@ -1,0 +1,594 @@
+<template>
+    <div :rl-type="contentTouchableStop ? 'stop' : null" class="c-tabs">
+        <c-tabs-content
+            a-if="!noContent && bottom"
+            ref="content"
+            :selected="oSelected"
+            :has-slide-animation="hasSlideAnimation"
+            :content-gap-top="contentGapTop"
+            :inner-height="innerHeight"
+            :loading-data="tabList"
+            :force-height-transition="forceHeightTransition"
+            @transitionend="handleContentWrapperTransitionEnd"
+        >
+            <!-- @slot:default 多个c-tabs-item -->
+            <slot
+                a-for="(item, index) in tabList"
+                :name="'__c__' + index"
+            />
+        </c-tabs-content>
+        <c-row
+            :class="{
+                'c-gap-top-small': gapTop,
+                'c-gap-bottom-small': !bottom && gapBottom && contentGapTop
+            }"
+            :style="{
+                display: (hideNav && len === 1) ? 'none' : 'block',
+                overflow: 'hidden'
+            }"
+            type="tile"
+            data-module="c-tb"
+            rl-type="stop"
+        >
+            <div :class="{'c-tabs-nav-view': bottom || allowScroll}">
+                <ul
+                    ref="tabsNav"
+                    :class="{
+                        'c-tabs-nav': true,
+                        'c-tabs-nav-bottom': bottom
+                    }"
+                    :style="tabsNavSty"
+                    voice-action="switch"
+                    role="tablist"
+                >
+                    <template a-for="(tab, index) in tabList">
+                        <li
+                            ref="labels"
+                            :class="[{
+                                'c-tabs-nav-selected': index === oSelected,
+                                'c-navs-scroll-select-bottom': index === oSelected && !bottomAnimation,
+                                'c-tabs-nav-selected-bg': bottom && index === oSelected,
+                                'c-tabs-nav-bottom-padding': bottom,
+                                'c-tabs-nav-touch-active': (activeIndex !== oSelected) && (activeIndex === index),
+                                'c-tabs-nav-touch-selected': (activeIndex !== oSelected) && (oSelected === index)
+                            }]"
+                            :data-module="tab.dataModule ? tab.dataModule : ''"
+                            :data-log="tab.logContent"
+                            :data-nolog="!isOpenLog"
+                            :voice-config="'switch.item:' + tab.label"
+                            :key="index"
+                            :aria-selected="oSelected === index"
+                            class="WA_LOG_TAB c-tabs-nav-li"
+                            role="tab"
+                            @click="headerItemClick(index)"
+                            @touchstart="touchNav(index)"
+                        >
+                            <c-link
+                                :url="(tab.params && tab.params.url) ? tab.params.url : null"
+                                :params="(tab.params && tab.params.linkOption) ? tab.params.linkOption : null"
+                                class="c-tabs-a"
+                            >
+                                <template a-if="tab.params && tab.params.url">
+                                    <img
+                                        a-if="tab.icon"
+                                        :src="tab.icon"
+                                        class="c-gap-right-small"
+                                    >
+                                    <span class="c-tabs-nav-li-span">
+                                        {{ tab.label }}
+                                    </span>
+                                </template>
+                                <template a-else>
+                                    <img
+                                        a-if="tab.icon"
+                                        :src="tab.icon"
+                                        class="c-gap-right-small"
+                                    >
+                                    <span>{{ tab.label }}</span>
+                                </template>
+                            </c-link>
+                        </li>
+                    </template>
+                    <div
+                        ref="bottomBar"
+                        :style="bottombarStyle"
+                        class="c-tabs-nav-bottombar"
+                    />
+                </ul>
+            </div>
+        </c-row>
+        <c-tabs-content
+            a-if="!noContent && !bottom"
+            ref="content"
+            :selected="oSelected"
+            :has-slide-animation="hasSlideAnimation"
+            :content-gap-top="contentGapTop"
+            :inner-height="innerHeight"
+            :loading-data="tabList"
+            :force-height-transition="forceHeightTransition"
+            @transitionend="handleContentWrapperTransitionEnd"
+        >
+            <!-- @slot:default 多个c-tabs-item -->
+            <slot a-for="(item, index) in tabList" :name="'__c__' + index"/>
+        </c-tabs-content>
+    </div>
+</template>
+<script type="config">
+{
+    props: {
+        /**
+         * 选中选项卡的索引
+         */
+        selected: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * tabnav是否允许滚动
+         */
+        allowScroll: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 导航在底部
+         */
+        bottom: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 内容区切换是否带过渡效果，默认没有过渡效果
+         */
+        hasSlideAnimation: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 是否打开日志， 默认为打开
+         */
+        isOpenLog: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 当只有一个 tab 时设置是否隐藏 Nav 只显示内容，默认显示，true 表示隐藏。当 tab 数量超过1个时，这个设置失效
+         */
+        hideNav: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 当 tab 内容高度发生变化时（如 tab 中套展开收起），需要将变化后的高度传入 inner-height 字段
+         */
+        innerHeight: {
+            type: Number,
+            default: 0
+        },
+        /**
+         * 是否触发点击事件改选定选项
+         */
+        disableEvent: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 设置 true 时表示没有内容，只有头部。可用于 kgheader 等组件中
+         */
+        noContent: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 设置 tab 上方是否自带5px间距，默认有
+         */
+        gapTop: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 设置 tab 下方是否自带5px间距，默认有
+         */
+        gapBottom: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 设置 tab 内容上方是否自带间距，默认有
+         */
+        contentGapTop: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * content 是否屏蔽整卡点击态
+         */
+        contentTouchableStop: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 强制开启 TabsContent 高度变化 transition
+         */
+        forceHeightTransition: Boolean
+    },
+    data: {
+        oSelected: selected,
+        len: 0,
+        bottombarColor: '#000',
+        tabsNavSty: {},
+        bottombarStyle: '',
+        activeIndex: selected,
+        bottomAnimation: false,
+        // 保存上一个位置
+        position: {
+            left: 0,
+            right: 0
+        }
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-loading': '../Loading/Loading',
+        'c-tabs-content': './TabsContent',
+        'c-link': '../Link/Link'
+    }
+}
+</script>
+
+<script type="php">
+function created($ctx) {
+    $data = $ctx->getMessage('tab-item-data');
+    $ctx->_d["tabList"] = $data;
+}
+
+function render ($ctx, $isXml = false) {
+
+    $vnodes = $ctx->slots['default'];
+
+    foreach ($vnodes as $index => $vnode) {
+        $ctx->slots['__c__' . $index] = array($vnode);
+    }
+
+    $ctx->_d['len'] = count($ctx->_d['tabList']);
+
+    return parent::render($ctx, false);
+}
+</script>
+
+<script>
+/**
+ * @file Tabs
+ * @author yaochang(yaochang@baidu.com)
+ */
+import IScroll from '@baidu/better-scroll';
+
+export default {
+    render(ctx) {
+        let vnodes = this.$slots.default;
+        this.tabList = [];
+        vnodes.forEach((vnode, index) => {
+            this.$slots['__c__' + index] = [vnode];
+            let data = vnode.componentOptions.propsData;
+            let itemObj = {
+                label: data.label,
+                icon: data.icon,
+                isLoading: data.isLoading ? data.isLoading : false,
+                logContent: JSON.stringify(data.logContent),
+                params: data.params,
+                dataModule: data.tabDataModule ? data.tabDataModule : ''
+            };
+            this.tabList.push(itemObj);
+        });
+        this.len = this.tabList.length;
+        return this.$super.render();
+    },
+    watch: {
+        selected(value, old) {
+            if (value === this.oSelected) {
+                return;
+            }
+            if (value > this.tabList.length) {
+                return;
+            }
+            // 为了避免 len 和 selected 同时被修改时，导致 selected tab 的下边线定位错误的问题，加上 nextTick
+            this.$nextTick(() => {
+                this.oSelected = value;
+                this.change(value, old);
+            });
+        },
+        len(value) {
+            this.$nextTick(this.reset);
+        }
+    },
+    mounted() {
+        this.getNavsWidth();
+        this.position = this.getPosition(this.$refs.labels[this.oSelected]);
+        this.reset();
+        this.$root.$on('attach', () => {
+            this.activeIndex = this.oSelected;
+            this.reset();
+        });
+        this.$nextTick(() => {
+            this.bottomAnimation = true;
+            this.animationInit();
+        });
+        window.addEventListener('resize', this.reset);
+        window.addEventListener('orientationchange', this.reset);
+    },
+    destroyed() {
+        window.removeEventListener('resize', this.reset);
+        window.removeEventListener('orientationchange', this.reset);
+    },
+    methods: {
+        reset(index) {
+            // 组件已经被销毁，就不要 reset 了
+            if (this._isDestroyed) {
+                return;
+            }
+            index = typeof index === 'number' ? index : this.oSelected;
+            this.position = this.getPosition(this.$refs.labels[this.oSelected]);
+            this.$nextTick(() => {
+                this.animationInit();
+                if (this.bottom || this.allowScroll) {
+                    this.setScroll();
+                }
+            });
+        },
+        refresh() {
+            this.$nextTick(() => {
+                this.reset();
+                this.$refs.content.reset();
+            });
+        },
+        contentRefresh() {
+            this.$nextTick(() => {
+                this.$refs.content.reset();
+            });
+        },
+        headerItemClick(index) {
+            if (this.disableEvent) {
+                return;
+            }
+
+            /**
+             * 点击组件头部时可选项时触发.
+             *
+             * @event clickHeaderItem
+             * @property {object} param1.index 点击 tab 序号
+             */
+            this.$emit('clickHeaderItem', {index});
+            this.change(index);
+        },
+        touchNav(index) {
+            this.activeIndex = index;
+        },
+        getPosition(dom) {
+            if (!dom || !dom.offsetParent) {
+                return {left: null, right: null};
+            }
+            let parentDom = dom.offsetParent;
+            let left = dom.offsetLeft + parentDom.offsetLeft;
+            let right = left + dom.offsetWidth;
+            return {left, right};
+
+        },
+        animationInit() {
+            let {left, right} = this.position;
+            if (!this.$refs.bottomBar) {
+                return;
+            }
+            this.$refs.bottomBar.setAttribute('style', `
+                height: 1px;
+                background-color: ${this.bottombarColor};
+                left: ${left}px;
+                width: ${right - left}px;
+            `);
+        },
+        animation(value) {
+            let {left: oldLeft, right: oldRight} = this.position;
+            this.position = this.getPosition(this.$refs.labels[value]);
+            let {left, right} = this.position;
+            this.$nextTick(() => {
+                let scaleX = (right - left) / (oldRight - oldLeft);
+                let tranX = (right + left - oldRight - oldLeft) / 2;
+
+                this.$refs.bottomBar.setAttribute('style', `
+                    height: 1px;
+                    background-color: ${this.bottombarColor};
+                    left: ${oldLeft}px;
+                    width: ${oldRight - oldLeft}px;
+                    transition: transform .24s cubic-bezier(.4, 0, .2, 1);
+                    -webkit-transition: -webkit-transform .24s cubic-bezier(.4, 0, .2, 1);
+                    transform: translate3d(${tranX}px, 0, 0) scaleX(${scaleX}) ;
+                    -webkit-transform: translate3d(${tranX}px, 0, 0) scaleX(${scaleX}) ;
+                    transform-origin: 50% 0 0;
+                    -webkit-transform-origin: 50% 0 0;
+                `);
+            });
+        },
+        change(value, old) {
+            old = old === undefined ? this.oSelected : old;
+            if (value === old) {
+                return;
+            }
+            this.oSelected = value;
+
+            /**
+             * 改变选定项时触发.
+             *
+             * @event change
+             * @property {object} param1 新 tab 序号
+             * @property {object} param2 旧 tab 序号
+             */
+            this.$emit('change', value, old);
+
+            // 下方是动画的逻辑处理代码
+            this.$nextTick(() => {
+                this.animationInit();
+                this.animation(value);
+            });
+            // 滑动对象存在,执行滑动并传递autoScroll标记用于scrollEnd事件判断
+            if (this.tabScroll) {
+                let scrollToIndex = value > 0 ? value - 1 : value;
+                let nav = this.tabsNav.children[scrollToIndex];
+                this.tabScroll.scrollToElement(nav, 240, 0, 0, '', {autoScroll: true});
+            }
+        },
+        setScroll() {
+            this.$nextTick(() => {
+                if (!this.$refs.tabsNav) {
+                    return;
+                }
+                let view = this.$refs.tabsNav.parentNode;
+                let viewWidth = view.offsetWidth;
+                let current = this.oSelected;
+                let sum = this.tabList.length;
+                if (!this.tabScroll) {
+                    this.tabScroll = new IScroll(view, {
+                        bindToWrapper: true, // 将 touchmove 事件绑定至 dom 而非全局
+                        disableMouse: true,
+                        disablePointer: true,
+                        scrollX: true,
+                        scrollY: false,
+                        eventPassthrough: true,
+                        scrollbars: false
+                    });
+                }
+                // 前置检测选中的tab是否在可视区
+                if (current > 0 && current < sum) {
+                    let currentTab = Math.min(current, sum - 1);
+                    if (this.position.right > viewWidth) {
+                        let scrollToIndex = currentTab > 0 ? currentTab - 1 : currentTab;
+                        this.tabScroll.scrollToElement(this.tabsNav.children[scrollToIndex], 240);
+                    }
+                }
+                // 若tab横滑回调方法存在,执行回调
+                this.tabScroll.on('scrollEnd', () => {
+                    if (this.customFlag && this.customFlag.autoScroll) {
+                        // 若为自动触发滑动，不执行回调
+                        return;
+                    }
+
+                    /**
+                     * 选项卡nav滑动结束触发.
+                     *
+                     * @event onTabScrollEnd
+                     */
+                    this.$emit('onTabScrollEnd', this);
+                });
+            });
+        },
+        getNavsWidth() {
+            if (this.bottom || this.allowScroll) {
+                // c-tabs-nav节点的左右padding
+                this.tabsNav = this.$refs.tabsNav;
+                let pdl = parseFloat(getComputedStyle(this.tabsNav).paddingLeft);
+                let pdr = parseFloat(getComputedStyle(this.tabsNav).paddingRight);
+                // 计算navs总宽度
+                let navsWidth = pdl + pdr;
+                Array.prototype.forEach.call(this.tabsNav.children, el => {
+                    if (el.tagName.toLowerCase() === 'li') {
+                        navsWidth += parseFloat(getComputedStyle(el).width);
+                    }
+                });
+                // 设置tabs实际区域宽度
+                this.tabsNavSty = {width: navsWidth + 'px'};
+            }
+        },
+        handleContentWrapperTransitionEnd() {
+
+            /**
+             * transitionend event.
+             *
+             * @event transitionend
+             */
+            this.$emit('transitionend');
+        }
+    }
+};
+</script>
+<style scoped lang="less">
+.c-tabs {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+       -moz-user-select: none;
+            user-select: none;
+
+}
+.c-tabs.c-gap-top-zero > .c-gap-top-small {
+    margin-top: 0;
+}
+.c-tabs-nav {
+    margin: 0;
+    .c-tabs-nav-selected {
+        border-bottom: none;
+    }
+    .c-navs-scroll-select-bottom {
+        border-bottom: solid 1px #000;
+    }
+}
+.c-tabs-a {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+.c-tabs-nav-li {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    position: relative;
+}
+.c-tabs-nav-li-span {
+    color: #555;
+}
+.c-tabs-nav-touch-active a {
+    .c-tabs-nav-li-span {
+        color: #000;
+    }
+}
+.c-tabs-nav-touch-selected a {
+    .c-tabs-nav-li-span {
+        color: #555 !important;
+    }
+}
+.c-tabs-nav-bottombar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-color: #000;
+    z-index: 10;
+}
+
+.c-tabs-nav img {
+    width: .14rem;
+    height: .14rem;
+    vertical-align: middle;
+    display: inline-block;
+    display: none;
+}
+.c-tabs-nav-selected,
+.c-tabs-nav-selected-bg {
+    img {
+        display: inline-block;
+    }
+}
+
+.c-tabs-nav-selected .c-tabs-nav-li-span {
+    color: #000;
+}
+.c-tabs-nav-selected-bg {
+    position: relative;
+    top: -1px;
+    border-top-color: #fff;
+    line-height: .39rem;
+    color: #000;
+    background-color: #fff;
+    white-space: nowrap;
+}
+.c-tabs-nav-view .c-tabs-nav {
+    &-bottom-padding {
+        padding-left: .15rem;
+        padding-right: .15rem;
+    }
+    &-bottom-padding:first-child {
+        padding-left: .17rem;
+    }
+}
+</style>

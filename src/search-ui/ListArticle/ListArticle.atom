@@ -1,0 +1,61 @@
+<template>
+    <div :class="articleType == '1' ? 'c-list-article-one' : 'c-list-article-two'" role="listbox">
+        <template a-for="(item, index) in articleList">
+            <c-single-article
+                :key="index"
+                :class="{
+                    'c-gap-bottom': index !== articleList.length - 1,
+                    'c-gap-top': index !== 0
+                }"
+                :article-type="articleType"
+                :title="item.title"
+                :url="item.url"
+                :url-params="item.urlParams"
+                :abstract="item.abstract"
+                :img-list="item.imgList"
+                :img-col="item.imgCol"
+                :img-type="item.imgType"
+                :time="item.time"
+                :source="item.source"
+                :read-num="item.readNum"
+                :label-text="item.labelText"
+                :label-type="item.labelType"
+                role="option"
+            >
+                <span a-if="item.extInfo" slot="extInfo">{{ item.extInfo }}</span>
+            </c-single-article>
+            <c-divider a-if="index < articleList.length - 1" :key="index"/>
+        </template>
+    </div>
+
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 文章内容列表，详细字段参考`Article`
+         *
+         * @property {string} extInfo 文章拓展的辅助信息，以支持`Article`中`slot="extInfo"`的功能，但只支持文本
+         * @see See [Article](./Article#API)
+         */
+        articleList: {
+            type: Array
+        },
+
+        /**
+         * 文章类别，目前只支持这两级，只有字体大小及行高的区别：
+         * 2级用于结果页，1级用于情景页
+         */
+        articleType: {
+            type: String,
+            default: '2'
+        }
+    },
+    components: {
+        'c-single-article': '../Article/Article',
+        'c-divider': '../Divider/Divider'
+    }
+}
+</script>

@@ -1,0 +1,113 @@
+<template>
+    <c-link
+        :class="{'c-more-wrapper-inline': inline}"
+        :url="url"
+        :params="params"
+        class="c-color"
+        @click="showMore"
+    >
+        <div
+            :class="{'c-more-icon-box-inline': inline}"
+            class="c-more-icon-box"
+            role="text"
+        >
+            <c-icon type="right_arrow" class="c-more-icon"/>
+            <br>
+            <span>{{ text }}</span>
+        </div>
+    </c-link>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 链接地址，a 标签元素，若为空，则输出的是一个 div
+         */
+        url: String,
+        /**
+         * 链接所带的参数，可参考Link组件
+         */
+        params: Object,
+        /**
+         * 查看更多文案
+         */
+        text: {
+            type: String,
+            default: '查看更多'
+        },
+        /**
+         * 是否使用非绝对定位样式 请务必设置该值为true! 后续可能不再支持该值为 false 的情况
+         */
+        inline: {
+            type: Boolean,
+            default: false
+        }
+    },
+    components: {
+        'c-icon': '../Icon/Icon',
+        'c-link': '../Link/Link'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file 查看更多
+ * @author cxtom <cxtom2008@gmail.com>
+ */
+
+export default {
+    methods: {
+
+        /**
+         * showMore event.
+         *
+         * @event showMore
+         */
+        showMore() {
+            this.$emit('showMore');
+        }
+    }
+};
+</script>
+
+<style scoped>
+    /* csshint-disable require-number */
+    .c-more-icon-box {
+        position: absolute;
+        text-align: center;
+        width: .62rem;
+        height: .62rem;
+        top: 50%;
+        margin: -.31rem 0 0 0;
+        transform: translateX(50%);
+    }
+
+    .c-more-icon {
+        font-size: .42rem;
+        display: inline-block;
+        height: .42rem;
+        line-height: .42rem;
+    }
+
+    .c-more-wrapper-inline {
+        position: relative;
+        display: inline-block;
+        width: .62rem;
+        height: .62rem;
+        margin: auto;
+        transform: none;
+    }
+
+    .c-more-icon-box-inline {
+        transform: none;
+        margin: auto;
+        position: unset;
+        display: inline-block;
+    }
+
+    .c-more-icon-box-inline span {
+        font-size: .14rem;
+    }
+</style>

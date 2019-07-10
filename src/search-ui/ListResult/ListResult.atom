@@ -1,0 +1,124 @@
+<template>
+    <article class="c-container">
+        <header a-if="!hideHeader" class="c-gap-bottom-small">
+            <!-- @slot 标题区 -->
+            <slot name="title">
+                <c-title
+                    a-if="title"
+                    :text="title"
+                    :clamp="titleClamp"
+                    :icon="titleIcon"
+                    :arrow="titleArrow"
+                    :url="url"
+                    :url-params="urlParams"
+                    :label="titleLabel"
+                    :label-type="titleLabelType"
+                    @click="onTitleClick"
+                />
+            </slot>
+        </header>
+        <!-- @slot 内容区 -->
+        <section><slot/></section>
+    </article>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 标题链接
+         */
+        url: String,
+
+        /**
+         * 标题链接所需参数
+         */
+        urlParams: Object,
+
+        /**
+         * 标题文案
+         */
+        title: String,
+
+        /**
+         * 标题截断行数
+         */
+        titleClamp: [String, Number],
+
+        /**
+         * 标题图标
+         */
+        titleIcon: String,
+
+        /**
+         * 标题是否带箭头
+         */
+        titleArrow: Boolean,
+
+        /**
+         * 标题文字标签文案
+         */
+        titleLabel: String,
+
+        /**
+         * 标题文字标签类型
+         */
+        titleLabelType: String,
+
+        /**
+         * 标题尺寸
+         */
+        titleSize: String,
+
+        /**
+         * 是否不显示标题区
+         */
+        hideHeader: {
+            type: Boolean,
+            default: false
+        }
+    },
+    components: {
+        'c-title': '../Title/Title'
+    }
+}
+</script>
+
+<style lang="less" scoped>
+    .c-container {
+        margin: 0;
+        padding-bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: stretch;
+        align-content: flex-start;
+        flex-wrap: nowrap;
+    }
+    .c-container:after {
+        content: '';
+        display: block;
+        width: 100%;
+        height: 1px;
+        background-color: #f1f1f1;
+        margin-top: .1rem;
+    }
+</style>
+
+<script>
+export default {
+    methods: {
+        onTitleClick(e) {
+
+            /**
+             * 标题点击事件
+             *
+             * @event title-click
+             * @property {Event} param1 透传标题的事件对象
+             */
+            this.$emit('title-click', e);
+        }
+    }
+};
+</script>

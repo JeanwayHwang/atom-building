@@ -1,0 +1,117 @@
+<template>
+    <div
+        class="c-scroll-inner"
+    >
+        <div
+            class="c-flexbox"
+        >
+            <div
+                a-for="(item, index) in innerCols"
+                :key="index"
+                :style="{
+                    width: (97 * item + (index === (length - 1) ? -24 : 0)) / (97 * col - 24) * 100 + '%',
+                    paddingRight: (index === (length - 1) ? 0 : paddingRight) + '%'
+                }"
+                :class="[
+                    verticalAlign === 'center'
+                        ? $style.cScrollInnerItemVerticalAlign
+                        : ''
+                ]"
+                class="c-scroll-inner-item"
+            >
+                <!-- @slot:default 栅格套栅格内部的栅格划分自定义区域 -->
+                <slot :name="'__c__' + index"/>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 栅格宽度
+         */
+        col: {
+            type: [Number, String]
+        },
+
+        /**
+         * 如果 item 内部符合分列布局，则设置 innerCols 可以设置每一列的栅格宽度，有n列就设置n个宽度。
+         * 数组中的元素之和必须为 col。如果不是分列布局，则默认不填
+         */
+        innerCols: {
+            type: Array,
+            default: []
+        },
+
+        /**
+         * 是否开启点击态
+         */
+        touchable: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 'vertical-align' 样式
+         */
+        verticalAlign: {
+            type: String,
+            default: 'top'
+        }
+    },
+    computed: {
+        length: innerCols.length,
+        paddingRight: 24 / (97 * col - 24) * 100
+    }
+}
+</script>
+
+<script>
+export default {
+    render() {
+        let vnodes = this.$slots.default || [];
+
+        vnodes.forEach((vnode, index) => {
+            this.$slots['__c__' + index] = [vnode];
+        });
+
+        return this.$super.render();
+    }
+};
+</script>
+
+<script type="php">
+function created ($ctx) {
+    $ctx->dispatch('scroll-item-data', array(
+        'col' => $ctx->_d['col'],
+    ));
+}
+
+function render ($ctx, $isXml = false) {
+    $vnodes = $ctx->slots['default'];
+
+    if (!empty($vnodes)) {
+        foreach ($vnodes as $index => $vnode) {
+            $ctx->slots['__c__' . $index] = array($vnode);
+        }
+    }
+
+    return parent::render($ctx, false);
+}
+</script>
+
+<style module>
+.c-scroll-inner {
+}
+.c-scroll-inner-item {
+    overflow: hidden;
+    white-space: normal;
+}
+.c-scroll-inner-item-vertical-align {
+    display: flex;
+    align-items: center;
+}
+</style>

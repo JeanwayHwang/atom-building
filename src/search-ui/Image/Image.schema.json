@@ -1,0 +1,166 @@
+{
+    "alias": [
+        "c-img",
+        "c-image"
+    ],
+    "type": "object",
+    "properties": {
+        "img": {
+            "type": "object",
+            "properties": {
+                "src": {
+                    "type": "string",
+                    "@ChineseName": "图片地址",
+                    "@Demo": "https://ss2.baidu.com/-vo3dSag_xI4khGko9WTAnF6hhy/image/awhcrop%3D250%2C250/sign=70495b0d1b3853439a85da72e17cc043/c995d143ad4bd11336931f5351afa40f4bfb0570.jpg",
+                    "description": "图片地址"
+                },
+                "type": {
+                    "type": "string",
+                    "@ChineseName": "宽高比",
+                    "@Demo": "s",
+                    "description": "图片宽高比",
+                    "enum": ["s", "l", "v", "w", "x", "y", "z"]
+                },
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "标题",
+                    "@Demo": "这里是图片标题",
+                    "description": "图片标题"
+                },
+                "titleClamp": {
+                    "type": "number",
+                    "@ChineseName": "标题截断行数",
+                    "@Demo": 2,
+                    "description": "图片标题截断行数",
+                    "maximum": 5,
+                    "minimum": 1
+                },
+                "titleAlign": {
+                    "type": "string",
+                    "@ChineseName": "标题对齐方式",
+                    "@Demo": "left",
+                    "description": "图片标题对齐方式",
+                    "enum": ["center", "left", "right"]
+                },
+                "titleFixHeight": {
+                    "type": "boolean",
+                    "@ChineseName": "标题是否定高",
+                    "@Demo": false,
+                    "description": "图片标题是否定高"
+                },
+                "subTitle": {
+                    "type": "string",
+                    "@ChineseName": "副标题",
+                    "@Demo": "这里是图片副标题",
+                    "description": "图片副标题"
+                },
+                "subTitleClamp": {
+                    "type": "number",
+                    "@ChineseName": "副标题截断行数",
+                    "@Demo": 1,
+                    "description": "图片副标题截断行数",
+                    "maximum": 5,
+                    "minimum": 1
+                },
+                "subTitleAlign": {
+                    "type": "string",
+                    "@ChineseName": "副标题对齐方式",
+                    "@Demo": "center",
+                    "description": "图片副标题对齐方式",
+                    "enum": ["center", "left", "right"]
+                },
+                "subTitleFixHeight": {
+                    "type": "boolean",
+                    "@ChineseName": "副标题是否定高",
+                    "@Demo": false,
+                    "description": "图片副标题是否定高"
+                },
+                "hackWhiteStroke": {
+                    "type": "boolean",
+                    "@ChineseName": "是否添加默认的白边遮罩",
+                    "@Demo": false,
+                    "description": "图片是否添加默认的白边遮罩"
+                },
+                "isRound": {
+                    "type": "boolean",
+                    "@ChineseName": "是否是圆形图片",
+                    "@Demo": false,
+                    "description": "图片是圆形"
+                },
+                "info": {
+                    "type": "boolean",
+                    "@ChineseName": "图片说明",
+                    "@Demo": "",
+                    "description": "条形说明遮罩的文案"
+                },
+                "defaultImageType": {
+                    "type": "string",
+                    "@ChineseName": "缺省图以及加载图的类型",
+                    "@Demo": "",
+                    "description": "缺省图以及加载图的类型"
+                },
+                "gridSize": {
+                    "type": "number",
+                    "@ChineseName": "图片所在的栅格宽度",
+                    "@Demo": "",
+                    "description": "图片所在的栅格宽度",
+                    "maximum": 12,
+                    "minimum": 1
+                },
+                "showNum": {
+                    "type": "string",
+                    "@ChineseName": "胶囊遮罩显示的文案",
+                    "@Demo": "",
+                    "description": "胶囊遮罩显示的文案"
+                },
+                "pillBigText": {
+                    "type": "string",
+                    "@ChineseName": "胶囊遮罩文案前显示的大号字体文案",
+                    "@Demo": "",
+                    "description": "胶囊遮罩文案前显示的大号字体文案"
+                },
+                "iconType": {
+                    "type": "string",
+                    "@ChineseName": "胶囊遮罩文案前的图标名称",
+                    "@Demo": "",
+                    "description": "胶囊遮罩文案前的图标名称"
+                },
+                "circleMaskSize": {
+                    "type": "string",
+                    "@ChineseName": "圆形遮罩尺寸",
+                    "@Demo": "normal",
+                    "description": "圆形遮罩尺寸",
+                    "enum": ["normal", "small"]
+                },
+                "circleMaskIcon": {
+                    "type": "string",
+                    "@ChineseName": "圆形遮罩图标",
+                    "@Demo": "",
+                    "description": "圆形遮罩图标"
+                },
+                "circleMaskText": {
+                    "type": "string",
+                    "@ChineseName": "圆形遮罩文案",
+                    "@Demo": "",
+                    "description": "圆形遮罩文案"
+                },
+                "paddingBottom": {
+                    "type": "string",
+                    "@ChineseName": "自定义图片宽高比",
+                    "@Demo": "",
+                    "description": "自定义图片宽高比"
+                },
+                "progressive": {
+                    "type": "boolean",
+                    "@ChineseName": "是否渐显图片",
+                    "@Demo": false,
+                    "description": "是否渐显图片"
+                }
+            },
+            "propsData": [
+                "src",
+                "title"
+            ]
+        }
+    }
+}

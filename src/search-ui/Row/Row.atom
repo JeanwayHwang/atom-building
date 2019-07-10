@@ -1,0 +1,41 @@
+<template>
+    <div
+        :class="{
+            'c-row': type !== 'tile',
+            'c-row-tile': type === 'tile',
+            'c-row-tight': type === 'tight',
+            'c-row-align-middle': verticalAlign === 'middle',
+            'c-row-align-bottom': verticalAlign === 'bottom'
+        }"
+    >
+        <!-- @slot 栅格内容，只能包含 `Span` 组件 -->
+        <slot/>
+    </div>
+</template>
+
+<style scoped>
+    .c-row-align-middle {
+        box-align: center;
+        align-items: center;
+    }
+    .c-row-align-bottom {
+        box-align: end;
+        align-items: flex-end;
+    }
+</style>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 接受参数 `tile`、`tigh`t，对应 pmd 中的 c-row-title、c-row-tight
+         */
+        type: String,
+
+        /**
+         * 接受参数 top\middle\bottom，分别生成c-row-align-top\c-row-align-middle\c-row-align-bottom
+         */
+        verticalAlign: String
+    }
+}
+</script>

@@ -1,0 +1,207 @@
+<!-- @ignore -->
+<template>
+    <!-- 指示器 -->
+    <div
+        :style="{
+            'padding-top': paddingTop,
+            'padding-bottom': paddingBottom
+        }"
+        class="indicator"
+    >
+        <div
+            :style="{
+                '-webkit-transform': 'translateX(-' + transIndex * 11 + 'px) scale(1)',
+                'transform': 'translateX(-' + transIndex * 11 + 'px) scale(1)'
+            }"
+            class="indicator-inner"
+        >
+            <!-- 点 -->
+            <template
+                a-if="type === 'dot'"
+            >
+                <!-- 指示器项 -->
+                <div
+                    a-for="(i, index) in length"
+                    :key="index"
+                    class="indicator-item"
+                >
+                    <!-- eslint-disable atom/max-len -->
+                    <div
+                        :style="[
+                            {
+                                backgroundColor: color
+                            },
+                            curIndex === index
+                                ? {
+                                    backgroundColor: selectedColor
+                                }
+                                : {},
+                            ((index === transIndex + threshold - 1) || (index === transIndex)) && index !== 0 && index !== (length - 1)
+                                ? {
+                                    top: '1px',
+                                    width: '4px',
+                                    height: '4px',
+                                    borderRadius: '2px'
+                                }
+                                : {}
+                        ]"
+                        :class="shadow ? $style.indicatorItemShadow : ''"
+                        class="indicator-item-selected"
+                    >
+                    </div>
+                    <!-- eslint-enable atom/max-len -->
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 指示器的长度
+         */
+        length: {
+            type: Number,
+            default: 0
+        },
+
+        /**
+         * 当前选中的索引
+         */
+        curIndex: {
+            type: [Number, String],
+            default: -1
+        },
+
+        /**
+         * 选中的颜色
+         */
+        selectedColor: {
+            type: String,
+            default: '#999'
+        },
+
+        /**
+         * 颜色
+         */
+        color: {
+            type: String,
+            default: '#e1e1e1'
+        },
+
+        /**
+         * 是否有阴影
+         */
+        shadow: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 显示类型：'dot' 点
+         */
+        type: {
+            type: String,
+            default: 'dot'
+        },
+
+        /**
+         * padding-top
+         */
+        paddingTop: {
+            type: String,
+            default: '.1rem'
+        },
+
+        /**
+         * padding-bottom
+         */
+        paddingBottom: {
+            type: String,
+            default: '.1rem'
+        },
+
+        /**
+         * 阈值
+         */
+        threshold: {
+            type: Number,
+            default: 5
+        }
+    },
+    data: {
+        // 偏移索引
+        transIndex: 0
+    }
+}
+</script>
+
+<script>
+export default {
+    watch: {
+        curIndex(newVal, oldVal) {
+            if (newVal > oldVal) {
+                if (newVal >= this.threshold - 1 && newVal < this.length - 1) {
+                    this.transIndex = newVal - (this.threshold - 2);
+                }
+                // 处理最左边临界的情况
+                if (newVal >= this.threshold - 1 && this.transIndex === 0) {
+                    this.transIndex = this.length - this.threshold;
+                }
+            }
+            else {
+                if (newVal <= this.transIndex && this.transIndex > 0) {
+                    this.transIndex = newVal - 1;
+                }
+                // 处理最右边临界的情况
+                if (newVal === 0) {
+                    this.transIndex = 0;
+                }
+            }
+        }
+    }
+};
+</script>
+
+<style module lang="less">
+.indicator {
+    display: inline-block;
+    width: 50px;
+    white-space: nowrap;
+    line-height: 1;
+    font-size: 0;
+    overflow: hidden;
+}
+.indicator-inner {
+    transition: all .38s cubic-bezier(.2, 0, .2, 1);
+}
+.indicator-item {
+    position: relative;
+    display: inline-block;
+    margin-right: 5px;
+    border-radius: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    &:last-child {
+        margin-right: 0;
+    }
+}
+.indicator-item-selected {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 3px;
+    transition: all .38s cubic-bezier(.2, 0, .2, 1);
+}
+.indicator-item-shadow {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .1);
+}
+</style>

@@ -1,0 +1,70 @@
+<template>
+    <c-page-scroll
+        class="c-page-scroll-video"
+        :col="imgCol"
+        @scrollend="scrollEnd"
+    >
+        <c-page-scroll-item a-for="page in math_ceil(count / (12 / imgCol))">
+            <c-row>
+                <template a-for="idx in ( 12 / imgCol )">
+                    <c-span a-if="( page - 1 ) * 12 / imgCol + ( idx - 1 ) < count">
+                        <c-video-col
+                            :item="video[( page -1 ) * 12 / imgCol + ( idx - 1 )]"
+                            :imgType="showConfig && showConfig.imgType ? showConfig.imgType : 'y'"
+                        />
+                    </c-span>
+
+                    <c-span a-else-if="( page -1 ) * 12 /imgCol + ( idx - 1 ) == count">
+                        <c-more
+                            a-if="moreInfo"
+                            :url="moreInfo.url"
+                            :params="moreInfo.params"
+                            :text="moreInfo.text"
+                            @showMore="showMore"
+                        />
+                    </c-span>
+
+                    <c-span a-else></c-span>
+
+                </template>
+            </c-row>
+        </c-page-scroll-item>
+    </c-page-scroll>
+</template>
+
+<script type="config">
+    {
+        props: [
+            'video', 'showConfig', 'moreInfo', 'col'
+        ],
+        data: {
+            count: (video && video.length ? video.length : 0),
+            imgCol: 12 / math_ceil(12 / (col ? col : (showConfig && showConfig.col ? showConfig.col : 4))),
+            moreCol: 4
+        },
+        components: {
+            'c-link': '../Link/Link',
+            'c-more': '../More/More',
+            'c-row': '../Row/Row',
+            'c-span': '../Row/Span',
+            'c-icon': '../Icon/Icon',
+            'c-video-col':'../Video/VideoCol',
+            'c-page-scroll': '../PageScroll/PageScroll',
+            'c-page-scroll-item': '../PageScroll/PageScrollItem'
+        }
+    }
+</script>
+
+<script>
+    export default {
+        methods: {
+            showMore() {
+                this.$emit('showMore');
+            },
+            scrollEnd() {
+                this.$emit('scrollEnd');
+            }
+
+        }
+    };
+</script>

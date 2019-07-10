@@ -1,0 +1,159 @@
+<template>
+    <c-scroll
+        :col="imgCol"
+        class="c-gap-bottom-small c-scroll-video"
+        scroller-flex
+        @scrollEnd="scrollEnd"
+    >
+        <c-scroll-item
+            a-for="(item, index) in video"
+            :col="imgCol"
+            :key="index"
+            @click.native="handleScrollItemClick({
+                item,
+                index
+            })"
+        >
+            <c-touchable-feedback
+                :open="!!item.url"
+                :top="-.05"
+                :bottom="-.05"
+                :left="-.04"
+                :right="-.04"
+                is-jump
+            >
+                <c-video-col
+                    :item="item"
+                    :img-type="showConfig && showConfig.imgType ? showConfig.imgType : 'y'"
+                    :icon-type="iconType"
+                    :title-clamp="showConfig && showConfig.titleClamp ? showConfig.titleClamp : 1"
+                    :info-line="showConfig && showConfig.infoLine ? showConfig.infoLine : 1"
+                    :title-fix-height="showConfig ? showConfig.titleFixHeight : false"
+                />
+            </c-touchable-feedback>
+        </c-scroll-item>
+        <c-scroll-item a-if="moreInfo" :col="moreCol">
+            <!-- 使用定位来解决 iOS 10.1 及以下高度 100% 填充问题 -->
+            <!-- In Safari 10.1 and below, the height of (non flex) children are not recognized in percentages -->
+            <!-- https://bugs.webkit.org/show_bug.cgi?id=137730 -->
+            <c-touchable-feedback
+                :open="!!(moreInfo.url || (moreInfo.params && moreInfo.params.tcUrl))"
+                :url="moreInfo.url"
+                :url-params="moreInfo.params"
+                expand
+                is-jump
+                style="position: absolute; top: .05rem; bottom: 0; left: 0; right: 0"
+            >
+                <c-more
+                    :url="moreInfo.url"
+                    :params="moreInfo.params"
+                    :text="moreInfo.text"
+                    @showMore="showMore"
+                />
+            </c-touchable-feedback>
+        </c-scroll-item>
+    </c-scroll>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 视频数据数组
+         *
+         * @property {string} url 跳转链接
+         * @property {string} title 标题，最小长度1个字符 最大长度200个字符
+         * @property {string} poster 图片缩略图地址，最小长度1个字符 最大长度1024个字符
+         * @property {number} source 来源，最小长度1个字符 最大长度100个字符
+         * @property {number} duration 播放时长，单位：秒，最小长度1个字符 最大长度10个字符
+         * @property {number} pubtime 发布时间，标准时间戳，最小长度1个字符 最大长度10个字符
+         * @property {number} playtime 播放次数，最小值为（包含）0，最大值为（包含）99999999
+         * @property {number} score 评分
+         * @property {string} labelFront 标题左侧标签文案
+         * @property {string} labelFrontType 标题前的标签类型，可参考Label组件
+         * @property {string} defaultImageType 缺省图&加载图类型，具体可参考 [Image 组件](http://sfe.baidu.com:8184/Image)
+         */
+        video: Array,
+
+        /**
+         * 展现配置
+         *
+         * @property {string} imgType='y' 图片比例
+         * @property {string} iconType='video_play3' 右下角遮罩显示的图标
+         * @property {string} col=4 图片所占栅格
+         * @property {number} titleClamp=1 标题截断
+         * @property {number} infoLine=1 来源信息，可选，默认为1行展现，2为两行展现，有效值1或2
+         * @property {boolean} titleFixHeight=false 标题是否定高，如果定高，会按字体大小和 `titleClamp` 计算高度
+         */
+        showConfig: Object,
+
+        /**
+         * 查看更多配置
+         *
+         * @property {string} url 链接
+         * @property {string} params 链接参数对象
+         * @property {string} text='查看更多' 查看更多文案
+         */
+        moreInfo: Object,
+
+        /**
+         * 图片栅格；这里尽量用 showConfig.col 来配置，这里仅仅是为了兼容已使用的模板
+         */
+        col: Number
+
+    },
+    computed: {
+        imgCol: col ? col : (showConfig && showConfig.col ? showConfig.col : 8),
+        iconType: showConfig && showConfig.iconType ? showConfig.iconType : '',
+        moreCol: 4
+    },
+    components: {
+        'c-link': '../Link/Link',
+        'c-icon': '../Icon/Icon',
+        'c-video-col': '../Video/VideoCol',
+        'c-scroll': '../Scroll/Scroll',
+        'c-scroll-item': '../Scroll/ScrollItem',
+        'c-more': '../More/More',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+    module.exports = {
+        methods: {
+            showMore() {
+
+                /**
+                 * 当最后一项展示『查看更多』并且需要有特殊操作时，可在组件外层调用的地方绑定该事件
+                 *
+                 * @event showMore
+                 */
+                this.$emit('showMore');
+            },
+            scrollEnd() {
+
+                /**
+                 * 滑动结束后触发
+                 *
+                 * @event scrollEnd
+                 */
+                this.$emit('scrollEnd');
+            },
+            handleScrollItemClick(obj) {
+
+                /**
+                 * 项点击事件
+                 *
+                 * @event itemclick
+                 *
+                 * @property {object} param1 参数对象
+                 * @property {object} param1.item 点击项数据对象
+                 * @property {object} param1.index 点击项的索引
+                 */
+                this.$emit('itemclick', obj);
+            }
+        }
+    };
+</script>

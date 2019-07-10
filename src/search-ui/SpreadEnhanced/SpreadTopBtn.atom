@@ -1,0 +1,134 @@
+<!-- @ignore -->
+<template>
+    <c-touchable-feedback
+        :top="touchableFeedbackTop"
+        :bottom="touchableFeedbackBottom"
+        :left="touchableFeedbackLeft"
+        :right="touchableFeedbackRight"
+    >
+        <div
+            :style="{
+                'padding-top': paddingTop,
+                'padding-bottom': paddingBottom,
+                'padding-left': paddingLeft,
+                'padding-right': paddingRight
+            }"
+            :class="[
+                logClass
+                    ? 'WA_LOG_BTN'
+                    : ''
+            ]"
+            class="spread-top-btn"
+            @click="handleClick"
+        >
+            <span class="spread-top-btn-text-left c-line-clamp1">
+                {{ leftText }}
+                <!-- @slot 左侧文字 -->
+                <slot/>
+            </span>
+            <span class="spread-top-btn-main">
+                <span>
+                    {{
+                        spread
+                            ? foldText
+                            : spreadText
+                    }}
+                </span>
+                <c-arrow
+                    :direction="
+                        spread
+                            ? 2
+                            : 1
+                    "
+                    color="#555"
+                    class="c-gap-left-small"
+                />
+            </span>
+        </div>
+    </c-touchable-feedback>
+</template>
+
+<script type="config">
+{
+    props: {
+        // 用于设置初始状态，展开为 true，收起为 false
+        spread: {
+            type: Boolean,
+            default: false
+        },
+        // 左侧文案
+        leftText: String,
+        // 收起状态时，展示内容文案配置
+        spreadText: {
+            type: String,
+            default: '展开'
+        },
+        // 展开状态时，收起内容文案配置
+        foldText: {
+            type: String,
+            default: '收起'
+        },
+        paddingTop: {
+            type: String,
+            default: '.1rem'
+        },
+        paddingBottom: {
+            type: String,
+            default: '.1rem'
+        },
+        paddingLeft: {
+            type: String
+        },
+        paddingRight: {
+            type: String
+        },
+        touchableFeedbackTop: {
+            type: Number,
+            default: 0
+        },
+        touchableFeedbackBottom: {
+            type: Number,
+            default: 0
+        },
+        touchableFeedbackLeft: {
+            type: Number,
+            default: -0.17
+        },
+        touchableFeedbackRight: {
+            type: Number,
+            default: -0.17
+        },
+        // 是否增加日志类
+        logClass: {
+            type: Boolean,
+            default: true
+        }
+    },
+    components: {
+        'c-arrow': '../AnimateIcon/Arrow',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleClick() {
+            this.$emit('click', {
+                spread: this.spread
+            });
+        }
+    }
+};
+</script>
+
+<style module>
+    .spread-top-btn {
+        display: flex;
+        justify-content: space-between;
+    }
+    .spread-top-btn-main {
+        flex-shrink: 0;
+    }
+</style>

@@ -1,0 +1,88 @@
+{
+    "alias": [
+        "c-calendar"
+    ],
+    "type": "object",
+    "properties": {
+        "calendar": {
+            "type": "object",
+            "@ChineseName": "calendar 组件实例",
+            "description": "calendar 组件实例，calendar 的基础相关数据",
+            "properties": {
+                "defaultCheckedArr": {
+                    "type": "array",
+                    "@ChineseName": "默认选中项数组",
+                    "description": "默认选中项数组",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "year": {
+                                "type": "number",
+                                "@ChineseName": "年",
+                                "@Demo": 2018,
+                                "description": "年"
+                            },
+                            "month": {
+                                "type": "number",
+                                "@ChineseName": "月",
+                                "@Demo": 7,
+                                "description": "月"
+                            },
+                            "day": {
+                                "type": "number",
+                                "@ChineseName": "日",
+                                "@Demo": 25,
+                                "description": "日"
+                            }
+                        }
+                    }
+                },
+                "type": {
+                    "type": "number",
+                    "@ChineseName": "日期组件的类型；1：单选日期；2：范围选择；默认为 2 范围选择",
+                    "@Demo": 2,
+                    "description": "日期组件的类型；1：单选日期；2：范围选择；默认为 2 范围选择"
+                },
+                "startText": {
+                    "type": "string",
+                    "@ChineseName": "起始日期的文案",
+                    "@Demo": "出发",
+                    "description": "起始日期的文案；不传则不显示"
+                },
+                "endText": {
+                    "type": "string",
+                    "@ChineseName": "结束日期的文案",
+                    "@Demo": "返回",
+                    "description": "结束日期的文案；不传则不显示"
+                },
+                "sameDayText": {
+                    "type": "string",
+                    "@ChineseName": "范围选择选择同一天的显示文案",
+                    "@Demo": "返回",
+                    "description": "范围选择选择同一天的显示文案；不传则不允许选择同一天"
+                },
+                "beforeMonthNum": {
+                    "type": "number",
+                    "@ChineseName": "在当前月份之前要显示的月个数",
+                    "@Demo": 0,
+                    "description": "在当前月份之前要显示的月个数；默认为 0"
+                },
+                "afterMonthNum": {
+                    "type": "number",
+                    "@ChineseName": "在当前月份之后要显示的月个数",
+                    "@Demo": 5,
+                    "description": "在当前月份之后要显示的月个数；默认为 5"
+                }
+            },
+            "propsData": [
+                "defaultCheckedArr",
+                "type",
+                "startText",
+                "endText",
+                "sameDayText",
+                "beforeMonthNum",
+                "afterMonthNum"
+            ]
+        }
+    }
+}

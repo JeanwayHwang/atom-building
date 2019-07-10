@@ -1,0 +1,119 @@
+{
+    "alias": [
+        "c-article"
+    ],
+    "type": "object",
+    "properties": {
+        "article": {
+            "type": "object",
+            "@ChineseName": "article 组件实例",
+            "description": "article 组件实例，article 的基础相关数据",
+            "properties": {
+                "url": {
+                    "type": [
+                        "string",
+                        "object"
+                    ],
+                    "@ChineseName": "article 标题链接",
+                    "@Demo": "https://m.baidu.com/search?url=xxx",
+                    "description": "article 标题链接"
+                },
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "article 标题内容",
+                    "@Demo": "这里是 article 标题",
+                    "description": "article 标题内容"
+                },
+                "articleType": {
+                    "type": "number",
+                    "@ChineseName": "文章类别",
+                    "@Demo": 2,
+                    "description": "文章类别，一级 or 二级 目前只支持这两级，只有字体大小及行高的区别 2级用于结果页，1级用于情景页"
+                },
+                "imgList": {
+                    "type": "array",
+                    "@ChineseName": "article 图片集合",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "src": {
+                                "type": "string",
+                                "@ChineseName": "图片链接",
+                                "@Demo": "http://www.baidu.com/default.png",
+                                "description": "图片链接"
+                            },
+                            "defaultImageType": {
+                                "type": "string",
+                                "@ChineseName": "缺省图&加载图类型",
+                                "@Demo": "app",
+                                "description": "缺省图&加载图类型，具体可参考 [Image 组件](http://sfe.baidu.com:8184/Image)"
+                            },
+                            "type": {
+                                "type": "string",
+                                "@ChineseName": "图片比例",
+                                "@Demo": "x",
+                                "description": "图片比例，值有（s,l,w,x,y）详见[栅格图片](http://pmd.baidu.com/doc/#image)"
+                            }
+                        }
+                    }
+                },
+                "imgCol": {
+                    "type": "number",
+                    "@ChineseName": "图片所占栅格",
+                    "@Demo": 4,
+                    "description": "图片所占栅格，只有单图样式有效，默认为4"
+                },
+                "abstract": {
+                    "type": "string",
+                    "@ChineseName": "内容的文本",
+                    "@Demo": "描述",
+                    "description": "内容的文本"
+                },
+                "source": {
+                    "type": "string",
+                    "@ChineseName": "文章来源",
+                    "@Demo": "手机百度",
+                    "description": "文章来源"
+                },
+                "readNum": {
+                    "type": "number",
+                    "@ChineseName": "article 文章阅读数",
+                    "@Demo": 250,
+                    "description": "article 文章阅读数"
+                },
+                "time": {
+                    "type": "number",
+                    "@ChineseName": "时间戳",
+                    "@Demo": 12345678,
+                    "description": "article 时间戳 单位：毫秒"
+                },
+                "labelText": {
+                    "type": "string",
+                    "@ChineseName": "标签文案，参考c-label",
+                    "@Demo": "标签1",
+                    "description": "标签文案，参考c-label"
+                },
+                "labelType": {
+                    "type": "string",
+                    "@ChineseName": "标签类型，参考c-label",
+                    "@Demo": "public",
+                    "description": "标签类型，参考c-label"
+                }
+            },
+            "propsData": [
+                "url",
+                "title",
+                "articleType",
+                "imgList",
+                "imgCol",
+                "imgType",
+                "abstract",
+                "source",
+                "readNum",
+                "time",
+                "labelText",
+                "labelType"
+            ]
+        }
+    }
+}

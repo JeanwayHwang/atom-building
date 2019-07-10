@@ -1,0 +1,63 @@
+<template>
+    <ul class="c-filter-one-content">
+        <li a-for="(option, index) in dataSec.values" 
+            class="c-row c-row-tile c-filter-one-item c-filter-one-single c-line-bottom WA_LOG_OTHER"  
+            @click="change(index, option.value)"
+        >
+            <div class="c-span10 c-filter-one-l">
+                {{ option.text }}
+            </div>
+            <div a-if="option.value === dataSec.default" class="c-span2 c-filter-one-r">
+                <i class="c-icon" >&#xe608</i>
+            </div>
+        </li>
+    </ul>
+</template>
+
+<style>
+.c-filter-one-content {
+    position: relative;
+    z-index: 100;
+    padding: 0 .17rem;
+    overflow-y: scroll;
+    background: #fff;
+    max-height: 75%;
+}
+.c-filter-one-content li.c-filter-one-single {
+    padding-top: .1rem;
+    padding-bottom: .1rem;
+    padding-left: .13rem;
+    padding-right: .13rem;
+}
+.c-filter-one-l {
+    text-align: left;
+}
+.c-filter-one-r {
+    text-align: right;
+} 
+</style>
+
+<config>
+    {
+        props: [
+            'sec'
+        ],
+        data:{
+            dataSec:sec
+        },
+        components: {
+            'c-icon': '../Icon/Icon'
+        }
+    }
+</config>
+
+<script>
+    module.exports = {
+        methods: {
+            change(index, value) {
+                this.dataSec.default = value;
+                this.$emit('itemChanged', [index]);
+            }
+        }
+    };
+</script>

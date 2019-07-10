@@ -1,0 +1,127 @@
+{
+    "alias": [
+        "c-kg-header"
+    ],
+    "type": "object",
+    "properties": {
+        "kgHeader": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "kgHeader 一级标题",
+                    "@Demo": "标题",
+                    "description": "kgHeader 一级标题"
+                },
+                "url": {
+                    "type": "string",
+                    "@ChineseName": "kgHeader 点击跳转地址",
+                    "@Demo": "https://www.baidu.com",
+                    "description": "kgHeader 点击跳转地址"
+                },
+                "abstract": {
+                    "type": "string",
+                    "@ChineseName": "kgHeader摘要",
+                    "@Demo": "摘要摘要",
+                    "description": "kgHeader摘要"
+                },
+                "headerImg": {
+                    "type": "string",
+                    "@ChineseName": "kgHeader 头部图片",
+                    "@Demo": "https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3163261706,1028326403&fm=58&s=3AA2E50040C292AD22209D630300E0E1",
+                    "description": "kgHeader 头部图片"
+                },
+                "bgColor": {
+                    "type": "string",
+                    "@ChineseName": "kgHeader 头部区域背景色",
+                    "@Demo": "#b03c21",
+                    "description": "kgHeader 头部区域背景色"
+                },
+                "bgImg": {
+                    "type": "string",
+                    "@ChineseName": "kgHeader 头部背景图",
+                    "@Demo": "https://ss3.baidu.com/9fo3dSag_xI4khGko9WTAnF6hhy/super/pic/item/728da9773912b31b325384178d18367adab4e1d5.jpg",
+                    "description": "kgHeader 头部背景图"
+                },
+                "bg2": {
+                    "type": "string",
+                    "@ChineseName": "kgHeader 头部第二层背景图",
+                    "@Demo": "https://ss3.baidu.com/9fo3dSag_xI4khGko9WTAnF6hhy/super/pic/item/728da9773912b31b325384178d18367adab4e1d5.jpg",
+                    "description": "kgHeader 头部第二层背景图"
+                },
+                "color": {
+                    "type": "string",
+                    "@ChineseName": "kgHeader 头部字体颜色",
+                    "@Demo": "#f00",
+                    "description": "kgHeader 头部字体颜色"
+                },
+                "tabList": {
+                    "type": "array",
+                    "@ChineseName": "导航列表",
+                    "description": "导航列表",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "txt": {
+                                "type": "string",
+                                "@ChineseName": "导航文案",
+                                "@Demo": "概述",
+                                "description": "导航文案"
+                            },
+                            "url": {
+                                "type": "string",
+                                "@ChineseName": "导航跳转地址",
+                                "@Demo": "https://www.baidu.com",
+                                "description": "导航跳转地址"
+                            }
+                        }
+                    }
+                },
+                "tabColor": {
+                    "type": "string",
+                    "@ChineseName": "kgHeader 导航区字体颜色",
+                    "@Demo": "#f00",
+                    "description": "kgHeader 导航区字体颜色"
+                },
+                "tabBgColor": {
+                    "type": "string",
+                    "@ChineseName": "kgHeader 头部背景色",
+                    "@Demo": "#f00",
+                    "description": "kgHeader 头部背景色"
+                },
+                "feedbackColor": {
+                    "type": "object",
+                    "properties": {
+                        "header": {
+                            "type": "string",
+                            "@ChineseName": "头部点击态颜色",
+                            "@Demo": "rgba(225,225,225,0.08)",
+                            "description": "头部点击态颜色"
+                        },
+                        "tabs": {
+                            "type": "string",
+                            "@ChineseName": "导航区点击态颜色",
+                            "@Demo": "rgba(225,225,225,0.08)",
+                            "description": "导航区点击态颜色"
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "title",
+                "url",
+                "abstract",
+                "headerImg",
+                "bgColor",
+                "bgImg",
+                "bg2",
+                "color",
+                "tabList",
+                "tabColor",
+                "tabBgColor",
+                "feedbackColor"
+            ]
+        }
+    }
+}

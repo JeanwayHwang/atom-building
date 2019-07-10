@@ -1,0 +1,286 @@
+<template>
+    <div
+        :class="{
+            'c-error-page-black': black
+        }"
+        class="c-error-page"
+        data-module="c-ep"
+    >
+        <div
+            :class="{
+                searchcraft,
+                half
+            }"
+            class="content"
+        >
+            <!-- logo -->
+            <div
+                class="center"
+            >
+                <div
+                    a-if="logo === 'blank'"
+                    class="logo logo-blank"
+                />
+                <div
+                    a-else-if="logo === 'error'"
+                    class="logo logo-error"
+                />
+                <div
+                    a-else-if="logo === 'trouble'"
+                    class="logo logo-network"
+                />
+                <div
+                    a-else-if="logo === 'noContent'"
+                    class="logo logo-blank"
+                />
+                <div
+                    a-else-if="logo === 'network'"
+                    class="logo logo-network"
+                />
+                <div
+                    a-else-if="logo === 'noComment'"
+                    class="logo logo-noComment"
+                />
+            </div>
+            <!-- title -->
+            <c-line
+                a-if="title"
+                :class="
+                    searchcraft || half
+                        ? 'c-gap-inner-top'
+                        : 'c-gap-inner-top-large'
+                "
+                align="center"
+                class="c-font-medium c-color-gray-a"
+            >
+                {{ title }}
+            </c-line>
+            <!-- desc -->
+            <c-line
+                a-if="desc"
+                align="center"
+                class="c-font-normal c-color-gray-a"
+            >
+                {{ desc }}
+            </c-line>
+            <!-- btn -->
+            <c-row
+                a-if="hasBtn"
+                class="c-gap-inner-top-small c-gap-inner-bottom-large"
+            >
+                <c-span
+                    :col="4"
+                />
+                <c-span
+                    :col="4"
+                >
+                    <c-btn
+                        a-if="black"
+                        :style="[
+                            {
+                                'background-color': '#000',
+                                'color': '#666'
+                            },
+                            searchcraft
+                                ? {
+                                    'border-radius': '.2rem'
+                                }
+                                : {}
+                        ]"
+                        :text="btnText"
+                        type="primary"
+                    />
+                    <c-btn
+                        a-else
+                        :style="[
+                            searchcraft
+                                ? {
+                                    'border-radius': '.2rem'
+                                }
+                                : {}
+                        ]"
+                        :text="btnText"
+                        :url="btnUrl"
+                        @click="onClick"
+                    />
+                </c-span>
+                <c-span
+                    :col="4"
+                />
+            </c-row>
+            <!-- @slot 底部内容 -->
+            <slot name="c-error-page-bottom-slot"/>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * logo图片
+         *
+         * 全屏图片可选分别是
+         * 空白页（blank），页面出错（error），网络问题（trouble）
+         *
+         * 半屏可选分别是
+         * 暂无内容（noContent），暂无评论（noComment），网络问题（network）
+         */
+        logo: {
+            type: String,
+            default: 'blank'
+        },
+
+        /**
+         * 是否有按钮
+         */
+        hasBtn: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 按钮文案
+         */
+        btnText: String,
+
+        /**
+         * 单行文字标题
+         */
+        title: String,
+
+        /**
+         * 点击按钮的跳转链接
+         */
+        btnUrl: String,
+
+        /**
+         * 标题下的描述性文案
+         */
+        desc: String,
+
+        /**
+         * 是否为半屏
+         */
+        half: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 黑色背景下的外观
+         */
+        black: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 简搜下有特殊样式，通过ua判断，需各垂类在业务里完成
+         */
+        searchcraft: {
+            type: Boolean,
+            default: false
+        }
+    },
+    components: {
+        'c-btn': '../Button/Button',
+        'c-line': '../Line/Line',
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+<script>
+export default {
+    methods: {
+        onClick(e) {
+
+            /**
+             * 点击事件
+             *
+             * @event click
+             * @property {Event} param1 透传事件对象
+             */
+            this.$emit('click', e);
+        }
+    }
+};
+</script>
+
+<style scoped lang="less">
+.c-error-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 .17rem;
+    background-color: #fff;
+    height: 100%;
+
+    .center {
+        display: flex;
+        justify-content: center;
+    }
+    .logo {
+        width: 90px;
+        height: 90px;
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+    }
+    .logo-blank {
+        background-image: url(./asset/blank.svg);
+    }
+    .logo-error {
+        background-image: url(./asset/error.svg);
+    }
+    .logo-network {
+        background-image: url(./asset/network.svg);
+    }
+    .logo-noComment {
+        background-image: url(./asset/noComment.svg);
+    }
+    .half {
+        .logo {
+            width: 80px;
+            height: 80px;
+        }
+    }
+    .searchcraft {
+        .logo {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+        .logo-blank {
+            background-image: url(./asset/searchcraft_blank.png);
+        }
+        .logo-error {
+            background-image: url(./asset/searchcraft_error.png);
+        }
+        .logo-network {
+            background-image: url(./asset/searchcraft_trouble.png);
+        }
+    }
+}
+.c-error-page-black {
+    background-color: #000;
+    color: #666;
+    .logo {
+        color: #666;
+        opacity: .3;
+    }
+    .searchcraft {
+        .logo-blank {
+            background-image: url(./asset/searchcraft_blank_black.png);
+        }
+        .logo-error {
+            background-image: url(./asset/searchcraft_error_black.png);
+        }
+        .logo-network {
+            background-image: url(./asset/searchcraft_trouble_black.png);
+        }
+    }
+}
+</style>

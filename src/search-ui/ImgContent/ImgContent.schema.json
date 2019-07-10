@@ -1,0 +1,70 @@
+{
+    "alias": [
+        "c-img-content"
+    ],
+    "type": "object",
+    "properties": {
+        "imgContent": {
+            "type": "object",
+            "properties": {
+                "imgSrc": {
+                    "type": "string",
+                    "@ChineseName": "img 链接",
+                    "@Demo": "https://ss2.baidu.com/-vo3dSag_xI4khGko9WTAnF6hhy/image/awhcrop%3D250%2C250/sign=70495b0d1b3853439a85da72e17cc043/c995d143ad4bd11336931f5351afa40f4bfb0570.jpg",
+                    "description": "img 链接"
+                },
+                "imgUrl": {
+                    "type": "string",
+                    "@ChineseName": "图片跳转链接",
+                    "@Demo": "https://img.baidu.com/search?img=xxx",
+                    "description": "点击图片的跳转链接"
+                },
+                "imgHackWhiteStroke": {
+                    "type": "boolean",
+                    "@ChineseName": "是否添加默认的白边遮罩",
+                    "@Demo": false,
+                    "description": "图片是否添加默认的白边遮罩"
+                },
+                "imgShowNum": {
+                    "type": "string",
+                    "@ChineseName": "胶囊遮罩显示的文案",
+                    "@Demo": "",
+                    "description": "胶囊遮罩显示的文案"
+                },
+                "imgIconType": {
+                    "type": "string",
+                    "@ChineseName": "胶囊遮罩文案前的图标名称",
+                    "@Demo": "",
+                    "description": "胶囊遮罩文案前的图标名称"
+                },
+                "imgIsRound": {
+                    "type": "boolean",
+                    "@ChineseName": "是否是圆形图片",
+                    "@Demo": false,
+                    "description": "图片是圆形"
+                },
+                "imgCol": {
+                    "type": "number",
+                    "@ChineseName": "图片所占的栅格宽度",
+                    "@Demo": 4,
+                    "description": "图片所占的栅格宽度"
+                },
+                "isVerticalMiddle": {
+                    "type": "boolean",
+                    "@ChineseName": "右侧内容是否上下居中",
+                    "@Demo": false,
+                    "description": "右侧内容是否上下居中"
+                },
+                "defaultImageType": {
+                    "type": "string",
+                    "@ChineseName": "缺省图以及加载图的类型",
+                    "@Demo": "",
+                    "description": "缺省图以及加载图的类型"
+                }
+            },
+            "propsData": [
+                "imgSrc"
+            ]
+        }
+    }
+}

@@ -1,0 +1,898 @@
+<template>
+    <div>
+        <!-- 如果限制图片比例的话，需要在最外层也增加一个 padding-bottom 的高度限制，避免一些 iOS 的浏览器第一次加载时出现的图片撑开最外层元素，影响页面展现的问题 -->
+        <section
+            ref="carousel"
+            :style="[
+                imgType !== 'auto'
+                    ? {
+                        height: '0'
+                    }
+                    : {}
+            ]"
+            :class="[
+                imgType !== 'auto'
+                    ? 'c-img-' + imgType
+                    : ''
+            ]"
+            data-module="c-cs"
+            class="carousel"
+            @touchstart="handleTouchStart"
+            @touchmove="handleTouchMove"
+            @touchend="handleTouchEnd"
+        >
+            <!-- 轮播栏 -->
+            <!-- 硬件加速回导致在一些 iOS 和 Android 的设备上闪屏 -->
+            <div
+                ref="carouselLayout"
+                :style="[
+                    {
+                        '-webkit-transform': 'translateX(' + disX + 'px) scale(1)',
+                        'transform': 'translateX(' + disX + 'px) scale(1)'
+                    },
+                    alignItems
+                        ? {
+                            'align-items': alignItems
+                        }
+                        : {},
+                    height
+                        ? {
+                            height
+                        }
+                        : {}
+                ]"
+                :class="[
+                    isTransition
+                        ? $style.carouselLayoutTransition
+                        : ''
+                ]"
+                class="carousel-layout"
+                role="listbox"
+            >
+                <!-- list -->
+                <c-link
+                    a-for="(item, index) in listData"
+                    :key="index"
+                    :url="item.url"
+                    :params="item.params"
+                    :style="[
+                        {
+                            'background-size': backgroundSize
+                        },
+                        height
+                            ? {
+                                'background-image': 'url(' + item.imgSrc + ')'
+                            }
+                            : {}
+                    ]"
+                    class="carousel-img-item"
+                    role="option"
+                    @click="handleImgItemClick(
+                        {
+                            item,
+                            index
+                        },
+                        $event
+                    )"
+                >
+                    <c-img
+                        :src="height
+                            ? ''
+                            : item.imgSrc
+                        "
+                        :type="imgType"
+                        :border-radius="{
+                            tl: false,
+                            tr: false,
+                            bl: false,
+                            br: false
+                        }"
+                        :is-show-default-image="false"
+                        class="img c-gap-top-zero c-gap-bottom-zero"
+                    />
+                </c-link>
+            </div>
+            <!-- 底部栏 -->
+            <div
+                :class="[
+                    title
+                        ? $style.bottomLayoutShadow
+                        : ''
+                ]"
+                class="bottom-layout"
+            >
+                <!-- 这里的 wrapper 是为了能相对定位 -->
+                <div
+                    :class="[
+                        title ? '' : $style.bottomLayoutWrapperCenter
+                    ]"
+                    class="bottom-layout-wrapper"
+                >
+                    <!-- 标题；这里需要根据指示器的数量进行计算；指示器宽度为 6px；指示器间距为 5px -->
+                    <div
+                        a-if="title"
+                        ref="title"
+                        :style="{
+                            'opacity': 1,
+                            'padding-right': 17 + num * 6 + (num - 1) * 5 + 'px'
+                        }"
+                        class="title c-line-clamp1"
+                    >
+                        {{ title }}
+                    </div>
+                    <!-- 指示器 -->
+                    <c-indicator
+                        a-if="showIndicator && num <= 5 && !dotIndicatorOpt.outside"
+                        :color="dotIndicatorOpt.color"
+                        :selected-color="dotIndicatorOpt.selectedColor"
+                        :shadow="dotIndicatorOpt.shadow"
+                        :length="num"
+                        :cur-index="indicatorActiveIndex - 1"
+                        :class="[
+                            title
+                                ? ''
+                                : $style.indicatorNoTitle,
+                            indicatorAlign === 'right'
+                                ? $style.indicatorRight
+                                : ''
+                        ]"
+                        class="indicator"
+                    />
+                </div>
+            </div>
+            <!-- 胶囊 -->
+            <c-image-mask
+                a-if="(!title && num > 5) || numberIndicatorOpt.show"
+                :text="indicatorActiveIndex + '/' + num"
+                :style="{
+                    top: numberIndicatorOpt.top,
+                    bottom: numberIndicatorOpt.bottom,
+                    left: numberIndicatorOpt.left,
+                    right: numberIndicatorOpt.right
+                }"
+                type="pills"
+                class="indicator-pill"
+            />
+            <!-- @slot mask -->
+            <slot name="mask"/>
+        </section>
+        <!-- 底部指示器 -->
+        <div
+            a-if="dotIndicatorOpt.outside"
+            class="bottom-row"
+        >
+            <c-indicator
+                :length="num"
+                :cur-index="indicatorActiveIndex - 1"
+                :color="dotIndicatorOpt.color"
+                :selected-color="dotIndicatorOpt.selectedColor"
+                :shadow="dotIndicatorOpt.shadow"
+            />
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 数据列表
+         *
+         * @property {string} imgSrc 图片路径
+         * @property {string} url 跳转链接
+         * @property {string} params 跳转链接所需参数，可参考[Link](./Link#API)
+         */
+        list: Array,
+
+        /**
+         * 标题的文案；传标题属性后，会有底部蒙层；有标题的样式最多5张图片
+         */
+        title: String,
+
+        /**
+         * 动画时间
+         */
+        animationTime: {
+            type: Number,
+            default: 300
+        },
+
+        /**
+         * 自动播放
+         *
+         * @property {number} delay 自动播放的延迟时间；默认为 3000，单位为毫秒
+         */
+        autoplay: [Object, Boolean],
+
+        /**
+         * 是否循环
+         */
+        loop: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 背景图片填充方式
+         */
+        backgroundSize: {
+            type: String,
+            default: 'cover'
+        },
+
+        /**
+         * 图片类型
+         */
+        imgType: {
+            type: String,
+            default: 'auto'
+        },
+
+        /**
+         * 指示器位置
+         */
+        indicatorAlign: {
+            type: String,
+            default: 'center'
+        },
+
+        /**
+         * 是否显示指示器
+         */
+        showIndicator: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 是否同步渲染所有图片
+         */
+        syncRenderAll: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 垂直对齐位置(具体值请参考 flex align-items 属性)
+         */
+        alignItems: String,
+
+        /**
+         * 指定高度
+         */
+        height: {
+            type: String
+        },
+
+        /**
+         * 数字指示器配置
+         *
+         * @property {boolean} show 是否显示
+         * @property {string} top 距离上侧的距离
+         * @property {string} bottom 距离下侧的距离
+         * @property {string} left 距离左侧的距离
+         * @property {string} right 距离右侧的距离
+         */
+        numberIndicatorOpt: {
+            type: Object,
+            default: {
+                right: '.03rem',
+                bottom: '.05rem'
+            }
+        },
+
+        /**
+         * 圆点指示器配置
+         *
+         * @property {boolean} outside 是否在轮播外
+         * @property {string} color 颜色
+         * @property {string} selectedColor 选中的颜色
+         */
+        dotIndicatorOpt: {
+            type: Object,
+            default: {
+                color: '#c8c8c8',
+                selectedColor: '#fff'
+            }
+        },
+
+        /**
+         * 速度阈值；速度超过这个会直接滑动，速度小于这个会判断如果滑动距离大于屏幕距离的一半再滑动
+         * 90 / 380 = 0.236
+         */
+        speedThreshold: {
+            type: Number,
+            default: 0.23
+        }
+
+    },
+    data: {
+        // 因为会对 list 的数据进行操作，所以需要放在 data 里
+        // 为了优化首屏性能，所以在首屏时只放第一条的数据，并提供这种优化方式的开关
+        listData: syncRenderAll
+            ? list
+            : (list && list[0]
+                ? [list[0]]
+                : []
+            ),
+        // 当前轮播项的索引
+        activeIndex: 1,
+        // 指示器当前轮播项的索引，这里是为了解决在大于最大值或者小于0时索引也会触发视图更新，导致显示 7/6 这种的问题
+        indicatorActiveIndex: 1,
+        // 因为在 mounted 里会添加两个额外的 dom，所以需要记录原始长度
+        originNum: 0,
+        // 动画开关
+        isTransition: false,
+        // 轮播图宽度
+        width: 0,
+        // 开始位置
+        startX: 0,
+        startY: 0,
+        // 滑动时距离浏览器左/上侧实时距离
+        moveX: 0,
+        moveY: 0,
+        // 手指实时偏移距离
+        disX: 0,
+        disY: 0,
+        // 滑动保护
+        slideProtect: false,
+        // 滑动保护延时执行句柄
+        slideProtectTimeout: null,
+        // 修复循环的延时执行句柄
+        fixLoopTimeout: null,
+        // 自动播放数据
+        autoplayData: {
+            // 轮询器
+            interval: null,
+            // 延迟时间
+            delay: autoplay && autoplay.delay ? autoplay.delay : 2500
+        },
+        touchStartTime: 0,
+        touchEndTime: 0,
+        touchDuration: 0,
+        speed: 0,
+        distance: 0,
+        halfScreenWidth: 0
+    },
+    components: {
+        'c-link': '../Link/Link',
+        'c-img': '../Image/Image',
+        'c-image-mask': '../Image/ImageMask',
+        'c-indicator': './Indicator'
+    }
+}
+</script>
+
+<script>
+// dom 操作
+import {
+    getScreenWidth
+} from '../util/domUtil';
+
+export default {
+    mounted() {
+        this.halfScreenWidth = getScreenWidth() / 2;
+        // 初始化
+        this.init();
+        this.resume();
+    },
+    activated() {
+        this.resume();
+    },
+    deactivated() {
+        this.stop();
+    },
+    beforeDestory() {
+        this.stop();
+    },
+    methods: {
+        resume() {
+            // 自动轮播
+            this.setAutoPlayInterval();
+            // 横竖屏变化监听
+            // 媒体查询 js api；参考：https://developer.mozilla.org/zh-CN/docs/Web/API/Window/matchMedia, https://aotu.io/notes/2017/01/31/detect-orientation/index.html, https://caniuse.com/#search=matchmedia
+            this.mediaQueryList = window.matchMedia('(orientation: portrait)');
+            this.mediaQueryList.addListener(this.mediaQueryOrientationListener);
+        },
+        stop() {
+            // 移除自动轮播
+            this.clearAutoPlayInterval();
+            // 移除横竖屏变化监听
+            this.mediaQueryList.removeListener(this.mediaQueryOrientationListener);
+        },
+        // 横竖屏监听
+        mediaQueryOrientationListener(mediaQueryList) {
+            if (mediaQueryList.matches) {
+                // 竖屏
+            }
+            else {
+                // 横屏
+            }
+            // 重新计算横滑的宽度；这里的延迟是为了计算出准确的翻转手机后的 width
+            // 这里有测试 vm.$nextTick 和 setTimeout(fn,0) 都会有问题，所以加了延时和动效
+            setTimeout(() => {
+                this.isTransition = true;
+                this.width = this.$refs.carousel.offsetWidth;
+                this.disX = -this.activeIndex * this.width;
+            }, 500);
+        },
+        // 初始化
+        init() {
+            // 深复制数组
+            this.listData = JSON.parse(JSON.stringify(this.list));
+            // 计算原始长度
+            if (!this.originNum) {
+                // 列表类型
+                if (this.list) {
+                    this.originNum = this.list.length;
+                }
+            }
+            // 计算横滑的宽度
+            this.width = this.$refs.carousel.offsetWidth;
+            // 如果需要循环
+            if (this.loop) {
+                // 当 listData 存在时并且数据大于 0 时，并且长度和原始长度相同时；将头和尾重新拼接
+                if (this.listData && this.listData.length > 0 && this.listData.length === this.originNum) {
+                    let firstItem = Object.assign(this.listData[0]);
+                    let lastItem = Object.assign(this.listData[this.num - 1]);
+                    this.listData.push(firstItem);
+                    this.listData.unshift(lastItem);
+                }
+                // 设置初始偏移距离
+                this.disX = -this.width;
+                // 修改索引为默认索引再 + 1
+                this.activeIndex = 1;
+                // 设置指示器的索引
+                this.indicatorActiveIndex = 1;
+            }
+            else {
+                // 设置初始偏移距离
+                this.disX = 0;
+                // 修改索引为默认索引
+                this.activeIndex = 0;
+                // 设置指示器的索引；因为不循环头和尾就没有多出来的一个元素了，所以 indicatorActiveIndex 需要比 activeIndex 大 1
+                this.indicatorActiveIndex = 1;
+            }
+        },
+        handleTouchStart(e) {
+            // 滑动保护
+            if (this.slideProtect) {
+                return;
+            }
+            // 清除自动播放
+            this.clearAutoPlayInterval();
+            e = e || event;
+            // tounches 类数组，等于1时表示此时有只有一只手指在触摸屏幕
+            if (e.changedTouches.length !== 1) {
+                return;
+            }
+            this.touchStartTime = new Date().getTime();
+            // 注意 timeout
+            if (this.fixLoopTimeout) {
+                clearTimeout(this.fixLoopTimeout);
+                this.fixLoopTimeout = null;
+            }
+            // 记录开始位置
+            this.startX = e.touches[0].clientX;
+            this.startY = e.touches[0].clientY;
+        },
+        handleTouchMove(e) {
+            // 滑动保护
+            if (this.slideProtect) {
+                e.cancelable && e.preventDefault();
+                e.stopPropagation();
+                return true;
+            }
+            e = e || event;
+            // tounches 类数组，等于1时表示此时有只有一只手指在触摸屏幕
+            if (e.changedTouches.length !== 1) {
+                return true;
+            }
+            // 滑动时距离浏览器左侧实时距离
+            this.moveX = e.touches[0].clientX;
+            this.moveY = e.touches[0].clientY;
+            // 起始位置减去 实时的滑动的距离，得到手指实时偏移距离
+            let disX = this.moveX - this.startX;
+            let disY = this.moveY - this.startY;
+
+            // 增加不循环时对手势的判断
+            if (this.noLoopTouchJudgement(disX)) {
+                return true;
+            }
+
+            // 每次滑动的时候都计算方向
+            let direction = this.getDirection(disX, disY);
+            // 水平滑动时阻止点击事件透传
+            if (direction === 3 || direction === 4) {
+                e.cancelable && e.preventDefault();
+                e.stopPropagation();
+                // 水平才滑动
+                if (this.isTransition) {
+                    this.isTransition = false;
+                }
+                this.disX = disX - this.activeIndex * this.width;
+            }
+            return true;
+        },
+        handleTouchEnd(e) {
+            // 滑动保护
+            if (this.slideProtect) {
+                return;
+            }
+            // 设置自动播放
+            this.setAutoPlayInterval();
+            this.isTransition = true;
+            e = e || event;
+            // tounches 类数组，等于1时表示此时有只有一只手指在触摸屏幕
+            if (e.changedTouches.length !== 1) {
+                return;
+            }
+
+            // 计算出持续时间
+            this.touchEndTime = new Date().getTime();
+            this.touchDuration = this.touchEndTime - this.touchStartTime;
+
+            this.endX = e.changedTouches[0].clientX;
+            this.endY = e.changedTouches[0].clientY;
+            let disX = this.endX - this.startX;
+            let disY = this.endY - this.startY;
+
+            // 增加不循环时对手势的判断
+            if (this.noLoopTouchJudgement(disX)) {
+                return true;
+            }
+
+            this.disX = disX;
+            this.disY = disY;
+
+            this.distance = disX;
+
+            // 计算出速度
+            this.speed = Math.abs(this.disX / this.touchDuration);
+
+            // 速度达到标准直接滑动
+            if (this.speed >= this.speedThreshold) {
+                this.move();
+            }
+            // 速度没达到标准需要滑动距离大于屏幕宽度的一半才能滑动
+            else if (Math.abs(this.disX) > getScreenWidth() / 2) {
+                this.move();
+            }
+            this.disX = -this.activeIndex * this.width;
+            // 打开动画保护
+            this.slideProtect = true;
+            if (this.slideProtectTimeout) {
+                clearTimeout(this.slideProtectTimeout);
+                this.slideProtectTimeout = null;
+            }
+            // 延迟动画时间清除滑动保护
+            this.slideProtectTimeout = setTimeout(() => {
+                this.slideProtect = false;
+            }, this.animationTime);
+        },
+        // 移动
+        move() {
+            // 往左移
+            if (this.disX > 0) {
+                this.activeIndex -= 1;
+                // 如果等于0 并且 是循环
+                if (this.activeIndex === 0 && this.loop) {
+                    // 设置指示器的索引为总数
+                    this.indicatorActiveIndex = this.num + this.activeIndex;
+                }
+                // 如果不等于0
+                else {
+                    // 如果循环
+                    if (this.loop) {
+                        // 设置指示器的索引为当前索引
+                        this.indicatorActiveIndex = this.activeIndex;
+                    }
+                    // 如果不循环
+                    else {
+                        // 设置指示器的索引为当前索引+1
+                        this.indicatorActiveIndex = this.activeIndex + 1;
+                    }
+                }
+            }
+            // 往右移
+            else {
+                this.activeIndex += 1;
+                // 如果超出最大数量 并且 是循环
+                if (this.activeIndex === this.num + 1 && this.loop) {
+                    // 设置指示器的索引
+                    this.indicatorActiveIndex = this.activeIndex - this.num;
+                }
+                else {
+                    // 如果循环
+                    if (this.loop) {
+                        // 设置指示器的索引
+                        this.indicatorActiveIndex = this.activeIndex;
+                    }
+                    // 如果不循环
+                    else {
+                        // 设置指示器的索引为当前索引+1
+                        this.indicatorActiveIndex = this.activeIndex + 1;
+                    }
+                }
+            }
+            // 触发事件
+            this.emitChange();
+        },
+        // 不循环时对手势的判断
+        noLoopTouchJudgement(disX) {
+            // 如果不循环
+            if (!this.loop) {
+                // 如果 dix 为负（代表往右划）并且 当前划动项的索引+1后与原始长度相等
+                if (disX < 0 && this.activeIndex + 1 === this.originNum) {
+                    // 直接返回
+                    return true;
+                }
+                // 如果 dix 为正（代表往左划）并且 当前划动项的索引为0
+                if (disX > 0 && this.activeIndex === 0) {
+                    // 直接返回
+                    return true;
+                }
+            }
+            // 不直接 return
+            return false;
+        },
+        // 根据起点终点返回方向 1向上 2向下 3向左 4向右 0未滑动
+        getDirection(angx, angy) {
+            let result = 0;
+            // 如果滑动距离太短
+            if (Math.abs(angx) < 2 && Math.abs(angy) < 2) {
+                return result;
+            }
+            let angle = this.getAngle(angx, angy);
+            if (angle >= -135 && angle <= -45) {
+                result = 1;
+            }
+            else if (angle > 45 && angle < 135) {
+                result = 2;
+            }
+            else if ((angle >= 135 && angle <= 180) || (angle >= -180 && angle < -135)) {
+                result = 3;
+            }
+            else if (angle >= -45 && angle <= 45) {
+                result = 4;
+            }
+            return result;
+        },
+        // 获得角度
+        getAngle(angx, angy) {
+            return Math.atan2(angy, angx) * 180 / Math.PI;
+        },
+        // 修复循环
+        fixLoop() {
+            // 第 0 个，即为在左侧对最后一个的补全
+            if (this.activeIndex === 0) {
+                // 动画时间过后
+                this.fixLoopTimeout = setTimeout(() => {
+                    // 关闭动画
+                    this.isTransition = false;
+                    // 设置 activeIndex 为实际的 index
+                    this.activeIndex = this.num;
+                    // 改变 translate 的距离
+                    this.disX = -this.activeIndex * this.width;
+                }, this.animationTime);
+            }
+            // 第 num + 1 个，即为在右侧对第一个的补全
+            else if (this.activeIndex === this.num + 1) {
+                // 动画时间过后
+                setTimeout(() => {
+                    // 关闭动画
+                    this.isTransition = false;
+                    // 设置 activeIndex 为实际的 index
+                    this.activeIndex = this.activeIndex - this.num;
+                    // 改变 translate 的距离
+                    this.disX = -this.activeIndex * this.width;
+                }, this.animationTime);
+            }
+        },
+        // 图片项点击事件
+        handleImgItemClick(obj, e) {
+
+            /**
+             * 点击图片项时候触发
+             *
+             * @event imgitemclick
+             * @property {object} param1 选中信息
+             * @property {object} param1.item 为选中的图片项的参数，同 `list`
+             * @property {number} param1.index 选中的图片项的索引
+             * @property {Event} param2 透传点击事件对象
+             */
+            this.$emit('imgitemclick', obj, e);
+        },
+        // 设置自动播放 interval
+        setAutoPlayInterval() {
+            // 如果不是自动播放
+            if (!this.autoplay) {
+                return;
+            }
+            // 如果不是循环
+            if (!this.loop) {
+                return;
+            }
+            // 在设置前要清空
+            if (this.autoplayData.interval) {
+                clearInterval(this.autoplayData.interval);
+                this.autoplayData.interval = null;
+            }
+            // 设置轮询器
+            this.autoplayData.interval = setInterval(() => {
+                this.activeIndex++;
+                // 如果超出最大数量
+                if (this.activeIndex === this.num + 1) {
+                    // 设置指示器的索引
+                    this.indicatorActiveIndex = this.activeIndex - this.num;
+                }
+                else {
+                    // 设置指示器的索引
+                    this.indicatorActiveIndex = this.activeIndex;
+                }
+                // 开启动效
+                this.isTransition = true;
+                // 设置 X
+                this.disX = -this.activeIndex * this.width;
+                // 触发事件
+                this.emitChange();
+            }, this.autoplayData.delay);
+        },
+        // 清除自动播放 interval
+        clearAutoPlayInterval() {
+            if (this.autoplayData.interval) {
+                clearInterval(this.autoplayData.interval);
+                this.autoplayData.interval = null;
+            }
+        },
+        // 触发改变事件
+        emitChange() {
+            let index = this.activeIndex - 1;
+            if (index < 0) {
+                index = this.originNum + index;
+            }
+            else if (index >= this.originNum) {
+                index = this.originNum - index;
+            }
+
+            /**
+             * 轮播改变的时候触发
+             *
+             * @event change
+             * @property {object} param1
+             * @property {Event} param1.current 当前轮播项的索引
+             */
+            this.$emit('change', {
+                current: index
+            });
+        }
+    },
+    computed: {
+        num() {
+            // 如果已经有了原始 num，直接使用原始 num
+            if (this.originNum) {
+                return this.originNum;
+            }
+            // 如果还没有，则进行计算
+            let num = 0;
+            if (this.$slots.default) {
+                let vnodes = this.$slots.default;
+                num = vnodes.length;
+            }
+            else if (this.list) {
+                num = this.list.length;
+            }
+            return num;
+        }
+    },
+    watch: {
+        activeIndex(newVal, oldVal) {
+            // 修复循环
+            this.loop && this.fixLoop();
+        }
+    }
+};
+</script>
+
+<script type="php">
+function computed_num($ctx) {
+    return
+        isset($ctx->slots['default'])
+        ? count($ctx->slots['default'])
+        : (empty($ctx->_d['list'])
+            ? 0
+            : count($ctx->_d['list']));
+}
+</script>
+
+<style lang="less" module>
+.carousel {
+    position: relative;
+    overflow: hidden;
+    line-height: 0;
+    z-index: 1;
+}
+.carousel-layout {
+    display: flex;
+    // 强制不换行
+    white-space: nowrap;
+}
+// 图片项
+.carousel-img-item {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: 100%;
+    height: 100%;
+    background: no-repeat center;
+    background-size: cover;
+    vertical-align: top;
+    opacity: 1;
+    z-index: 1;
+    .img {
+        width: 100%;
+    }
+    // 以下代码在 iOS 11.2.6 的手百上会出现自动加载白屏的问题；所以使用 opacity: 1; z-index: 1; 代替
+    // 将滚动区域可视范围的列表项item元素缓存起来；避免 iOS 闪屏；http://www.cnblogs.com/gaoxue/p/3753734.html
+    // -webkit-transform: translate3d(0, 0, 0);
+    //         transform: translate3d(0, 0, 0);
+}
+.carousel-layout-transition {
+    transition: all .38s cubic-bezier(.2, 0, .2, 1);
+
+}
+.bottom-layout {
+    position: absolute;
+    bottom: 0;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    padding-left: .17rem;
+    padding-right: .08rem;
+    height: 38px;
+    width: 100%;
+    line-height: 24px;
+    box-sizing: border-box;
+}
+.bottom-layout-shadow {
+    background: -prefix-linear-zgradient(top, rgba(0, 0, 0, 0), rgba(0, 0, 0, .5));
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, .5));
+}
+.bottom-layout-wrapper {
+    position: relative;
+    display: flex;
+    height: 100%;
+}
+.bottom-layout-wrapper-center {
+    justify-content: center;
+}
+.title {
+    color: #fff;
+}
+.indicator {
+    position: absolute;
+    right: 0;
+    white-space: nowrap;
+    text-align: center;
+    user-select: none;
+}
+.indicator-no-title {
+    position: static;
+    line-height: 26px;
+}
+.indicator-right {
+    position: absolute;
+    width: auto;
+    right: 0;
+}
+.indicator-pill {
+    position: absolute;
+    user-select: none;
+}
+.indicator-item-selected {
+    background-color: #fff;
+}
+.bottom-row {
+    display: flex;
+    justify-content: center;
+}
+</style>

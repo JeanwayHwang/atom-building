@@ -1,0 +1,274 @@
+<!-- @ignore -->
+<template>
+    <div class="multi">
+        <div class="header-wrapper c-line-bottom" @touchmove.prevent>
+            <c-row class="header">
+                <!-- 占位 -->
+                <c-span
+                    a-if="titleAlign === 'center'"
+                    col="3"
+                    class="all-wrapper c-span-middle WA_LOG_BTN"
+                    @click.native="handleSelectAllBtnClick"
+                >
+                    {{ leftText }}
+                </c-span>
+                <!-- 标题 -->
+                <c-span :col="titleAlign === 'center' ? '6' : '9'">
+                    <div class="title">
+                        <div class="header-middle">
+                            <!-- 主标题 -->
+                            <c-line
+                                :align="titleAlign === 'center' ? 'center' : 'left'"
+                                class="c-title c-color-link"
+                                clamp="1"
+                            >
+                                {{ title }}
+                            </c-line>
+                        </div>
+                    </div>
+                </c-span>
+                <!-- 关闭按钮 -->
+                <c-span
+                    class="close-wrapper c-span-middle WA_LOG_BTN"
+                    col="3"
+                    role="button"
+                    aria-label="关闭"
+                    @click.native="handleConfirmBtnClick"
+                >
+                    {{ rightText }}
+                </c-span>
+            </c-row>
+        </div>
+        <div
+            ref="list"
+            class="list"
+            @touchstart="handleTouchStart"
+            @touchmove="handleTouchMove"
+        >
+            <div
+                a-for="(item, idx) in data"
+                :key="idx"
+                class="item-wrapper c-line-bottom"
+            >
+                <c-row
+                    :class="[
+                        idx === myIdx ? $style.selected : '',
+                        idx === myIdx ? 'c-color-link' : ''
+                    ]"
+                    :aria-checked="isSelected(idx)"
+                    class="item WA_LOG_BTN c-gap-inner-top-large c-gap-inner-bottom-large c-color"
+                    @click.native="changeItem(idx, item)"
+                >
+                    <c-span col="11">
+                        <c-line clamp="1">
+                            {{ item.text }}
+                        </c-line>
+                    </c-span>
+                    <c-span
+                        col="1"
+                        class="icon-wrapper"
+                    >
+                        <c-icon
+                            a-if="isSelected(idx)"
+                            class="icon-check"
+                            type="check"
+                        />
+                    </c-span>
+                </c-row>
+            </div>
+        </div>
+    </div>
+</template>
+<script type="config">
+{
+    props: {
+        title: String,
+        data: Array,
+        selectedIdxes: Array,
+        leftText: String,
+        rightText: String,
+        titleAlign: {
+            type: String,
+            default: 'center'
+        }
+    },
+    data: {
+        idxArr: selectedIdxes
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-line': '../Line/Line',
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+<script>
+export default {
+    methods: {
+        handleConfirmBtnClick() {
+            let arr = [];
+            for (let i = 0; i < this.idxArr.length; i++) {
+                arr[i] = this.idxArr[i];
+            }
+            this.$emit('select', this.copyArr(this.idxArr));
+        },
+        handleSelectAllBtnClick() {
+            this.idxArr = this.copyArr(this.idxArr);
+            for (let i = 0; i < this.data.length; i++) {
+                if (!(this.idxArr.indexOf(i) + 1)) {
+                    this.idxArr.push(i);
+                }
+            }
+        },
+        changeItem(idx, item) {
+            this.idxArr = this.copyArr(this.idxArr);
+            let idxOf = this.idxArr.indexOf(idx);
+            if (idxOf + 1) {
+                this.idxArr.splice(idxOf, 1);
+            }
+            else {
+                this.idxArr.push(idx);
+            }
+        },
+        isSelected(idx) {
+            return this.idxArr.indexOf(idx) + 1;
+        },
+        // 开始触摸
+        handleTouchStart(e) {
+            this.startY = e.touches[0].clientY;
+        },
+        handleTouchMove(e) {
+            let status = '11';
+            const ele = this.$refs.list;
+            const currentY = e.touches[0].clientY;
+            if (ele.scrollTop === 0) {
+                // 如果内容小于容器则同时禁止上下滚动
+                status = ele.offsetHeight >= ele.scrollHeight ? '00' : '01';
+            }
+            else if (ele.scrollTop + ele.offsetHeight + 1 >= ele.scrollHeight) {
+                // 已经滚到底部了只能向上滚动
+                status = '10';
+            }
+            if (status !== '11') {
+                // 判断当前的滚动方向
+                const direction = currentY - this.startY > 0 ? '10' : '01';
+                // 操作方向和当前允许状态求与运算，运算结果为0，就说明不允许该方向滚动，则禁止默认事件，阻止滚动
+                if (!(parseInt(status, 2) & parseInt(direction, 2))) {
+                    e.preventDefault();
+                }
+            }
+        },
+        copyArr(arr) {
+            let newArr = [];
+            for (let i = 0; i < arr.length; i++) {
+                newArr[i] = arr[i];
+            }
+            return newArr;
+        }
+    }
+};
+</script>
+<style lang="less" module>
+.multi {
+    position: fixed;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    // 最大7行半
+    max-height: 4.155rem;
+    min-height: 1.67rem;
+    background-color: #fff;
+    z-index: 502;
+    margin: 0;
+    overflow: hidden;
+    border-top-left-radius: 13px;
+    border-top-right-radius: 13px;
+    .header-wrapper {
+        padding: 0 .17rem;
+        position: relative;
+        box-sizing: border-box;
+    }
+    .header {
+        .title {
+            height: .58rem;
+        }
+        .all-wrapper {
+            text-align: left;
+            cursor: pointer;
+        }
+        .header-middle {
+            position: relative;
+            transform: translateY(-50%);
+            top: 50%;
+            margin-top: .5px;
+        }
+        .close-wrapper {
+            text-align: right;
+            cursor: pointer;
+        }
+    }
+    .list {
+        position: relative;
+        -webkit-box-flex: 1;
+            -webkit-flex: 1;
+                    flex: 1;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        .item-wrapper {
+            padding-left: .17rem;
+            padding-right: .17rem;
+        }
+        .item {
+            .icon-wrapper {
+                position: relative;
+                height: 18px;
+                width: 18px;
+                max-height: 18px;
+                max-width: 18px;
+                text-align: center;
+                border: 1px solid #ddd;
+                padding: 0;
+                margin: 3px 4px;
+                border-radius: 2px;
+                .icon-check {
+                    display: inline-block;
+                    font-weight: normal;
+                    font-size: 16px;
+                    line-height: 16px;
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                }
+            }
+            &:last-child {
+                border-bottom: none;
+            }
+        }
+        .selected {
+            font-weight: bold;
+        }
+    }
+}
+// 根据 pmd rem 比例进行缩放，7行半
+@media screen and (max-width: 360px) {
+    .multi {
+        max-height: 391.19px;
+    }
+}
+// 针对小屏手机，比如 iphone4 进行高度限制
+@media screen and (max-height: 480px) {
+    .multi {
+        max-height: 70%;
+    }
+}
+// 横屏的时候不能使用 7行半，要使用 70%
+@media screen and (orientation:landscape) {
+    .multi {
+        max-height: 70%;
+    }
+}
+</style>

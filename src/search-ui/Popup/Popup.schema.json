@@ -1,0 +1,31 @@
+{
+    "alias": [
+        "c-popup"
+    ],
+    "type": "object",
+    "properties": {
+        "popup": {
+            "type": "object",
+            "@ChineseName": "popup 组件实例",
+            "description": "popup 组件实例，popup的基础相关数据",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "popup 标题",
+                    "@Demo": "标题",
+                    "description": "popup 标题"
+                },
+                "subtitle": {
+                    "type": "string",
+                    "@ChineseName": "popup 副标题",
+                    "@Demo": "副标题",
+                    "description": "popup 副标题"
+                }
+            },
+            "propsData": [
+                "title",
+                "subtitle"
+            ]
+        }
+    }
+}

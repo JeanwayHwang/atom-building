@@ -1,0 +1,303 @@
+<template>
+    <div class="c-filter-multi-dom">
+        <div class="c-filter-multi-content">
+            <div class="c-filter-multi-list" a-for="(vals, index) in dataSel.values">
+                <div class="c-gap-top-large c-gap-bottom">
+                    <c-row><c-span>{{vals.text}}</c-span></c-row>
+                </div>
+                <c-rangeInput a-if = "vals.subCate.type === 'rangeInput'" ref="rangeInput" :rangeInput="vals.subCate" />
+                <template a-else>
+
+                    <c-row a-for="i in math_ceil(vals.subCate.values.length / cols)" :class="['c-gap-top', {'c-filter-multi-row-none': vals.subCate.spreadLevel && vals.subCate.defShowNum < vals.subCate.values.length && (i > vals.subCate.defShowNum / vals.subCate.defShowNum)}]">
+                        <c-span a-for="j in cols" a-if="(i-1)*cols+(j-1) < vals.subCate.values.length">
+                            <div :class="['c-filter-multi-list-item', {'c-filter-multi-list-item-selected' : vals.subCate.values[(i-1)*cols+(j-1)].selected && vals.subCate.values[(i-1)*cols+(j-1)].selected === true}]"
+                            @click="changeSelList(index, vals.subCate.values[(i-1)*cols+(j-1)].value,(i-1)*cols+(j-1), vals.subCate.type)">
+                                <div class="WA_LOG_BTN c-line-clamp1">{{vals.subCate.values[(i-1)*cols+(j-1)].text}}</div>
+                                <div class="c-filter-multi-list-item-angle" a-if="vals.subCate.values[(i-1)*cols+(j-1)].selected && vals.subCate.values[(i-1)*cols+(j-1)].selected === true"></div>
+                                <span class="c-filter-multi-list-item-icon" a-if="vals.subCate.values[(i-1)*cols+(j-1)].selected && vals.subCate.values[(i-1)*cols+(j-1)].selected === true"><i class="c-icon c-filter-multi-list-item-angle-icon">&#xe608</i></span>
+                            </div>
+                        </c-span>
+                        <c-span a-else></c-span>
+                    </c-row>
+                    <c-spread
+                        class="c-filter-multi-list-spread"
+                        :isShow="vals.subCate.defShowNum < vals.subCate.values.length"
+                        :isSpread="vals.subCate.spreadLevel"
+                        spreadText=""
+                        foldText=""
+                    @click="handleSpreadClick(index)">
+                </c-spread>
+                </template>
+            </div>
+            <div class="c-filter-multi-btn-sel c-line-top">
+                <c-row>
+                    <c-span>
+                        <button class="c-btn WA_LOG_BTN" @click="resetSel()">重置</button>
+                    </c-span>
+                    <c-span>
+                        <button class="c-btn c-filter-multi-btn WA_LOG_BTN" @click="sureSel()">确定</button>
+                    </c-span>
+                </c-row>
+            </div>
+        </div>
+    </div>
+</template>
+<style scoped>
+    .c-filter-multi-dom {
+        width: 100%;
+        height: 100%;
+    }
+    .c-filter-multi-content {
+        position: relative;
+        z-index: 100;
+        background-color: #fff;
+        text-align: left;
+        overflow-x: hidden;
+        overflow-y: auto;
+        height: 90%;
+        padding-bottom: 55%;
+    }
+    .c-filter-multi-list {
+        position: relative;
+    }
+    .c-filter-multi-list-spread {
+        position: absolute;
+        right: .17rem;
+        top: 0;
+    }
+    .c-filter-multi-list-item {
+        position: relative;
+        padding: .05rem 0;
+        color: #000;
+        border: 1px solid #f8f8f8;
+        background-color: #f8f8f8;
+        text-align: center;
+        border-radius: .04rem;
+    }
+    .c-filter-multi-list-item-selected {
+        background-color: #fff;
+        border: 1px solid #555;
+    }
+    .c-filter-multi-list-item-icon {
+        width: .18rem;
+        height: .18rem;
+        position: absolute;
+        bottom: 0;
+        right: -.03rem;
+        z-index: 2;
+        font-size: .08rem;
+    }
+    .c-filter-multi-list-item-angle {
+        width: 0;
+        height: 0;
+        border-bottom: .18rem solid #555;
+        border-left: .18rem solid transparent;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        z-index: 1;
+    }
+    .c-filter-multi-list-item-angle-icon {
+        color: #fff;
+        font-size: .1rem;
+        margin-left: .02rem;
+    }
+    .c-filter-multi-btn {
+        background-color: #555;
+        color: #fff;
+        border: 1px solid #555;
+    }
+    .c-filter-multi-line-middle {
+        line-height: .38rem;
+        width: .07rem;
+        overflow: hidden;
+    }
+    .c-filter-multi-price-company {
+        position: absolute;
+        top: .06rem;
+        right: .14rem;
+    }
+    .c-filter-multi-row-none {
+        display: none;
+    }
+    .c-filter-multi-center {
+        text-align: center;
+    }
+    .c-filter-multi-btn-sel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        z-index: 3;
+        width: 100%;
+        background-color: #fff;
+        padding: .15rem 0;
+        -webkit-box-sizing:border-box;
+                box-sizing: border-box;
+    }
+</style>
+<config>
+    {
+        props: [
+            'sec'
+        ],
+        data: {
+            'selIndex' : {},
+            'cols' : 3,
+            'rangeInputFilter': '',
+            'dataSel': sec,
+            'multiSel': {}
+        },
+        components: {
+            'c-row': '../Row/Row',
+            'c-span': '../Row/Span',
+            'c-rangeInput': './FilterRangeInput',
+            'c-spread': '../Spread/Spread'
+        }
+    }
+</config>
+
+<script type="php">
+    function render ($ctx, $isXml = false) {
+        $data = $ctx->_d['dataSel'];
+        $values = $data['values'];
+        foreach ($values as $value) {
+            $def = $value['subCate']['default'];
+            if (!is_array($def)) {
+                $def = [$def];
+            }
+            if ($value['subCate']['type'] !== 'rangeInput') {
+                $subVals = $value['subCate']['values'];
+                foreach ($subVals as $key => $subVal) {
+                    if (in_array($subVal['value'], $def)) {
+                        $subVals[$key]['selected'] = true;
+                    }
+                }
+            }
+        }
+        return parent::render($ctx, false);
+    }
+</script>
+
+<script>
+module.exports = {
+    render() {
+        for (let i = 0; i < this.dataSel.values.length; i++) {
+            /* 默认转一下数组给defalut */
+            let defVal = this.dataSel.values[i].subCate.default;
+            if (!Array.isArray(defVal)) {
+                this.dataSel.values[i].subCate.default = [defVal];
+            }
+            if (this.dataSel.values[i].subCate.type !== 'rangeInput') {
+                /* 处理在defult处理数组吼的默认选中 */
+                let vals = this.dataSel.values[i].subCate.values;
+                for (let j = 0; j < vals.length; j++) {
+                    if (this.dataSel.values[i].subCate.default.indexOf(vals[j].value) > -1) {
+                        this.dataSel.values[i].subCate.values[j].selected = true;
+                    }
+                }
+            }
+        }
+        return this.$super.render();
+    },
+    mounted() {
+        for (let i = 0; i < this.dataSel.values.length; i++) {
+            if (this.dataSel.values[i].subCate.type === 'rangeInput') {
+                this.rangeInputFilter = this.dataSel.values[i].subCate.filterKey;
+            }
+        }
+    },
+    methods: {
+        handleSpreadClick(idx) {
+            let dataSec = Object.assign({}, this.dataSel);
+            dataSec.values[idx].subCate.spreadLevel = !dataSec.values[idx].subCate.spreadLevel;
+            this.dataSel = dataSec;
+        },
+        changeSelList(dropIdx, value, valIdx, type) {
+            let dataSec = Object.assign({}, this.dataSel);
+            let filterKey = this.dataSel.values[dropIdx].subCate.filterKey;
+            if (!type || type === 'list') {
+                let ifSel = dataSec.values[dropIdx].subCate.values[valIdx].selected;
+                if (!ifSel) {
+                    let subVals = dataSec.values[dropIdx].subCate;
+                    for (let i = 0; i < subVals.values.length; i++) {
+                        if (i === valIdx) {
+                            subVals.values[i].selected = true;
+                            subVals.default[0] = value;
+                        }
+                        else {
+                            subVals.values[i].selected = false;
+                            subVals.default[0] = 'defVal';
+                        }
+                    }
+                    dataSec.values[dropIdx].subCate = subVals;
+                    this.selIndex[filterKey] = value;
+                }
+                else {
+                    dataSec.values[dropIdx].subCate.values[valIdx].selected = false;
+                    dataSec.values[dropIdx].subCate.default[0] = 'defVal';
+                    if (this.selIndex[filterKey]) {
+                        this.selIndex[filterKey] = '';
+                    }
+                }
+                this.dataSel = dataSec;
+            }
+            else if (type === 'multi') {
+                let dataSec = Object.assign({}, this.dataSel);
+                // let filterKey = this.dataSel.values[dropIdx].filterKey;
+                let ifSel = dataSec.values[dropIdx].subCate.values[valIdx].selected;
+                let multiFilkey = dataSec.values[dropIdx].subCate.filterKey;
+                if (!ifSel) {
+                    dataSec.values[dropIdx].subCate.values[valIdx].selected = true;
+                    // this.multiSel[multiFilkey] = value;
+                    if (this.selIndex[multiFilkey] instanceof Array) {
+                        this.selIndex[multiFilkey].push(value);
+                    }
+                    else {
+                        this.selIndex[multiFilkey] = [value];
+                    }
+                }
+                else {
+                    dataSec.values[dropIdx].subCate.values[valIdx].selected = false;
+                    this.selIndex[multiFilkey] = this.selIndex[multiFilkey].filter(d => d !== value);
+                }
+                this.dataSel = dataSec;
+            }
+        },
+        resetSel() {
+            this.multiSel = {};
+            let dataSec = Object.assign({}, this.dataSel);
+            for (let i = 0; i < dataSec.values.length; i++) {
+                let filterkey = dataSec.values[i].subCate.filterKey;
+                this.selIndex[filterkey] = '';
+                if (dataSec.values[i].subCate.type !== 'rangeInput') {
+                    let vals = dataSec.values[i].subCate.values.slice();
+                    // let defVal = dataSec.values[i].subCate.default;
+                    for (let k = 0; k < vals.length; k++) {
+                        vals[k].selected = false;
+                        this.sec.values[i].subCate.default[k] = 'defVal';
+                    }
+                    dataSec.values[i].subCate.values = vals;
+                }
+            }
+            this.$refs.rangeInput[0].resetVal();
+            this.dataSel = dataSec;
+        },
+        sureSel() {
+            if (this.rangeInputFilter !== '') {
+                let info = this.$refs.rangeInput[0].rangeFliter;
+                this.$refs.rangeInput[0].sureVal();
+                if (info.status === '0') {
+                    delete info.status;
+                    delete info.filterKey;
+                    this.selIndex = Object.assign(this.selIndex, info);
+                    this.$emit('itemChanged', this.selIndex);
+                }
+            }
+            else {
+                /* 没有输入框的逻辑 */
+                this.$emit('itemChanged', this.selIndex);
+            }
+        }
+    }
+};
+</script>

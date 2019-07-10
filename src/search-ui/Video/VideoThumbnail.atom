@@ -1,0 +1,150 @@
+<template>
+    <!-- eslint-disable atom/attribute-object-format -->
+    <c-img
+        :src="img"
+        :type="imgType"
+        :show-num="formatTime"
+        :icon-type="maskIconType"
+        :default-image-type="defaultImageType"
+        :maskgap-size="showColDefined"
+        :show-txt="showTxt"
+        :circle-mask-icon="icon"
+        :circle-mask-text="icontxt"
+        :circle-mask-size="showColDefined == 12 ? 'large' : 'small'"
+        :lazy="lazy"
+        :border-radius="imgBorderRadius"
+        aria-hidden="true"
+        class="c-video-thumbnail"
+        @click.native="$emit('click', $event)"
+    />
+    <!-- eslint-enable atom/attribute-object-format -->
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 图片地址
+         */
+        img: String,
+        /**
+         * 图片比例，默认为y，3:2
+         */
+        imgType: String,
+        /**
+         * 播放时长，单位：秒，最小长度1个字符 最大长度10个字符
+         */
+        duration: [String, Number],
+        /**
+         * 描述图片居中遮罩自定义icon, 不传时，默认值为 ‘video_play3'
+         */
+        icontypeDefined: {
+            type: String,
+            default: 'video_play3'
+        },
+        /**
+         * 描述图片居中遮罩自定义文案内容, 与icontypeDefined只能出现一个，否则都显示，影响展现
+         */
+        icontxt: String,
+        /**
+         * 描述自定义图片栅格数，不传默认栅格数值为4
+         */
+        showColDefined: [String, Number],
+        /**
+         * 描述图片右下角遮罩内自定义文案及数字，与duration互斥，优先显示showTxt
+         */
+        showTxt: [String, Number],
+        /**
+         * 描述图片右下角遮罩内自定义icon图标
+         */
+        maskIconType: String,
+        /**
+         * 缺省图&加载图类型，具体可参考Image 组件
+         */
+        defaultImageType: String,
+        /**
+         * 图片是否需要懒加载
+         */
+        lazy: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 圆角配置
+         *
+         * @property {boolean} [tl=true] 左上角是否有圆角
+         * @property {boolean} [tr=true] 右上角是否有圆角
+         * @property {boolean} [bl=true] 左下角是否有圆角
+         * @property {boolean} [br=true] 右下角是否有圆角
+         * @property {string} tlRadius 左上角圆角半径值，默认为 3px
+         * @property {string} trRadius 右上角圆角半径值，默认为 3px
+         * @property {string} blRadius 左下角圆角半径值，默认为 3px
+         * @property {string} brRadius 右下角圆角半径值，默认为 3px
+         */
+        imgBorderRadius: {
+            type: Object
+        }
+    },
+    computed: {
+        icon: icontypeDefined ? icontypeDefined : 'video_play3'
+    },
+    components: {
+        'c-img': '../Image/Image',
+        'c-icon': '../Icon/Icon'
+    }
+    /**
+     * click event.
+     *
+     * @event click
+     */
+}
+</script>
+
+<script type="php">
+    public function computed_formatTime($ctx) {
+        $duration = $ctx->_d["duration"];
+        $showTxt = $ctx->_d["showTxt"];
+        if (empty($duration) || !is_numeric($duration) || !empty($showTxt)) {
+            return $showTxt;
+        }
+        $duration = intval($duration);
+        if ($duration > 3600 * 24) {
+            return intval($duration / 3600) . "小时";
+        }
+
+        $minute = intval($duration / 60);
+        $second = intval($duration % 60);
+        $minute = $minute < 10 ? '0' . $minute : $minute;
+        $second = $second < 10 ? '0' . $second : $second;
+        return $minute . ':' . $second;
+    }
+</script>
+
+<script>
+/**
+ * @file 视频图片
+ * @author guoyong <guoyong03@baidu.com>
+ */
+
+export default {
+    computed: {
+        formatTime() {
+            if (!this.duration || !parseInt(this.duration, 10) || this.showTxt) {
+                return this.showTxt;
+            }
+            this.duration = parseInt(this.duration, 10);
+            if (this.duration > 3600 * 24) {
+                // 大于24小时直接显示小时
+                return parseInt(this.duration / 3600, 10) + '小时';
+            }
+            let minute = parseInt(this.duration / 60, 10);
+            let second = this.duration % 60;
+            minute = minute < 10 ? '0' + minute : minute;
+            second = second < 10 ? '0' + second : second;
+            return minute + ':' + second;
+        }
+    }
+};
+</script>
+

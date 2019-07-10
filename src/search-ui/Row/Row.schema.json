@@ -1,0 +1,38 @@
+{
+    "alias": [
+        "c-row"
+    ],
+    "type": "object",
+    "properties": {
+        "row": {
+            "type": "object",
+            "@ChineseName": "row 组件实例",
+            "description": "row 组件实例，row 的基础相关数据",
+            "properties": {
+                "type": {
+                    "enum": [
+                        "tile",
+                        "tight"
+                    ],
+                    "@ChineseName": "类型",
+                    "description": "类型 接受参数 tile、tight，生成 c-row-title 和 c-row-tight",
+                    "@Demo": "tight"
+                },
+                "align": {
+                    "enum": [
+                        "top",
+                        "middle",
+                        "bottom"
+                    ],
+                    "@ChineseName": "对齐方式",
+                    "description": "对齐方式 接受参数top/middle/bottom，分别生成c-row-align-top/c-row-align-middle/c-row-align-bottom",
+                    "@Demo": "top"
+                }
+            },
+            "propsData": [
+                "type",
+                "align"
+            ]
+        }
+    }
+}

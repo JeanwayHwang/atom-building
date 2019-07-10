@@ -1,0 +1,382 @@
+<!-- @ignore -->
+<template>
+    <ul
+        :class="{'c-navs-common-content-sub': type === 'navSub'}"
+        :style="{
+            'background-color': backgroundColor,
+            'font-size': $platform === 'pc' ? '14px' : '15px',
+            'height': $platform === 'pc' ? '38px' : '2.6667em'
+        }"
+        class="c-navs-common-content"
+        voice-action="switch"
+        role="tablist"
+    >
+        <li
+            a-for="(label, index) in labelList"
+            :key="index"
+            :class="{
+                'c-navs-common-selected': index === selectedIndex,
+                'c-navs-scroll-select-bottom': index === selectedIndex && !bottomAnimation,
+                'WA_LOG_TAB': !label.url,
+                'c-navs-common-li-disable-event': disableEvent
+            }"
+            :data-nolog="!isOpenLog"
+            :data-log="logContent.logList&&logContent.logList[index]?logContent.logList[index]:null"
+            :data-module="label.dataModule ? label.dataModule : ''"
+            :aria-selected="index === selectedIndex"
+            role="tab"
+            class=" c-color-gray-a"
+            @click="itemClick(index)"
+            @touchstart="touchNav(index)"
+        >
+            <c-link
+                :url="label.url"
+                :params="label.params"
+                :voice-config="'switch.item:' + label.txt"
+                class="c-navs-common-full-height c-navs-common-span-clamp"
+            >
+                <div
+                    class="c-navs-common-full-height"
+                >
+                    <span
+                        a-if="disableEvent"
+                        ref="labels"
+                        :style="[
+                            activeIndex === selectedIndex
+                                ? index === selectedIndex
+                                    ? {
+                                        'color': selectedColor,
+                                        'border-bottom-color': selectedColor,
+                                        'font-weight': 'bold',
+                                        'opacity': 1
+                                    } : {
+                                        color: itemStyle.color,
+                                        opacity: 0.7
+                                    }
+                                : index === activeIndex
+                                    ? {
+                                        'color': selectedColor,
+                                        'opacity': 1,
+                                        'font-weight': 'bold'
+                                    } : selectedIndex === index
+                                        ? {
+                                            'color': itemStyle.color,
+                                            'border-bottom-color': selectedColor,
+                                            'font-weight': 400,
+                                            'opacity': 0.7
+
+                                        } : {
+                                            color: itemStyle.color,
+                                            opacity: 0.7
+                                        },
+                            {
+                                height: $platform === 'pc' ? '38px' : '2.6667em'
+                            }
+                        ]"
+                        class="c-navs-common-span-animation"
+                    >
+                        {{ label.txt }}
+                    </span>
+                    <span
+                        a-else
+                        ref="labels"
+                        :style="[
+                            index === selectedIndex
+                                ? {
+                                    'color': selectedColor,
+                                    'border-bottom-color': selectedColor
+                                } : {
+                                    color: itemStyle.color,
+                                    opacity: itemStyle.opacity
+                                },
+                            {
+                                height: $platform === 'pc' ? '38px' : '2.6667em'
+                            }
+                        ]"
+                    >
+                        {{ label.txt }}
+                    </span>
+                </div>
+            </c-link>
+        </li>
+
+        <!-- 为了实现下划线 动画 -->
+        <div
+            ref="bottomBar"
+            class="c-navs-common-bottom"
+        />
+    </ul>
+</template>
+
+<script type="config">
+{
+    props: {
+        labelList: {
+            type: Array,
+            required: true
+        },
+        selectedIndex: {
+            type: Number,
+            default: 0
+        },
+        selectedColor: {
+            type: String,
+            default: '#333'
+        },
+        itemStyle: {
+            type: Object,
+            default: {
+                color: '#666',
+                opacity: '1'
+            }
+        },
+        type: {
+            type: String,
+            default: 'nav'
+        },
+        backgroundColor: {
+            type: String,
+            default: '#fff'
+        },
+        isOpenLog: {
+            type: Boolean,
+            default: true
+        },
+        logContent: {
+            type: Object,
+            default: {}
+        },
+        feedbackColor: {
+            type: String,
+            default: 'rgba(0,0,0,.08)'
+        },
+        disableEvent: {
+            type: Boolean,
+            default: false
+        }
+    },
+    data: {
+        botttomStyle: '',
+        bottom1Style: '',
+        bottom2Style: '',
+        activeIndex: selectedIndex,
+        // 保存上一个位置
+        position: {
+            left: 0,
+            right: 0
+        },
+        isDownGrade: false,
+        // 下划线动画状态，TRUE为正在滑动中，FALSE为静止状态
+        bottomAnimation: false
+    },
+    components: {
+        'c-link': '../Link/Link'
+    }
+}
+</script>
+
+<script>
+export default {
+    mounted() {
+        this.$root.$on('attach', () => {
+            if (this.disableEvent) {
+                this.activeIndex = this.selectedIndex;
+            }
+        });
+        if (this.type === 'navSub') {
+            return;
+        }
+        this.isDownGrade = !this.supportAnimation();
+        this.$nextTick(() => {
+            if (!this.$refs.labels) {
+                return;
+            }
+            this.position = this.getPosition(this.$refs.labels[this.selectedIndex]);
+            this.animationInit();
+        });
+        this.$refs.bottomBar && this.$refs.bottomBar.addEventListener('transitionend', this.animationDone, false);
+    },
+    watch: {
+        selectedIndex(value, old) {
+            if (this.type === 'navSub' || this.isDownGrade) {
+                return;
+            }
+            this.animationInit();
+            this.animation(value);
+        },
+        labelList(newVal, oldVal) {
+            this.$nextTick(() => {
+                let selectedIndex = this.selectedIndex;
+                // 如果选项索引超出了数组的最大长度，则取数组的最大长度
+                if (this.selectedIndex >= this.labelList.length) {
+                    selectedIndex = this.labelList.length - 1;
+                }
+                this.move(selectedIndex);
+            });
+        }
+    },
+    methods: {
+        itemClick(index) {
+            this.$emit('clickItem', index);
+        },
+        touchNav(index) {
+            if (this.disableEvent) {
+                this.$emit('clickItem', index);
+                this.activeIndex = index;
+            }
+        },
+        getPosition(dom) {
+            if (!dom || !dom.offsetParent) {
+                return {left: null, right: null};
+            }
+            let parentDom = dom.offsetParent;
+            let left = dom.offsetLeft + parentDom.offsetLeft;
+            let right = left + dom.offsetWidth;
+            return {left, right};
+        },
+        // 判断具体手机型号是否进行降级处理
+        supportAnimation() {
+            let ua = navigator.userAgent.toLowerCase();
+            let version = ua.match(/zte\sn939st/);
+            if (version) {
+                return false;
+            }
+            return true;
+        },
+        animationInit() {
+            let {left, right} = this.position;
+            this.bottomAnimation = true;
+            this.$refs.bottomBar && this.$refs.bottomBar.setAttribute('style', `
+                height: 2px;
+                background-color: ${this.selectedColor};
+                left: ${left}px;
+                width: ${right - left}px;
+            `);
+        },
+        animation(value) {
+            let {left: oldLeft, right: oldRight} = this.position;
+            this.position = this.getPosition(this.$refs.labels[value]);
+            let {left, right} = this.position;
+            this.$nextTick(() => {
+                let scaleX = (right - left) / (oldRight - oldLeft);
+                let tranX = (right + left - oldRight - oldLeft) / 2;
+                this.$refs.bottomBar && this.$refs.bottomBar.setAttribute('style', `
+                    height: 2px;
+                    background-color: ${this.selectedColor};
+                    left: ${oldLeft}px;
+                    width: ${oldRight - oldLeft}px;
+                    transition: transform .24s cubic-bezier(0.4, 0, 0.2, 1);
+                    -webkit-transition: -webkit-transform .24s cubic-bezier(0.4, 0, 0.2, 1);
+                    transform: translate3d(${tranX}px, 0, 0) scaleX(${scaleX}) ;
+                    -webkit-transform: translate3d(${tranX}px, 0, 0) scaleX(${scaleX}) ;
+                    transform-origin: 50% 0 0;
+                    -webkit-transform-origin: 50% 0 0;
+                `);
+            });
+        },
+        animationDone() {
+            this.bottomAnimation = false;
+            this.$nextTick(() => {
+                this.$refs.bottomBar && this.$refs.bottomBar.setAttribute('style', '');
+            });
+        },
+        move(selectedIndex) {
+            this.position = this.getPosition(this.$refs.labels[selectedIndex]);
+            let {left, right} = this.position;
+            this.$refs.bottomBar && this.$refs.bottomBar.setAttribute('style', `
+                height: 2px;
+                background-color: ${this.selectedColor};
+                left: ${left}px;
+                width: ${right - left}px;
+            `);
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+
+@navs-height: 2.6667em;
+
+.c-navs-common-content {
+    height: @navs-height;
+    display: flex;
+    box-sizing: border-box;
+    justify-content: space-between;
+    list-style: none;
+    position: relative;
+    overflow: hidden;
+    .c-navs-common-li-disable-event {
+        a {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        }
+    }
+    .c-navs-common-full-height {
+        height: 100%;
+    }
+    .c-navs-common-span-clamp {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+    li {
+        height: 100%;
+        width: 0;
+        overflow: hidden;
+        flex-grow: 1;
+        text-align: center;
+        span {
+            height: 100%;
+            box-sizing: border-box;
+            display: inline-block;
+            line-height: 2.6667;
+            position: relative;
+            max-width: 100%;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+    }
+    .c-navs-common-bottom {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        left: 0;
+    }
+    .c-navs-common-left-bottom {
+        left: -100%;
+        right: 100%;
+        height: 100%;
+    }
+    .c-navs-scroll-select-bottom {
+        span {
+            border-bottom: solid 2px #333;
+        }
+    }
+    .c-navs-common-selected {
+        span {
+            color: #333;
+            font-weight: bold;
+            &:after {
+                bottom: -2px;
+            }
+        }
+    }
+}
+@navs-height-sub: 2.7143em;
+.c-navs-common-content-sub {
+    height: @navs-height-sub;
+    font-size: 14px;
+    li span {
+        line-height: 2.7143;
+    }
+    .c-navs-common-bottom {
+        height: 0;
+    }
+    .c-navs-common-selected {
+        span {
+            border-bottom: 0;
+        }
+    }
+}
+</style>

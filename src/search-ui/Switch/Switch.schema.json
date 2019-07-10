@@ -1,0 +1,31 @@
+{
+    "alias": [
+        "c-switch"
+    ],
+    "type": "object",
+    "properties": {
+        "switch": {
+            "type": "object",
+            "@ChineseName": "开关",
+            "description": "开关",
+            "properties": {
+                "value": {
+                    "type": "boolean",
+                    "@ChineseName": "开关状态值",
+                    "@Demo": false,
+                    "description": "开关状态值"
+                },
+                "hasMotion": {
+                    "type": "boolean",
+                    "@ChineseName": "是否开启点击动画",
+                    "@Demo": false,
+                    "description": "是否开启点击动画"
+                }
+            },
+            "propsData": [
+                "value",
+                "transition"
+            ]
+        }
+    }
+}

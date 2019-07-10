@@ -1,0 +1,144 @@
+<template>
+    <transition>
+        <slot />
+    </transition>
+</template>
+
+<script type="config">
+    {
+        abstract: true,
+        props: {
+            enter: {
+                type: Object,
+                required: true
+            },
+            leave: {
+                type: Object,
+                required: true
+            }
+        }
+    }
+</script>
+
+<script type="php">
+    function render ($ctx, $isXml = false) {
+        // 当传入的 slots['default'] 为 a-if="false" 时, 组件根节点 transition 节点下 children 节点全都为 "<!---->" 而被清空
+        // 而 transition 节点本身也不会渲染导致不会渲染任何内容 而这种情况下前端 transition 始终会渲染出 "<!---->" 导致 mismatch
+        // 这里通过自定义 php render 函数来修复
+        if ( isset($ctx->slots['default']) && empty($ctx->slots['default']) ) {
+            // $ctx->_e() returns "<!---->"
+            return $ctx->_e();
+        }
+
+        return parent::render($ctx, false);
+    }
+</script>
+
+<script>
+    import animationsFn from './animations';
+
+    const doAnimations = (el, animations, conf = {}, opt = {}) => {
+        let aObjs = [];
+        Object.keys(animations).forEach(key => {
+            const config = Object.assign({}, animations[key] || {}, conf);
+            const animation = animationsFn[key] && animationsFn[key](el, config, opt);
+            if (animation) {
+                aObjs.push(animation);
+            }
+        });
+        return aObjs;
+    };
+
+    export default {
+        functional: true,
+        render(createElement, context) {
+            let {props, data} = context;
+
+            data.props = data.props || {};
+            data.props.css = false;
+            data.on = data.on || {};
+
+            let listeners = data.on;
+            const {enter, leave} = listeners;
+            const afterEnter = listeners['after-enter'] || listeners.afterEnter;
+            const afterLeave = listeners['after-leave'] || listeners.afterLeave;
+
+            if (props.enter) {
+                let aObjs = [];
+                listeners.enter = (el, done) => {
+                    const {animations, options} = props.enter;
+                    const opt = Object.assign({fill: 'both'}, options || {});
+                    aObjs = doAnimations(el, animations, {}, opt);
+                    /* eslint-disable fecs-camelcase */
+                    el.__enter_aObjs__ = aObjs;
+
+                    if (aObjs[0]) {
+                        aObjs[0].promise.then(done);
+                    }
+                    else {
+                        done();
+                    }
+
+                    enter && enter(el, done);
+                };
+
+                listeners.afterEnter = el => {
+                    /* eslint-disable fecs-camelcase */
+                    el.__enter_aObjs__ && el.__enter_aObjs__.forEach(({animation}) => {
+                        animation.cancelFix();
+                    });
+                    afterEnter && afterEnter(el);
+                };
+
+                // 当动画未完成时切换 a-show 状态 会触发 Cancelled 此时重新执行 render, 需要将 aObjs 存储到 el 上
+                listeners.enterCancelled = el => {
+                    /* eslint-disable fecs-camelcase */
+                    el.__enter_aObjs__ && el.__enter_aObjs__.forEach(({animation}) => {
+                        animation.finish();
+                        animation.cancelFix();
+                    });
+                    el.__enter_aObjs__ = undefined;
+                };
+            }
+
+            if (props.leave) {
+                let aObjs = [];
+                listeners.leave = (el, done) => {
+                    const {animations, options} = props.leave;
+                    const opt = Object.assign({fill: 'both'}, options || {});
+                    aObjs = doAnimations(el, animations, {}, opt);
+                    /* eslint-disable fecs-camelcase */
+                    el.__leave_aObjs__ = aObjs;
+
+                    if (aObjs[0]) {
+                        aObjs[0].promise.then(done);
+                    }
+                    else {
+                        done();
+                    }
+                    leave && leave(el, done);
+                };
+
+                listeners.afterLeave = el => {
+                    /* eslint-disable fecs-camelcase */
+                    el.__leave_aObjs__ && el.__leave_aObjs__.forEach(({animation}) => {
+                        animation.cancelFix();
+                    });
+                    afterLeave && afterLeave(el);
+                };
+
+                // 当动画未完成时切换 a-show 状态 会触发 Cancelled 此时重新执行 render, 需要将 aObjs 存储到 el 上
+                listeners.leaveCancelled = el => {
+                    /* eslint-disable fecs-camelcase */
+                    el.__leave_aObjs__ && el.__leave_aObjs__.forEach(({animation}) => {
+                        animation.finish();
+                        animation.cancelFix();
+                    });
+                    el.__enter_aObjs__ = undefined;
+                };
+            }
+
+            return createElement('transition', context.data, context.children);
+        }
+    };
+</script>

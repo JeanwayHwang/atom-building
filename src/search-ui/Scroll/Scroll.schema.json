@@ -1,0 +1,24 @@
+{
+    "alias": [
+        "c-scroll"
+    ],
+    "type": "object",
+    "properties": {
+        "scroll": {
+            "type": "object",
+            "@ChineseName": "scroll 组件实例",
+            "description": "scroll 组件实例，scroll 的基础相关数据",
+            "properties": {
+                "snap": {
+                    "type": "boolean",
+                    "@ChineseName": "滚动后是否对齐到 item",
+                    "description": "滚动后是否对齐到 item",
+                    "@Demo": false
+                }
+            },
+            "propsData": [
+                "snap"
+            ]
+        }
+    }
+}

@@ -1,0 +1,143 @@
+<template>
+    <div class="c-flexbox c-filter-three-content-s2">
+        <ul class="c-filter-three-s2-nav">
+            <li a-for="(option, index) in sec.values" 
+            :class="['c-filter-three-s2-label WA_LOG_OTHER c-line-clamp1', {'c-filter-three-s2-label-selected' : option.value == sec.default}]"
+            @click="changeThreeLeft(index, option.value)"
+        >
+            {{ option.text }}
+            </li>
+        </ul>
+        <ul class="c-filter-three-s2-second-cont" a-for="(option, index) in sec.values" a-if="option.value == sec.default">
+            <li a-for="(subOpt, index) in option.subCate.values" 
+                :class="['c-filter-three-item WA_LOG_OTHER c-line-clamp1', {'c-filter-three-single-selected' : subOpt.value == option.subCate.default}]"
+            @click="changeThreeMid(index, subOpt.value)">
+                {{ subOpt.text }}
+            </li>
+        </ul>
+        <ul class="c-filter-three-s2-cont" a-for="(option, index) in sec.values" a-if="option.value == sec.default">
+            <template a-for="(subOpt, index) in option.subCate.values" a-if="subOpt.value == option.subCate.default">
+                <li a-for="(threeOpt, index) in subOpt.subCate.values" 
+                :class="['c-filter-three-item WA_LOG_OTHER c-line-clamp1', {'c-filter-three-single-selected' : threeOpt.value == subOpt.subCate.default}]" 
+                @click="changeThreeRight(index, threeOpt.value)">
+                {{ threeOpt.text }}</li>
+            </template>
+        </ul>
+    </div>
+</template>
+<style scoped>
+    .c-filter-three-mask {
+        position: fixed;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, .15);
+        line-height: 2.28571429;
+        z-index: 2;
+    }
+    .c-filter-three-content-s2 {
+        position: relative;
+        z-index: 100;
+        background-color: #fff;
+        text-align: left;
+        max-height: 75%;
+    }
+    .c-filter-three-s2-nav {
+        background-color: #f8f8f8;
+    }
+    .c-filter-three-s2-nav,.c-filter-three-s2-second-cont,.c-filter-three-s2-cont {
+        width: 33.33%;
+        list-style: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+    .c-filter-three-s2-nav .c-filter-three-s2-label-selected {
+        color: #000;
+        font-weight: 700;
+        background-color: #fff;
+        border-right-color: #fff;
+        margin-right: -1px;
+    }
+    .c-filter-three-content-s2 li {
+        padding: .1rem .17rem;
+    }
+    .c-filter-three-s2-nav li, .c-filter-three-s2-second-cont li, .c-filter-three-s2-cont li{
+        padding-left: .17rem;
+        padding-right: .17rem;
+    }
+    .c-filter-three-s2-nav li {
+        border-bottom: 1px solid #f1f1f1;
+        border-right: 1px solid #e7e7e7; 
+    }
+    .c-filter-three-s2-second-cont li,
+    .c-filter-three-s2-cont li{
+        padding-left: .12rem;
+    }
+    .c-filter-three-s2-second-cont {
+        border-right: 1px solid #e7e7e7; 
+    }
+    .c-filter-three-single-selected {
+        color: #000;
+        font-weight: 700;
+    }
+    @media screen and (max-width: 320px) {
+        .c-filter-three-s2-nav li,
+        .c-filter-three-s2-second-cont li,
+        .c-filter-three-s2-cont li {
+            padding-left: .12rem;
+            padding-right: .12rem;
+        }
+    }
+</style>
+
+<config>
+    {
+        props: [
+            'sec'
+        ],
+        data: {
+            'selIndex' : [0,0,0]
+        }
+    }
+</config>
+<script>
+    module.exports = {
+        methods: {
+            changeThreeLeft(index, val) {
+                this.sec.default = val;
+                this.selIndex[0] = index;
+                this.sec.values[index].subCate.default = '';
+            },
+            changeThreeMid(index, subVal) {
+                for (let j = 0; j < this.sec.values.length; j++) {
+                    if (this.sec.default === this.sec.values[j].value) {
+                        this.selIndex[0] = j;
+                        break;
+                    }
+                }
+                this.selIndex[1] = index;
+                let subCate = this.sec.values[this.selIndex[0]].subCate;
+                subCate.default = subVal;
+                this.sec.values[this.selIndex[0]].subCate.values[this.selIndex[1]].subCate.default = '';
+            },
+            changeThreeRight(index, rightVal) {
+                /* 重置下二级筛选的索引，避免没有选二级的时候bug */
+                for (let j = 0; j < this.sec.values.length; j++) {
+                    if (this.sec.default === this.sec.values[j].value) {
+                        this.selIndex[0] = j;
+                        for (let m = 0; m < this.sec.values[j].subCate.values.length; m++) {
+                            if (this.sec.values[j].subCate.default === this.sec.values[j].subCate.values[m].value) {
+                                this.selIndex[1] = m;
+                                break;
+                            }
+                        }
+                    }
+                }
+                this.selIndex[2] = index;
+                let threeCate = this.sec.values[this.selIndex[0]].subCate.values[this.selIndex[1]].subCate;
+                threeCate.default = rightVal;
+                this.$emit('itemChanged', this.selIndex);
+            }
+        }
+    };
+</script>

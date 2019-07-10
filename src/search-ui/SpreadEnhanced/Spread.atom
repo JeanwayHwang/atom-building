@@ -1,0 +1,840 @@
+<template>
+    <!-- 这里的类名用来方便在 dom 查看是什么 type -->
+    <!-- 这里通栏不采用 c-row-tile 的原因是：c-row-tile 在 pmd 里与其他类有组合效果，而展开收起内部的内容组件里无法控制，为了避免出现难以预知的问题，使用内联样式 -->
+    <div
+        ref="spread"
+        :style="[
+            rowTile
+                ? {
+                    'margin-left': '-.17rem',
+                    'margin-right': '-.17rem'
+                }
+                : {}
+        ]"
+        :class="[
+            'c-spread-' + type
+        ]"
+        class="c-spread"
+    >
+        <!-- 顶部展开收起按钮 -->
+        <c-spread-top-btn
+            a-if="topBtn.isShow"
+            ref="topBtn"
+            :spread="mSpread"
+            :text-align="topBtn.textAlign"
+            :left-text="topBtn.leftText"
+            :spread-text="topBtn.spreadText"
+            :fold-text="topBtn.foldText"
+            :padding-top="topBtn.paddingTop"
+            :padding-bottom="topBtn.paddingBottom"
+            :padding-left="topBtn.paddingLeft"
+            :padding-right="topBtn.paddingRight"
+            :touchable-feedback-top="topBtn.touchableFeedbackTop"
+            :touchable-feedback-bottom="topBtn.touchableFeedbackBottom"
+            :touchable-feedback-left="topBtn.touchableFeedbackLeft"
+            :touchable-feedback-right="topBtn.touchableFeedbackRight"
+            :log-class="logClass"
+            @click="handleSpreadChange"
+        >
+            <div>
+                <!-- @slot 顶部按钮左侧 slot -->
+                <slot name="top-left"/>
+            </div>
+        </c-spread-top-btn>
+        <!-- 内容区域点击态 -->
+        <c-touchable-feedback
+            :top="-.05"
+            :bottom="-.05"
+            :left="-.17"
+            :right="-.17"
+            :open="contentClick"
+        >
+            <!-- 内容 wrapper -->
+            <!-- list 和 paragraph 都是组件内部自己算的，所以都使用 px -->
+            <div
+                ref="contentWrapper"
+                :style="[
+                    contentWrapperHeight !== 'auto'
+                        ? {
+                            height: contentWrapperHeight + 'px'
+                        }
+                        : {}
+                ]"
+                class="content-wrapper"
+                @webkitTransitionEnd="handleContentWrapperTransitionEnd"
+                @transitionend="handleContentWrapperTransitionEnd"
+                @click="contentClick && handleSpreadChange()"
+            >
+                <!-- 内容 -->
+                <div
+                    ref="content"
+                    :style="[
+                        transitionType === 'top'
+                            ? {
+                                top: contentTop + 'px'
+                            }
+                            : {}
+                    ]"
+                    class="content"
+                >
+                    <!-- 列表 -->
+                    <template
+                        a-if="type === 'list'"
+                    >
+                        <!-- 收起时的 dom -->
+                        <div
+                            ref="listFold"
+                        >
+                            <div
+                                a-for="index in slotsCount"
+                                a-if="index - 1 < listThreshold"
+                                ref="listItem"
+                                :key="index - 1"
+                                class="list-item"
+                            >
+                                <!-- @slot:list{{index}} 列表 -->
+                                <slot :name="'list' + (index - 1)"/>
+                            </div>
+                        </div>
+                        <!-- 展开时的 dom -->
+                        <div
+                            a-if="showListSpread"
+                            ref="listSpread"
+                        >
+                            <div
+                                a-for="index in slotsCount"
+                                a-if="index - 1 >= listThreshold"
+                                ref="listItem"
+                                :key="index - 1"
+                                class="list-item"
+                            >
+                                <!-- @slot:list{{index}} 列表 -->
+                                <slot :name="'list' + (index - 1)"/>
+                            </div>
+                        </div>
+                    </template>
+                    <!-- 段落 -->
+                    <template
+                        a-else-if="type === 'paragraph'"
+                    >
+                        <!-- 这里的 margin-bottom 是为了中和 c-line-clamp 的 margin-bottom -->
+                        <div
+                            ref="paragraph"
+                            :style="[
+                                {
+                                    'margin-bottom': '0',
+                                    'padding-bottom': '5px'
+                                },
+                                paragraphThreshold === 0
+                                    ? {
+                                        'padding-bottom': '0'
+                                    }
+                                    : {}
+                            ]"
+                            :class="[
+                                paragraphThreshold === 1
+                                    ? $style.cLineClamp1
+                                    : 'c-line-clamp' + paragraphThreshold
+                            ]"
+                        >
+                            <!-- @slot 段落 -->
+                            <slot name="paragraph"/>
+                        </div>
+                    </template>
+                    <!-- 高度 -->
+                    <template
+                        a-else-if="type === 'height'"
+                    >
+                        <!-- @slot 内容 -->
+                        <slot/>
+                    </template>
+                </div>
+            </div>
+        </c-touchable-feedback>
+        <!-- 右下角展开收起按钮 -->
+        <div
+            :style="{
+                bottom: rightBottomBtn.bottom,
+                right: rightBottomBtn.right
+            }"
+            class="spread-right-bottom-btn"
+        >
+            <c-spread-right-bottom-btn
+                a-if="rightBottomBtn.isShow"
+                ref="rightBottomBtn"
+                :spread="mSpread"
+                :spread-text="rightBottomBtn.spreadText"
+                :fold-text="rightBottomBtn.foldText"
+                :bg-color="rightBottomBtn.bgColor"
+                :icon-color="rightBottomBtn.iconColor"
+                :log-class="logClass"
+                @click="handleSpreadChange"
+            />
+        </div>
+        <!-- 底部展开收起按钮；因为默认是显示底部按钮，所以放在最后 -->
+        <!-- slotsCount > listThreshold 是保证在总高度小于最小高度时不显示展开收起按钮-->
+        <c-spread-bottom-btn
+            a-if="
+                !topBtn.isShow
+                    && !rightBottomBtn.isShow
+                    && bottomBtn.isShow
+                    && (type === 'list'
+                        ? slotsCount > listThreshold
+                        : true
+                    )
+            "
+            ref="bottomBtn"
+            :spread="mSpread"
+            :text-align="bottomBtn.textAlign"
+            :spread-text="bottomBtn.spreadText"
+            :bg-color="bottomBtn.bgColor"
+            :icon-color="bottomBtn.iconColor"
+            :fold-text="bottomBtn.foldText"
+            :padding-top="bottomBtn.paddingTop"
+            :padding-bottom="bottomBtn.paddingBottom"
+            :touchable-feedback-top="bottomBtn.touchableFeedbackTop"
+            :touchable-feedback-bottom="bottomBtn.touchableFeedbackBottom"
+            :log-class="logClass"
+            :class="[
+                bottomBtn.borderTop
+                    ? 'c-line-top'
+                    : '',
+                bottomBtn.borderBottom
+                    ? 'c-line-bottom'
+                    : ''
+            ]"
+            @click="handleSpreadChange"
+        />
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 展开收起类型，目前支持3种类型，列表类型 list，文字段落类型 paragraph，自定义收起高度类型 height；
+         */
+        type: {
+            type: String,
+            default: 'list'
+        },
+
+        /**
+         * 展开收起状态，展开为 true，收起为 false
+         */
+        spread: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 内容区域是否可点击
+         */
+        contentClick: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 底部按钮配置
+         *
+         * @property {boolean} [isShow=true] 是否显示按钮
+         * @property {string} [textAlign=center] 底部按钮文字方向
+         * @property {string} [spreadText=展开] 展开文案
+         * @property {string} [foldText=收起] 收起文案
+         * @property {string} [paddingTop=.1rem] 上间距
+         * @property {string} [paddingBottom=.1rem] 下间距
+         * @property {string|number} [touchableFeedbackTop=0] 点击态顶部偏移量
+         * @property {string|number} [touchableFeedbackBottom=0] 点击态低部偏移量
+         * @property {string|number} [touchableFeedbackLeft=-0.17] 点击态左部偏移量
+         * @property {string|number} [touchableFeedbackRight=-0.17] 点击态右部偏移量
+         * @property {boolean} borderTop 是否有上边距
+         * @property {boolean} borderBottom 是否有下边距
+         * @property {string} [iconColor=#555] 右下角按钮箭头图标颜色
+         * @property {string} bgColor 右下角按钮背景颜色；背景颜色必须使用 rgb(xx,xx,xx) 的格式，不可使用十六进制
+         * @property {boolean} [iconColor=#555] 右下角按钮箭头图标颜色
+         */
+        bottomBtn: {
+            type: Object,
+            default: {
+                isShow: true,
+                textAlign: 'center'
+            }
+        },
+
+        /**
+         * 顶部按钮配置
+         *
+         * @property {boolean} [isShow=true] 是否显示按钮
+         * @property {string} [spreadText=展开] 展开文案
+         * @property {string} [foldText=收起] 收起文案
+         * @property {string} [paddingTop=.1rem] 上间距
+         * @property {string} [paddingBottom=.1rem] 下间距
+         * @property {string} paddingLeft 左间距
+         * @property {string} paddingRight 右间距
+         * @property {string|number} [touchableFeedbackTop=0] 点击态顶部偏移量
+         * @property {string|number} [touchableFeedbackBottom=0] 点击态低部偏移量
+         * @property {string} [iconColor=#555] 右下角按钮箭头图标颜色
+         * @property {string} bgColor 右下角按钮背景颜色；背景颜色必须使用 rgb(xx,xx,xx) 的格式，不可使用十六进制
+         * @property {boolean} [iconColor=#555] 右下角按钮箭头图标颜色
+         */
+        topBtn: {
+            type: Object,
+            default: {
+                isShow: false
+            }
+        },
+
+        /**
+         * 右下角按钮配置
+         *
+         * @property {boolean} [isShow=true] 是否显示按钮
+         * @property {string} [spreadText=展开] 展开文案
+         * @property {string} [foldText=收起] 收起文案
+         * @property {string} [iconColor=#555] 右下角按钮箭头图标颜色
+         * @property {string} bgColor 右下角按钮背景颜色；背景颜色必须使用 rgb(xx,xx,xx) 的格式，不可使用十六进制
+         * @property {boolean} [iconColor=#555] 右下角按钮箭头图标颜色
+         * @property {string} bottom 相对于底部的距离
+         * @property {string} right 相对于右边的距离
+         */
+        rightBottomBtn: {
+            type: Object,
+            default: {
+                isShow: false,
+                spreadText: '展开',
+                foldText: '收起'
+            }
+        },
+
+        /**
+         * 是否是通栏（即增加 margin-left: -.17rem, margin-right: -.17rem）
+         */
+        rowTile: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 是否增加日志类
+         */
+        logClass: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 收起状态时的高度：当 type 为 list 时，代表显示的 item 数量；当 type 为 paragraph 时，代表需要显示的文字行数；当 type 为 height 时，threshold 无意义
+         */
+        threshold: {
+            type: Number,
+            default: 1
+        },
+
+        /**
+         * 阶段展开间隔；每次点击展开展开 n 个元素（仅限列表类型 type === 'list' 时有意义）
+         */
+        spreadStep: Number,
+
+        /**
+         * 设置收起状态时的高度（当 type 为 height 时生效）
+         */
+        foldHeight: {
+            type: Number,
+            default: 24
+        }
+    },
+    data: {
+        // 降级标志
+        isDownGrade: false,
+        // 内部展开收起状态变量
+        mSpread: spread,
+        // slots 的数量
+        slotsCount: 0,
+        // 内容高度；如果为 height 类型并且存在收起高度 foldHeight 并且默认为收起状态，初始设置为收起高度
+        contentWrapperHeight: type === 'height' && foldHeight && !spread
+            ? foldHeight
+            : 'auto',
+        // 原始内容高度；用来做收起
+        foldContentWrapperHeight: type === 'height' && foldHeight
+            ? foldHeight
+            : 0,
+        // 展开收起区域总高度
+        spreadHeight: 0,
+        // transitionType === 'top'
+        // transition 动画类型；height：高度变化；top：top 值变化；默认为 height，当 threshold 为0的时候为 top
+        transitionType: threshold === 0
+            ? 'top'
+            : 'height',
+        // relative top
+        contentTop: 0,
+
+        // type === 'list'
+        // 是否显示 list 类型展开时的 dom
+        showListSpread: spread,
+        // list threshold 列表数量
+        listThreshold: threshold,
+
+        // 段落 threshold
+        paragraphThreshold: spread
+            ? 0
+            : threshold,
+        // 展开收起按钮点击保护
+        spreadBtnClickProtect: false,
+        // timeout 句柄
+        spreadBtnClickProtectTimeout: null,
+        // 是否是 Android 手百
+        isAndroidBaiduApp: false
+    },
+    components: {
+        'c-spread-bottom-btn': './SpreadBottomBtn',
+        'c-spread-top-btn': './SpreadTopBtn',
+        'c-spread-right-bottom-btn': './SpreadRightBottomBtn',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+import UA from '@searchfe/user-agent';
+// dom 操作
+import {
+    clearDomTransition
+} from '../util/domUtil';
+
+export default {
+    mounted() {
+        // 判断是否是 Android 手百
+        if (UA.isAndroid() && UA.isBaiduBox()) {
+            this.isAndroidBaiduApp = true;
+        }
+
+        let iOSVersion = UA.iOSVersion()[0];
+        // iOS 8 降级
+        if (iOSVersion <= 8) {
+            this.isDownGrade = true;
+            clearDomTransition(this.$refs.contentWrapper);
+            clearDomTransition(this.$refs.content);
+        }
+
+        // type === 'list'
+        // 如果是列表类型，并且默认展开
+        if (this.type === 'list' && this.spread) {
+            // 计算收起高度
+            this.foldContentWrapperHeight = this.$refs.listFold.offsetHeight;
+        }
+
+        // type === 'height'
+        // 如果是高度类型
+        else if (this.type === 'height') {
+            // 如果收起高度大于内容区的高度
+            if (this.foldHeight >= this.$refs.content.offsetHeight) {
+                // 高度自适应
+                this.contentWrapperHeight = 'auto';
+                // 底部按钮
+                if (this.bottomBtn && this.bottomBtn.isShow) {
+                    this.bottomBtn.isShow = false;
+                }
+                // 顶部按钮
+                else if (this.topBtn && this.topBtn.isShow) {
+                    this.topBtn.isShow = false;
+                }
+                // 右下方按钮
+                else if (this.rightBottomBtn && this.rightBottomBtn.isShow) {
+                    this.rightBottomBtn.isShow = false;
+                }
+            }
+        }
+
+    },
+
+    // render
+    render() {
+        let vnodes = this.$slots.default;
+        if (vnodes && vnodes.length) {
+            // 列表类型
+            if (this.type === 'list') {
+                vnodes.forEach((vnode, index) => {
+                    // 放入指定 slot
+                    this.$slots['list' + index] = [vnode];
+                });
+                // 设置 slots 长度
+                this.slotsCount = vnodes.length;
+            }
+            // 段落类型
+            else if (this.type === 'paragraph') {
+                // 放入指定 slot
+                let vnode = vnodes[0];
+                // 这里 vnode 可以用数组包起来也可以不包，但是不包起来会出现渲染同一个 slot 的问题，vue 会报 warning，所以还是用数组包起来
+                this.$slots.paragraph = [vnode];
+                // 设置 slots 长度
+                this.slotsCount = 1;
+            }
+        }
+        return this.$super.render();
+    },
+
+    methods: {
+
+        /**
+         * 展开
+         */
+        spreadFun() {
+            let oldHeight = this.$refs.content.clientHeight;
+            // 列表
+            if (this.type === 'list') {
+                // 计算收起高度
+                this.calculateFoldHeight();
+
+                // 设置内容区域高度，开启高度动画
+                this.contentWrapperHeight = this.$refs.content.clientHeight;
+                // 如果降级
+                if (this.isDownGrade) {
+                    this.contentWrapperHeight = 'auto';
+                }
+
+                // type === 'list' 分为两种类型
+                // 一种是阶段展开，每次展开 n 行
+                // 另一种是直接展开
+
+                // 阶段展开；如果展开步数存在
+                if (this.spreadStep) {
+                    this.listThreshold += this.spreadStep;
+                    // 如果当前的显示行数大于或等于整个数量
+                    if (this.listThreshold >= this.slotsCount) {
+                        // 显示展开后的 list
+                        this.showListSpread = true;
+                        // 设置为展开态
+                        this.setSpreadStatus(true);
+                        // 清空当前行
+                        this.listThreshold = this.threshold;
+                    }
+                }
+
+                // 直接展开
+                else {
+                    // 显示展开后的 list
+                    this.showListSpread = true;
+                    // 设置为展开态
+                    this.setSpreadStatus(true);
+                }
+            }
+            // 段落
+            else if (this.type === 'paragraph') {
+                // 设置为展开态
+                this.setSpreadStatus(true);
+                // 计算收起高度
+                this.calculateFoldHeight();
+                // 设置内容区域高度，开启高度动画
+                this.contentWrapperHeight = this.$refs.content.clientHeight;
+                // 设置不截断
+                this.paragraphThreshold = 0;
+            }
+            // 高度
+            else if (this.type === 'height') {
+                // 设置为展开态
+                this.setSpreadStatus(true);
+                // 设置内容区域高度，开启高度动画
+                this.contentWrapperHeight = this.$refs.content.clientHeight;
+            }
+
+            this.$nextTick(() => {
+                // 设置内容区域高度
+                this.contentWrapperHeight = this.$refs.content.clientHeight;
+
+                // 计算 diffHeight
+                let newHeight = this.contentWrapperHeight;
+                let diffHeight = newHeight - oldHeight;
+
+                // 如果是 transition 是 top 类型
+                if (this.transitionType === 'top') {
+                    this.contentTop = 0;
+                }
+
+                let obj = {
+                    // 这里翻转是因为 调用 setSpreadStatus 设置 mSpread 状态的时候是在 setTimeout(,0) 才执行，在这里 mSpread 还是之前的值，所以要做一下取反
+                    spread: !this.mSpread,
+                    type: this.type,
+                    height: this.calculateSpreadHeight(),
+                    slotsCount: this.slotsCount,
+                    diffHeight
+                };
+
+                if (this.type === 'list') {
+                    obj.listThreshold = this.listThreshold;
+                }
+
+                /**
+                 * 展开收起状态改变后触发的回调
+                 *
+                 * @event change
+                 * @property {boolean} spread 是否展开
+                 * @property {string} type 当前展开收起的类型
+                 * @property {number} height 当前高度
+                 * @property {number} diffHeight 相较于上一次变化的高度，主要用来配合外侧元素动态计算高度
+                 */
+                this.$emit('change', obj);
+            });
+
+            if (this.isAndroidBaiduApp) {
+                setTimeout(() => {
+                    this.contentWrapperTransitionEndThings();
+                }, 300);
+            }
+        },
+
+        /**
+         * 收起
+         */
+        foldFun() {
+            // 设置状态
+            this.setSpreadStatus(false);
+            let oldHeight = this.$refs.content.clientHeight;
+
+            // 如果是 transition 是 top 类型
+            if (this.transitionType === 'top') {
+                this.contentTop = -this.$refs.contentWrapper.offsetWidth;
+            }
+
+            // 设置收起初始高度，用来做高度动画；这里必须使用操作 dom 的方法指定高度，不能使用数据驱动视图的方式
+            this.$refs.contentWrapper.style.height = this.$refs.content.clientHeight + 'px';
+            // 这里必须主动调用 dom 的属性，触发浏览器重排，否则动画不生效
+            this.$refs.contentWrapper.offsetWidth;
+            // 设置内容区域高度为收起时的高度
+            this.contentWrapperHeight = this.foldContentWrapperHeight;
+
+            // 列表并且降级
+            // 这个只有降级才会这样处理
+            if (this.type === 'list' && this.isDownGrade) {
+                // 设置收起
+                this.showListSpread = false;
+            }
+
+            this.$nextTick(() => {
+                // 计算 diff height
+                let newHeight = this.calculateSpreadHeight();
+                let diffHeight = newHeight - oldHeight;
+
+                /**
+                 * 展开收起状态改变后触发的回调
+                 *
+                 * @event change
+                 * @property {boolean} spread 是否展开
+                 * @property {string} type 当前展开收起的类型
+                 * @property {number} height 当前高度
+                 * @property {number} diffHeight 相较于上一次变化的高度，主要用来配合外侧元素动态计算高度
+                 */
+                this.$emit('change', {
+                    // 这里翻转是因为 调用 setSpreadStatus 设置 mSpread 状态的时候是在 setTimeout(,0) 才执行，在这里 mSpread 还是之前的值，所以要做一下取反
+                    spread: !this.mSpread,
+                    type: this.type,
+                    height: newHeight,
+                    diffHeight
+                });
+            });
+
+            if (this.isAndroidBaiduApp) {
+                setTimeout(() => {
+                    this.contentWrapperTransitionEndThings();
+                }, 300);
+            }
+        },
+
+        // 设置展开收起的状态
+        setSpreadStatus(spread) {
+            // 这里 setTimeout 0 是因为如果立即切换的话，展开和收起发送的日志是反的
+            setTimeout(() => {
+                this.mSpread = spread;
+            }, 0);
+        },
+
+        // 展开收起按钮点击
+        handleSpreadChange() {
+
+            // 点击保护
+            if (this.spreadBtnClickProtect) {
+                return;
+            }
+            this.spreadBtnClickProtect = true;
+            this.spreadBtnClickProtectTimeout = setTimeout(() => {
+                this.spreadBtnClickProtect = false;
+            }, 300);
+
+            /**
+             * 展开收起按钮点击事件
+             *
+             * @event spreadbtnclick
+             * @property {boolean} lastSpread 上一次展开收起的状态，true 展开，false 收起
+             */
+            this.$emit('spreadbtnclick', {
+                lastSpread: this.mSpread
+            });
+
+            // 如果是收起
+            if (!this.mSpread) {
+                // 展开
+                this.spreadFun();
+            }
+
+            // 如果是展开
+            else if (this.mSpread) {
+                // 收起
+                this.foldFun();
+            }
+
+        },
+
+        // 动画结束后需要做的事
+        contentWrapperTransitionEndThings() {
+            // 列表
+            if (this.type === 'list') {
+                // height 设置为 auto
+                this.contentWrapperHeight = 'auto';
+
+                // 如果是收起状态
+                if (!this.mSpread) {
+                    // 设置收起
+                    this.showListSpread = false;
+                }
+            }
+            // 段落
+            else if (this.type === 'paragraph') {
+                // height 设置为 auto
+                this.contentWrapperHeight = 'auto';
+
+                // 如果是收起状态
+                if (!this.mSpread) {
+                    // 重置 paragraphThreshold
+                    this.paragraphThreshold = this.threshold;
+                }
+            }
+            // 高度
+            else if (this.type === 'height') {
+            }
+        },
+
+        // 高度变化动画回调
+        handleContentWrapperTransitionEnd() {
+            // 如果不是 Android 手百；Android 手百的引擎，对于 transitionEnd 的回调时机有问题
+            if (!this.isAndroidBaiduApp) {
+                this.contentWrapperTransitionEndThings();
+            }
+        },
+
+        // 计算收起高度；列表\段落类型，高度类型在 data 初始化时已计算完毕
+        calculateFoldHeight() {
+            // threshold === 0 时是特殊情况，此时的动效不是在高度上生效而是在 margin-top 上生效
+            if (this.threshold === 0) {
+                this.foldContentWrapperHeight = 0;
+            }
+            // 如果不是 threshold === 0，如果还没有得到收起时的高度
+            if (!this.foldContentWrapperHeight) {
+                // 计算收起时的高度
+                this.foldContentWrapperHeight = this.$refs.content.clientHeight;
+            }
+            // threshold === 0 时是特殊情况，此时的动效不是在高度上生效而是在 margin-top 上生效，有动效时点击过快 或者 无动效时 会导致 foldContentWrapperHeight 计算错误，所以这里要处理
+            if (this.threshold === 0) {
+                this.foldContentWrapperHeight = 0;
+            }
+        },
+
+        // 计算整个展开收起的高度
+        calculateSpreadHeight() {
+            let spreadHeight = this.contentWrapperHeight;
+            if (this.isDownGrade) {
+                spreadHeight = this.$refs.content.clientHeight;
+            }
+            // 底部按钮栏
+            // 如果按钮栏存在并且高度不为 auto 的话
+            if (this.bottomBtn && this.bottomBtn.isShow && this.$refs.bottomBtn) {
+                spreadHeight += this.$refs.bottomBtn.$el.offsetHeight;
+            }
+            return spreadHeight;
+        },
+        setThreshold(threshold) {
+            if (this.type === 'list') {
+                this.listThreshold = threshold;
+                // 如果是展开
+                if (this.mSpread) {
+                    this.mSpread = false;
+                    this.showListSpread = false;
+                }
+            }
+            else if (this.type === 'paragraph') {
+                this.paragraphThreshold = threshold;
+            }
+            // 在渲染结束后
+            this.$nextTick(() => {
+                // 清空收起高度
+                this.foldContentWrapperHeight = 0;
+                // 重新计算收起高度
+                this.calculateFoldHeight();
+            });
+        }
+    },
+    watch: {
+        threshold(newVal, oldVal) {
+            this.setThreshold(newVal);
+        }
+    }
+};
+</script>
+
+<script type="php">
+
+function render($ctx, $isXml = false) {
+    $type = $ctx->_d['type'];
+    $vnodes = $ctx->slots['default'];
+    if ($vnodes && count($vnodes)) {
+        // 列表类型
+        if ($type === 'list') {
+            foreach ($vnodes as $index => $vnode) {
+                // 放入指定 slot
+                $ctx->slots['list' . $index] = [$vnode];
+            }
+            // 设置 slots 长度
+            $ctx->_d['slotsCount'] = count($vnodes);
+        }
+        // 段落类型
+        else if ($type === 'paragraph') {
+            // 放入指定 slot
+            $vnode = $vnodes[0];
+            // 这里 vnode 可以用数组包起来也可以不包，但是不包起来会出现渲染同一个 slot 的问题，vue 会报 warning，所以还是用数组包起来
+            $ctx->slots['paragraph'] = [$vnode];
+            // 设置 slots 长度
+            $ctx->_d['slotsCount'] = 1;
+        }
+    }
+    return parent::render($ctx);
+}
+
+</script>
+
+<style module>
+.c-spread {
+    position: relative;
+}
+.content-wrapper {
+    transition: height .3s cubic-bezier(.18, 0, .26, 1);
+    overflow: hidden;
+}
+.content {
+    position: relative;
+    transition: top .3s cubic-bezier(.18, 0, .26, 1);
+}
+/* 全局的 c-line-clamp1 是另一种实现方式，会有问题；所以需要改成一致的 */
+.c-line-clamp1 {
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: normal;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+}
+/* 右下角按钮 */
+.spread-right-bottom-btn {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+}
+</style>

@@ -1,0 +1,616 @@
+<template>
+    <div
+        ref="cascader"
+        class="cascader"
+        data-module="c-cd"
+    >
+        <!-- 列 -->
+        <div
+            a-for="(columnItem, columnIndex) in math_ceil(column)"
+            ref="column"
+            :key="columnIndex"
+            :style="[
+                {
+                    overflow: columnOverflow
+                },
+                columnIndex != 0
+                    ? {
+                        'background-color': '#fff'
+                    }
+                    : {}
+            ]"
+            :class="[
+                columnIndex == 1
+                    ? $style.column1
+                    : ''
+            ]"
+            class="column"
+            @touchstart="handleTouchStart({
+                e: $event,
+                columnIndex
+            })"
+            @touchmove="handleTouchMove({
+                e: $event,
+                columnIndex
+            })"
+        >
+            <template
+                a-if="list[columnIndex] && list[columnIndex].options"
+            >
+                <!-- 项 -->
+                <div
+                    a-for="(option, optionIndex) in list[columnIndex].options"
+                    :key="optionIndex"
+                    :style="[
+                        {
+                            color: defaultColor
+                        },
+                        column == 1
+                            ? {
+                                'background-color': '#fff'
+                            }
+                            : {},
+                        column > 1 && columnIndex > 0
+                            ? {
+                                'background-color': '#fff',
+                                'border-color': '#fff'
+                            }
+                            : {},
+                        column > 1 && columnIndex == 1 && option.selected
+                            ? {
+                                'box-shadow': '-1px 0 0 0 #eee'
+                            }
+                            : {},
+                        option.selected
+                            ? {
+                                'background-color': '#fff',
+                                'color': selectedColor,
+                                'font-weight': 'bold'
+                            }
+                            : {}
+                    ]"
+                    class="option c-font-normal c-gap-inner-top c-gap-inner-bottom c-line-bottom WA_LOG_BTN"
+                    @click="handleOptionClick({
+                        column,
+                        columnIndex,
+                        option,
+                        optionIndex,
+                        options: list[columnIndex].options
+                    })"
+                >
+                    <div>
+                        <!-- 如果显示对勾图标时，需要给右侧空出位置 -->
+                        <span
+                            :class="[
+                                (column == 1 && option.selected)
+                                    ||
+                                    (column == 2 && columnIndex > 0 && option.selected)
+                                    ? 'c-gap-inner-right-large'
+                                    : ''
+                            ]"
+                            class="c-line-clamp1"
+                        >
+                            {{ option.text }}
+                        </span>
+                        <!-- 对勾图标 -->
+                        <!-- 一列时显示 -->
+                        <!-- 两列时最后一列显示 -->
+                        <c-icon
+                            a-if="
+                                (column == 1 && option.selected)
+                                    ||
+                                    (column == 2 && columnIndex > 0 && option.selected)
+                            "
+                            type="check"
+                            class="icon"
+                        />
+                    </div>
+                    <div
+                        a-if="option.extend"
+                        class="c-font-small c-line-clamp1 c-color-gray"
+                    >
+                        {{ option.extend }}
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 列数
+         */
+        column: {
+            type: [Number, String],
+            default: 1
+        },
+        /**
+         * 列的overflow，兼容；如果这里直接设置为 scroll，由于 Content 组件的 el.offsetWidth 强制重绘，在 Android 上会闪动；所以需要设置为 auto
+         *
+         * @ignore
+         */
+        columnOverflow: {
+            type: String,
+            default: 'auto'
+        },
+        /**
+         * 默认值
+         */
+        defaultValue: String,
+        /**
+         * 默认值类型；combine 合并，合在一个字符串里，以逗号区分；separate 分离，分级写在每一个级联项里；
+         */
+        defaultValueType: {
+            type: String,
+            default: 'separate'
+        },
+        /**
+         * 外部实例；外部传入的实例，在部分场景下，需要把 vnode 挂载到外部传入的实例上
+         *
+         * @ignore
+         */
+        ins: Object,
+        /**
+         * 默认颜色
+         */
+        defaultColor: {
+            type: String,
+            default: '#666'
+        },
+        /**
+         * 选中项颜色
+         */
+        selectedColor: {
+            type: String,
+            default: '#333'
+        },
+
+        /**
+         * 选项数组
+         *
+         * @property {string} text 选项的文案
+         * @property {string} value 选项的值
+         */
+        options: Array,
+
+        /**
+         * 动效配置
+         *
+         * @property {string} [heightTransition=height .3s cubic-bezier(0.4, 0.0, 0.2, 1)] height高度变化动效参数
+         */
+        transitionOpts: {
+            type: Object,
+            default: {
+                heightTransition: 'height .3s cubic-bezier(0.4, 0.0, 0.2, 1)'
+            }
+        },
+        /**
+         * 是否阻止滚动穿透
+         */
+        stopScrollThrough: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 是否深复制数据
+         */
+        deepCopy: {
+            type: Boolean,
+            default: true
+        }
+    },
+    data: {
+        // 打平数据
+        list: [
+            {
+                // 选项们
+                options
+            }
+        ],
+        // 高度
+        height: 'auto'
+    },
+    components: {
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+
+<script>
+// dom 操作
+import {
+    addDomTransition,
+    clearDomTransition
+} from '../util/domUtil';
+
+// 阻止滚动穿透 mixin
+import stopScrollThroughMixin from '../util/stopScrollThroughMixin';
+
+export default {
+    mixins: [
+        stopScrollThroughMixin
+    ],
+    mounted() {
+        this.init(this.options);
+    },
+    methods: {
+
+        /**
+         * 初始化，可在主动修改数据时主动调用该方法
+         *
+         * @param {Array} options 筛选数据
+         * @public
+         */
+        init(options) {
+            if (!options) {
+                options = this.options;
+            }
+            // 这里要把 list 重新初始化下
+            this.list = [{
+                options
+            }];
+            // 深复制下
+            this.deepCopy && this.$set(this.list[0], 'options', JSON.parse(JSON.stringify(options)));
+            // 如果外部实例 ins 存在
+            if (this.ins) {
+                // 把 vnode 挂载到外部实例上去
+                this.ins.vnode = this;
+            }
+
+            // 如果默认值存在
+            if (this.defaultValue !== undefined) {
+                if (this.defaultValueType === 'combine') {
+                    // 设置默认值；combine；这种遍历方式适合默认值设置在一起用逗号区分的情况
+                    this.setDefaultValueCombine(this.defaultValue, this.list[0].options);
+                }
+                else {
+                    // 设置默认值；separate；这种遍历方式适合每一级单独设置默认值的情况
+                    this.setDefaultValueSeparate(this.defaultValue, this.list[0].options);
+                }
+            }
+        },
+        // otpion 点击事件
+        handleOptionClick(obj) {
+
+            // 只有一列
+            if (parseInt(obj.column, 10) === 1) {
+                // TODO: 设置选中项
+                // 清空所有项
+                obj.options.forEach((option, optionIndex) => {
+                    this.$set(option, 'selected', false);
+                });
+                // 设置选中项
+                this.$set(obj.option, 'selected', true);
+
+                // TODO: 触发最后一列点击事件
+                this.emitLastColumnItemClickEvent(obj);
+            }
+            // 多列
+            else {
+                // TODO: 设置选中项
+                // 清空所有项
+                obj.options.forEach((option, optionIndex) => {
+                    this.$set(option, 'selected', false);
+                });
+                // 设置选中项
+                this.$set(obj.option, 'selected', true);
+
+                // TODO: 设置子选项
+                // 如果选中的 otpion 还有子 options 存在
+                if (obj && obj.option && obj.option.options) {
+                    // 设置子 options
+                    this.$set(this.list, obj.columnIndex + 1, {
+                        options: obj.option.options
+                    });
+                    // 在切换前一层级的 option 时，后一层级的需要进行清空操作
+                    this.clearColumn(obj.columnIndex + 2);
+                }
+                // 如果选中的 option 没有有子 options
+                else {
+                    // 清除列
+                    this.clearColumn(obj.columnIndex + 1);
+                }
+
+                // TODO: 设置之前项
+                // 如果列数不是第0列，那么它一定有之前项
+                if (obj.columnIndex !== 0) {
+                    this.list[obj.columnIndex - 1].options.forEach((option, optionIndex) => {
+                        if (option.selected) {
+                            // 设置之前项
+                            obj.previousOption = option;
+                            obj.previousOptionIndex = optionIndex;
+                            obj.previousColumnIndex = obj.columnIndex - 1;
+                            return;
+                        }
+                    });
+                }
+
+                // TODO: 如果是最后一列
+                if (parseInt(obj.column, 10) === obj.columnIndex + 1) {
+                    /* eslint-disable max-len */
+                    // TODO: 清空所有选中项除了当前选中的项
+                    this.clearAllSelectedExceptCurSelected(this.options, obj.columnIndex, 0, obj.optionIndex, obj.option.value, obj.option.text);
+                    /* eslint-enable max-len */
+
+                    // TODO: 触发最后一列点击事件
+                    this.emitLastColumnItemClickEvent(obj);
+                }
+            }
+
+            // 之前的高度
+            let heightBefore = this.$refs.cascader.offsetHeight;
+
+            this.$nextTick(() => {
+                // 计算级联高度
+                let height = this.getHeight();
+
+                // 需要传递的参数
+                // vnode 实例
+                obj.vnode = this;
+                // 高度
+                obj.height = height;
+                // 触发事件，这里事件触发放在 nextTick 里是因为需要在事件的参数里带上高度字段
+
+                /**
+                 * 项点击事件
+                 *
+                 * @event itemclick
+                 * @property {object} param1 点击项信息
+                 * @property {number} param1.column 列数
+                 * @property {number} param1.columnIndex 当前列数的索引
+                 * @property {number} param1.optionIndex 当前选中项索引
+                 * @property {Object} param1.option 当前选中项
+                 * @property {Object[]} param1.options 当前列选中项数组
+                 * @property {Object} param1.vnode 级联选择器`vnode`实例
+                 * @property {number} param1.height 级联选择器高度
+                 */
+                this.$emit('itemclick', obj);
+
+                // 给每一列设置高度
+                this.$refs.column.forEach((columnItem, columnIndex) => {
+                    this.setHeight(columnItem, height, heightBefore);
+                });
+            });
+        },
+        // 触发最后一列项点击事件
+        emitLastColumnItemClickEvent(obj) {
+
+            /**
+             * 最后一列项点击事件
+             *
+             * @event lastcolumnitemclick
+             * @property {object} param1 同`itemclick`事件
+             */
+            this.$emit('lastcolumnitemclick', obj);
+        },
+        // 清除列（包括起始和结束列）
+        clearColumn(startColumnIndex, endColumnIndex) {
+            // 默认 endColumnIndex 为 column - 1
+            if (!endColumnIndex) {
+                endColumnIndex = this.column - 1;
+            }
+            // 遍历 list
+            this.list.forEach((listItem, listIndex) => {
+                // 如果 listIndex > 选中的列 +1 && listIndex < 总列数
+                if (listIndex >= startColumnIndex && listIndex <= endColumnIndex) {
+                    // 清空该列的数据
+                    this.$set(this.list, listIndex, null);
+                }
+            });
+        },
+
+        /**
+         * 清空所有选中项除了当前选中的项
+         *
+         * @param {Array} options 选项数组
+         * @param {number} columnIndex 改变的列的索引
+         * @param {number} curColumnIndex 当前递归的列的索引
+         * @param {number} selectedOptionIndex 当前选中项的索引
+         * @param {string} selectedOptionValue 当前选中项的值
+         * @param {string} selectedOptionText 当前选中项的显示文案
+         */
+        /* eslint-disable max-len */
+        clearAllSelectedExceptCurSelected(options, columnIndex, curColumnIndex, selectedOptionIndex, selectedOptionValue, selectedOptionText) {
+        /* eslint-enable max-len */
+            // 如果 options 不存在，或者不是数组，直接返回
+            if (!options || !(options instanceof Array)) {
+                return;
+            }
+            // 遍历
+            options.forEach((option, optionIndex) => {
+                // 如果在同一层级
+                if (curColumnIndex === columnIndex) {
+                    /* eslint-disable max-len */
+                    // 如果遍历到的选项和当前选项不是同一个选项时，除了索引要比较，显示文案和值也要比较
+                    if (optionIndex !== selectedOptionIndex || option.value !== selectedOptionValue || option.text !== selectedOptionText) {
+                        // 选中态置为 false
+                        this.$set(option, 'selected', false);
+                    }
+                    /* eslint-enable max-len */
+                }
+                else {
+                    // 层级 +1 后递归
+                    this.clearAllSelectedExceptCurSelected(
+                        option.options,
+                        columnIndex,
+                        curColumnIndex + 1,
+                        selectedOptionIndex,
+                        selectedOptionValue,
+                        selectedOptionText
+                    );
+                }
+            });
+        },
+        // 得到高度
+        getHeight() {
+            return this.$refs.cascader
+                ? this.$refs.cascader.offsetHeight
+                : 0;
+        },
+        // 设置高度
+        setHeight(dom, height, heightBefore) {
+            // 清除动效
+            clearDomTransition(dom);
+            // 设置高度
+            dom.style.height = heightBefore + 'px';
+            // 强制触发视图更新
+            dom.offsetHeight;
+            // 添加动效
+            addDomTransition(dom, this.transitionOpts.heightTransition);
+            // 设置高度
+            dom.style.height = height + 'px';
+            // 动效结束后重新设置高度
+            setTimeout(() => {
+                dom.style.height = 'auto';
+            }, 300);
+        },
+        // 设置默认值；combine
+        setDefaultValueCombine(defaultValue, options, count, defaultValueArr) {
+            if (count === undefined) {
+                count = 0;
+            }
+            if (!options) {
+                return;
+            }
+            if (!defaultValueArr) {
+                defaultValueArr = defaultValue.split(',').map(item => item.trim());
+            }
+            // 遍历找出值相等的项
+            options.forEach((option, optionIndex) => {
+                // 如果值相等
+                if (option.value === defaultValueArr[count]) {
+                    // 设置选中
+                    this.$set(option, 'selected', true);
+                    // 如果选中的 otpion 还有子 options 存在
+                    if (option && option.options) {
+                        // 级数加1
+                        count++;
+                        // 设置子 options
+                        this.$set(this.list, count, {
+                            options: option.options
+                        });
+                        // 递归
+                        this.setDefaultValueCombine(option.defaultValue, option.options, count, defaultValueArr);
+                    }
+                }
+            });
+        },
+        // 设置默认值；separate
+        setDefaultValueSeparate(defaultValue, options, count) {
+            if (count === undefined) {
+                count = 0;
+            }
+            if (!options) {
+                return;
+            }
+            // 遍历找出值相等的项
+            options.forEach((option, optionIndex) => {
+                // 如果值相等
+                if (option.value === defaultValue) {
+                    // 设置选中
+                    this.$set(option, 'selected', true);
+                    // 如果选中的 otpion 还有子 options 存在
+                    if (option && option.options) {
+                        // 级数加1
+                        count++;
+                        // 设置子 options
+                        this.$set(this.list, count, {
+                            options: option.options
+                        });
+                        // 递归
+                        this.setDefaultValueSeparate(option.defaultValue, option.options, count);
+                    }
+                }
+                else {
+                    // 设置不选中
+                    this.$set(option, 'selected', false);
+                }
+            });
+        },
+        // 获得选中的数据
+        getSelectedData() {
+            let selectedData = {};
+            // 递归
+            this.getSelectedDataRecursion(
+                this.options,
+                this.ins
+                    ? this.ins.key
+                    : '',
+                selectedData
+            );
+            return selectedData;
+        },
+        // 获得选中的数据；递归
+        getSelectedDataRecursion(options, key, selectedData) {
+            options.forEach((option, optionIndex) => {
+                // 如果选中
+                if (option.selected) {
+                    // 设置对应键值对
+                    selectedData[key] = option.value;
+                    // 级联
+                    if (option.options) {
+                        // 递归
+                        this.getSelectedDataRecursion(option.options, option.key, selectedData);
+                    }
+                    // 直接返回代表只取一个
+                    return selectedData;
+                }
+            });
+            return selectedData;
+        },
+        // TODO: 解决浮层滚动穿透的问题
+        // 列触摸开始
+        handleTouchStart(obj) {
+            if (this.stopScrollThrough) {
+                this.handleTouchStartStopScrollThroughMixin(obj.e);
+            }
+        },
+        // 列触摸滑动
+        handleTouchMove(obj) {
+            if (this.stopScrollThrough) {
+                this.handleTouchMoveStopScrollThroughMixin(obj.e, this.$refs.column[obj.columnIndex]);
+            }
+        }
+    }
+};
+</script>
+
+<style module>
+.cascader {
+    display: flex;
+    background-color: #f8f8f8;
+}
+.column {
+    transition: height .3s;
+    height: auto;
+    max-height: 337.5px;
+    flex: 1;
+    box-sizing: border-box;
+    /* 兼容；如果这里直接设置为 scroll，由于 Content 组件的 el.offsetWidth 强制重绘，在 Android 上会闪动；所以需要设置为 auto */
+    overflow: auto;
+    /* iOS 弹性滚动 */
+    -webkit-overflow-scrolling: touch;
+}
+@media screen and (max-width: 360px) {
+    .column {
+        max-height: 322.5px;
+    }
+}
+.column1 {
+    box-shadow: -1px 0 0 0 #eee;
+}
+.option {
+    position: relative;
+    padding-left: .17rem;
+    padding-right: .17rem;
+    box-sizing: border-box;
+}
+.icon {
+    position: absolute;
+    top: .1rem;
+    right: .17rem;
+}
+</style>

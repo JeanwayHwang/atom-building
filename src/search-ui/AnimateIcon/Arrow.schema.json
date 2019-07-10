@@ -1,0 +1,29 @@
+{
+    "alias": [
+        "c-arrow"
+    ],
+    "type": "object",
+    "properties": {
+        "arrow": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string",
+                    "@ChineseName": "图标颜色",
+                    "description": "图标颜色",
+                    "@Demo": "#000"
+                },
+                "direction": {
+                    "type": "number",
+                    "@ChineseName": "图标方向",
+                    "description": "图标方向；1：向下；2：向上",
+                    "@Demo": 1
+                }
+            },
+            "propsData": [
+                "color",
+                "direction"
+            ]
+        }
+    }
+}

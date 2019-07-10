@@ -1,0 +1,836 @@
+<template>
+    <div>
+        <!-- eslint-disable atom/attribute-hyphenation -->
+        <c-touchable-stop a-if="useFusion">
+            <b-share
+                ref="share"
+                :usePopup="usePopup"
+                :url="url"
+                :title="title"
+                :content="content"
+                :iconUrl="iconUrl"
+                :color="color"
+                :channel="channel"
+                :loginfo="loginfo"
+                :custom="custom"
+                :imageurl="imageurl"
+                :screenShot="screenShot"
+                :type="type"
+            />
+        </c-touchable-stop>
+        <!-- eslint-enable atom/attribute-hyphenation -->
+        <div a-else>
+            <c-toast
+                a-nossr
+                :content="toastContent"
+                :state="toastState"
+                auto-close
+                @change="handleToastChange"
+            />
+            <c-touchable-stop>
+                <c-popup
+                    a-nossr
+                    a-if="$platform !== 'pc'"
+                    :is-open="show
+                        && !hasSDK
+                        && !linkPanel
+                    "
+                    :transition="usePopup"
+                    :has-padding="false"
+                    is-hide-header
+                    min-height="100px"
+                    @close="onClose"
+                >
+                    <div
+                        ref="c-share-container"
+                        class="c-share-container"
+                    >
+                        <div class="c-share-main">
+                            <div class="c-share-panel" @click="stop">
+                                <!-- <c-touchable-feedback class="c-share-button" role="button">
+                                    <div @click="onShare('baidu')">
+                                        <img src="./asset/share-baidu.svg">
+                                        <span>百度</span>
+                                    </div>
+                                </c-touchable-feedback> -->
+                                <c-touchable-feedback class="c-share-button" role="button">
+                                    <div @click="onShare('wechat')">
+                                        <div class="c-share-img wechat"></div>
+                                        <span>微信好友</span>
+                                    </div>
+                                </c-touchable-feedback>
+                                <c-touchable-feedback class="c-share-button" role="button">
+                                    <div @click="onShare('moments')">
+                                        <div class="c-share-img moments"></div>
+                                        <span>朋友圈</span>
+                                    </div>
+                                </c-touchable-feedback>
+                                <c-touchable-feedback class="c-share-button" role="button">
+                                    <div @click="onShare('qq')">
+                                        <div class="c-share-img qq"></div>
+                                        <span>QQ好友</span>
+                                    </div>
+                                </c-touchable-feedback>
+                                <c-touchable-feedback class="c-share-button" role="button">
+                                    <div @click="onShare('qzone')">
+                                        <div class="c-share-img qzone"></div>
+                                        <span>QQ空间</span>
+                                    </div>
+                                </c-touchable-feedback>
+                                <!-- <c-touchable-feedback class="c-share-button" role="button">
+                                    <div @click="onShare('hi')">
+                                        <img src="./asset/share-hi.svg">
+                                        <span>百度Hi</span>
+                                    </div>
+                                </c-touchable-feedback> -->
+                                <c-touchable-feedback class="c-share-button" role="button">
+                                    <div @click="onShare('sinaweibo')">
+                                        <div class="c-share-img weibo"></div>
+                                        <span>新浪微博</span>
+                                    </div>
+                                </c-touchable-feedback>
+                                <!-- <c-touchable-feedback class="c-share-button" role="button">
+                                    <div>
+                                        <img src="./asset/share-screenshot.svg">
+                                        <span>截图分享</span>
+                                    </div>
+                                </c-touchable-feedback> -->
+                                <c-touchable-feedback class="c-share-button" role="button">
+                                    <div @click="handleCopyLinkClick">
+                                        <c-icon type="link" class="img"/>
+                                        <span>复制链接</span>
+                                    </div>
+                                </c-touchable-feedback>
+                            </div>
+                            <c-touchable-feedback class="c-share-cancel">
+                                <div role="button" @click="onClose">
+                                    <span>取消</span>
+                                </div>
+                            </c-touchable-feedback>
+                        </div>
+                    </div>
+                </c-popup>
+                <c-popup
+                    a-nossr
+                    :is-open="linkPanel"
+                    :transition="usePopup"
+                    :has-padding="false"
+                    is-hide-header
+                    min-height="100px"
+                    @close="hideLinkPanel"
+                >
+                    <div class="copy-container">
+                        <p class="copy-hint">长按或点击右侧按钮复制链接，去粘贴给好友吧~</p>
+                        <div
+                            a-show="showCopyIcon"
+                            class="copy-btn"
+                            role="button"
+                            aria-roledescription="复制链接.按钮"
+                            @click="handleCopyLinkClick"
+                        >
+                            <c-icon type="link"/>
+                        </div>
+                        <div
+                            class="copy-box"
+                        >
+                            <span>{{ text }}</span>
+                            <a
+                                :href="shortLink"
+                                onclick="return false;"
+                            >
+                                {{ shortLink }}
+                            </a>
+                        </div>
+                    </div>
+
+                    <c-touchable-feedback class="c-share-cancel">
+                        <div role="button" @click="hideLinkPanel">
+                            <span>取消</span>
+                        </div>
+                    </c-touchable-feedback>
+                </c-popup>
+                <div a-show="hint" class="hint-mask">
+                    <img src="https://m.baidu.com/se/static/pmd/pmd/share/images/wxtips.png">
+                </div>
+            </c-touchable-stop>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 是否使用老的fusion，注意！新增分享组件请务必设置此值为 false
+         */
+        useFusion: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 是否展示分享面板
+         */
+        show: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 直接展示分享面板(false)；用弹出框展示分享面板(true)
+         */
+        usePopup: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 要分享的url
+         */
+        url: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 自定义的分享标题(QZONE 网页版不支持)
+         */
+        title: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 自定义的分享内容
+         */
+        content: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 分享类型：链接（url），图片（image），截图（screenshot）
+         */
+        type: {
+            type: String,
+            default: 'url'
+        },
+
+        /**
+         * 自定义的分享内容
+         */
+        iconUrl: {
+            type: String,
+            default: 'https://m.baidu.com/se/static/pmd/pmd/share/images/bdu.jpg'
+        },
+
+        /**
+         * 文字颜色配置，#333，#666，#999
+         *
+         * @ignore
+         */
+        color: {
+            type: String
+        },
+
+        /**
+         * 分享渠道：['wxfriend', 'pyq', 'qqfriend', 'qzone', 'sinaweibo', 'more']
+         *
+         * @ignore
+         */
+        channel: {
+            type: Array
+        },
+
+        /**
+         * 分享按钮点击时候需要发送的日志内容(只在结果页生效,发tc日志)
+         *
+         * @ignore
+         */
+        loginfo: {
+            type: Object
+        },
+
+        /**
+         * 分享窗口自定义功能，每一个元素都是一个对象
+         *
+         * @ignore
+         */
+        custom: {
+            type: Array
+        },
+
+        /**
+         * 分享图片的地址，默认图片是百度的logo图片
+         *
+         * @ignore
+         */
+        imageurl: {
+            type: String
+        },
+
+        /**
+         * 截图分享额外需要的属性；一个json类型的字符串，存放截图分享所需的属性
+         *
+         * @ignore
+         */
+        screenShot: {
+            type: String
+        }
+    },
+    data: {
+        hasSDK: true,
+        linkPanel: false,
+        isScriptInserted: false,
+        options: {},
+        shortLink: '',
+        hint: false,
+        screenHeight: 0,
+        toastContent: '复制成功',
+        toastState: false,
+        showCopyIcon: true
+    },
+    components: {
+        'c-icon': 'search-ui/Icon/Icon',
+        'c-popup': 'search-ui/Popup/Popup',
+        'c-touchable-feedback': 'search-ui/TouchableFeedback/TouchableFeedback',
+        'c-touchable-stop': 'search-ui/TouchableFeedback/TouchableStop',
+        'c-toast': '../Toast/Toast'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file 分享组件
+ * @author toxni (liyuhang01@baidu.com)
+ */
+import ua from '@searchfe/user-agent';
+import {fetch, loadJS} from '@baidu/ala-util';
+
+export default {
+    mounted() {
+        if (this.$platform !== 'pc') {
+            /* eslint-disable fecs-no-require */
+            require(['fusion/b-share/b-share']);
+            /* eslint-enable fecs-no-require */
+        }
+        if (this.useFusion) {
+            this.$el.addEventListener('shareclick', this.onShareClick);
+            this.$el.addEventListener('close', this.onClose);
+            if (this.show) {
+                this.$refs.share.fusion.popup();
+            }
+        }
+        else {
+            let supportBox = ua.isBaiduBox() ? this.getVersionTwo(ua.baiduBoxVersion()) >= 5.4 : 0;
+            let supportCraft = ua.isSearchCraft() ? this.getVersionTwo(ua.secrVersion()) >= 2.0 : 0;
+            let supportJisu
+                = ua.isBaiduBoxJisu && ua.isBaiduBoxJisu()
+                && ((this.getVersionTwo(ua.baiduBoxVersion()) >= 1.1 && ua.isIOS())
+                || (this.getVersionTwo(ua.baiduBoxVersion()) >= 2.2 && ua.isAndroid()));
+
+            this.hasSDK = supportBox || supportCraft || supportJisu;
+
+            if (ua.isQQBrowser()) {
+                loadJS('//jsapi.qq.com/get?api=app.share');
+            }
+        }
+    },
+    beforeDestroy() {
+        if (this.useFusion) {
+            this.$el.removeEventListener('shareclick', this.onShareClick);
+            this.$el.removeEventListener('close', this.onClose);
+        }
+    },
+    watch: {
+
+        /**
+         * 唤起面板时，判断是否简搜、手百环境
+         * 若是，则执行 nativeShare 调起端分享面板
+         * 若否，则由 show && !hasSDK 逻辑调起组件分享面板
+         *
+         * @param {boolean} newVal 新的 show 的值
+         */
+        show(newVal) {
+            if (!this.shortLink) {
+                this.generateShortLink();
+            }
+            if (newVal) {
+                if (this.useFusion) {
+                    this.$refs.share.fusion.popup();
+                }
+                else if (this.hasSDK) {
+
+                    /**
+                     * 关闭分享面板
+                     *
+                     * @event close
+                     */
+                    this.$emit('close');
+                    this.nativeShare();
+                }
+            }
+        }
+    },
+    methods: {
+        stop(e) {
+            e.stopPropagation();
+        },
+        onClose() {
+            this.$emit('close');
+        },
+        onShareClick(e) {
+            const info = e._args;
+
+            /**
+             * 点击分享面板上的按钮时触发
+             *
+             * @event shareclick
+             * @property {object} param1 分享目标
+             */
+            this.$emit('shareclick', info);
+        },
+        handleToastChange(value) {
+            if (value !== this.toastState) {
+                this.toastState = value;
+            }
+        },
+        getVersionTwo(verArr) {
+            return (verArr && verArr[0] && verArr[1]) ? parseFloat((verArr[0] * 10 + verArr[0]) / 10) : 0;
+        },
+
+        /**
+         * 点击分享到对应平台
+         * 若为 UC 浏览器，执行 ucShare
+         * 若为 QQ 浏览器，执行 qqBrowserShare
+         * 若为其它，执行 wiseShare
+         *
+         * @param {string} target ['wechat', 'moments', 'qq', 'qzone', 'sinaweibo']
+         */
+        onShare(target) {
+            this.$emit('shareClick', {
+                target
+            });
+            let tar = target.toLowerCase();
+            if (ua.isUC()) {
+                this.ucShare(tar);
+            }
+            else if (ua.isQQBrowser()) {
+                this.qqBrowserShare(tar);
+            }
+            else {
+                this.wiseShare(tar);
+            }
+        },
+
+        /**
+         * 手百、简搜调起分享端能力
+         */
+        nativeShare() {
+            // type 这里直接写死为 'url' 因为线上截图分享类型目前全都是链接分享 故与线上保持一致
+            // TODO: 后续与相关需求方确认 是否仍需使用截图分享功能
+            let params = {
+                type: 'url',
+                title: this.title,
+                content: this.content,
+                icon: this.iconUrl,
+                url: this.url ? this.url : location.href,
+                panel: ''
+            };
+            let self = this;
+            /* eslint-disable fecs-no-require */
+            require(['@baidu/share'], function (share) {
+                share.open(params).then(function (res) {
+
+                    /**
+                     * 分享完成回调
+                     *
+                     * @event reslove
+                     */
+                    self.$emit('reslove');
+                }).catch(function (error) {
+
+                    /**
+                     * 分享失败回调
+                     *
+                     * @event catch
+                     */
+                    self.$emit('catch');
+                });
+            });
+            /* eslint-enable fecs-no-require */
+        },
+
+        /**
+         * qq 浏览器分享逻辑
+         *
+         * @param {string} target 分享目标
+         */
+        qqBrowserShare(target) {
+            /* eslint-disable fecs-camelcase */
+            let appCode = this.getAppCode(target);
+            let options = {
+                url: this.url ? this.url : location.href,
+                title: this.title,
+                description: this.content,
+                img_url: this.iconUrl,
+                img_title: '',
+                to_app: appCode,
+                cus_txt: ''
+            };
+            options = target === '' ? '' : options;
+            if (typeof (window.browser) !== 'undefined' && typeof (window.browser.app) !== 'undefined') {
+                window.browser.app.share(options);
+            }
+            // 若调起端能力的 browser 缺失，则降级到 wiseShare 方法
+            else {
+                this.wiseShare(target);
+            }
+        },
+
+        /**
+         * uc 浏览器分享逻辑
+         *
+         * @param {string} target 分享目标
+         * @return {underfined}
+         */
+        ucShare(target) {
+            let appCode = this.getAppCode(target);
+            // Android UC 分享到 QQ 空间有问题，降级到 redirectShare 方法
+            if (appCode === 'QZone' && ua.isAndroid()) {
+                this.redirectShare(target);
+                return void 0;
+            }
+            if (typeof (window.ucweb) !== 'undefined') {
+                window.ucweb.startRequest(
+                    'shell.page_share',
+                    [this.title, this.title, this.url ? this.url : location.href, appCode, '', '@', '']
+                );
+            }
+            else if (typeof (window.ucbrowser) !== 'undefined') {
+                window.ucbrowser.web_share(
+                    this.title, this.title, this.url ? this.url : location.href, appCode, '', '@', ''
+                );
+            }
+            // 若调起端能力的 ucweb ucbrowser 缺失，则降级到 wiseShare 方法
+            else {
+                this.wiseShare(target);
+            }
+        },
+
+        /**
+         * 无端能力分享逻辑（一般为手百、简搜、QQ 浏览器、UC 浏览器以外的方式）
+         *
+         * @param {string} target 分享目标
+        */
+        wiseShare(target) {
+            // qq空间、新浪微博采用 url 转跳方式
+            if (target === 'qzone' || target === 'sinaweibo') {
+                this.redirectShare(target);
+            }
+            else if (ua.isQQApp()) {
+                this.showShareMask();
+            }
+            // 微信蒙层提示右上角分享
+            else if (ua.isWeixinApp()) {
+                this.showShareMask();
+            }
+            else {
+                this.showLinkPanel();
+            }
+        },
+
+        /**
+         * 显示复制链接面板
+         */
+        showLinkPanel() {
+            // 如果短链不存在
+            if (!this.shortLink) {
+                // 生成短链
+                this.generateShortLink(() => {
+                    // 打开复制链接面板
+                    this.linkPanel = true;
+                });
+            }
+            // 如果短链存在，直接打开复制链接面板
+            else {
+                this.linkPanel = true;
+            }
+        },
+
+        /**
+         * 生成短链
+         *
+         * @param {Function} cb 生成完毕后的回调函数
+         */
+        generateShortLink(cb) {
+            let url = `${location.protocol}//${location.protocol === 'https:'
+                ? 'sp0.baidu.com/5LMDcjW6BwF3otqbppnN2DJv/'
+                : ''}mysearch.pae.baidu.com/api/s`;
+            let href = this.url ? this.url : location.href
+                ? this.url ? this.url : location.href
+                : location.href;
+            // 生成短链
+            this.shortLink = href;
+            // 请求短链地址
+            fetch(`${url}?params=${JSON.stringify([href])}`, {
+                method: 'jsonp'
+            })
+                .then(data => {
+                    if (data && data.status === '0' && data[href]) {
+                        this.shortLink = data[href.toString()];
+                    }
+                    // 触发回调
+                    cb && cb();
+                });
+        },
+
+        /**
+         * 复制链接点击
+         */
+        handleCopyLinkClick() {
+            this.copyTextToClipboard(this.shortLink);
+        },
+
+        /**
+         * 复制链接至剪贴板
+         *
+         * @param {string} text 要复制的文案
+         */
+        copyTextToClipboard(text) {
+            // 生成一个表单元素 input/textarea
+            let textArea = document.createElement('textarea');
+            // 背景透明
+            textArea.style.background = 'transparent';
+            // *** 设置属性为只读，修复调起键盘并闪屏的问题
+            textArea.setAttribute('readonly', 'readonly');
+            textArea.value = text;
+            // 添加至 dom
+            document.body.appendChild(textArea);
+            // 设置选中
+            textArea.select();
+            // *** 兼容处理：修复 iOS 下 select() 不会选中文案的问题
+            textArea.setSelectionRange(0, text.length);
+            try {
+                let successful = document.execCommand('copy', true);
+                if (successful) {
+                    this.toastState = true;
+                }
+                else {
+                    this.showCopyIcon = false;
+                    this.linkPanel = true;
+                }
+            }
+            catch (err) {
+                this.showCopyIcon = false;
+                this.linkPanel = true;
+            }
+            // 移除元素
+            document.body.removeChild(textArea);
+        },
+
+        /**
+         * 关闭复制链接面板
+         */
+        hideLinkPanel() {
+            this.linkPanel = false;
+        },
+
+        /**
+         * 获取各个平台分享所需不同名称字段
+         *
+         * @param {string} target ['wechat', 'moments', 'qq', 'qzone', 'sinaweibo']
+         * @return {string} appCode
+         */
+        getAppCode(target) {
+            let appCodeList = {
+                sinaweibo: ['kSinaWeibo', 'SinaWeibo', 11, '新浪微博'],
+                wechat: ['kWeixin', 'WechatFriends', 1, '微信好友'],
+                moments: ['kWeixinFriend', 'WechatTimeline', '8', '微信朋友圈'],
+                qq: ['kQQ', 'QQ', '4', 'QQ好友'],
+                qzone: ['kQZone', 'QZone', '3', 'QQ空间']
+            };
+            if (ua.isUC()) {
+                return ua.isIOS() ? appCodeList[target][0] : appCodeList[target][1];
+            }
+            if (ua.isQQBrowser()) {
+                return appCodeList[target][2];
+            }
+        },
+
+        /**
+         * 分享至 QQApp 微信的蒙层提示
+         */
+        showShareMask() {
+            this.hint = true;
+            setTimeout(() => {
+                this.hint = false;
+            }, 2000);
+        },
+
+        /**
+         * 分享至 qq 空间、新浪微博的 url 转跳分享方式
+         *
+         * @param {string} target 分享目标
+         */
+        redirectShare(target) {
+            if (target === 'qzone') {
+                let url
+                    = `url=${encodeURIComponent(
+                        this.url ? this.url : location.href
+                    )}&imageUrl=${encodeURIComponent(this.iconurl)}`
+                    + `&summary=${this.content}&title=${this.title}`;
+                window.open('http://qzs.qzone.qq.com/open/connect/widget/mobile/qzshare/index.html?' + url);
+            }
+            if (target === 'sinaweibo') {
+                window.open(`http://v.t.sina.com.cn/share/share.php?url=${encodeURIComponent(
+                    this.url ? this.url : location.href
+                )}&title=${encodeURIComponent(this.title)}`);
+            }
+        }
+    }
+};
+</script>
+
+<style scoped lang="less">
+.c-share-container {
+    left: 0;
+    right: 0;
+    z-index: 999;
+}
+
+.c-share-mask {
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, .5);
+    user-select: none;
+    z-index: -1;
+}
+
+.c-share-panel {
+    width: 100%;
+    padding: .27rem 0 .24rem;
+    box-sizing: border-box;
+}
+
+.c-share-button {
+    width: 20%;
+    text-align: center;
+    display: inline-block;
+    vertical-align: top;
+    margin-bottom: .05rem;
+    cursor: pointer;
+    div {
+        font-size: 0;
+    }
+    .c-share-img {
+        width: .28rem;
+        height: .28rem;
+        margin: .14rem auto;
+        display: block;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: 50% 50%;
+    }
+    .wechat {
+        background-image: url(./asset/share-wechat.svg);
+    }
+    .moments {
+        background-image: url(./asset/share-moments.svg);
+    }
+    .qq {
+        background-image: url(./asset/share-qq.svg);
+    }
+    .qzone {
+        background-image: url(./asset/share-qzone.svg);
+    }
+    .weibo {
+        background-image: url(./asset/share-weibo.svg);
+    }
+    img {
+        width: .28rem;
+        height: .28rem;
+        margin: .14rem auto;
+        display: block;
+    }
+    .img {
+        width: .28rem;
+        font-size: .24rem;
+        line-height: .28rem;
+        margin: .14rem auto;
+        display: block;
+        color: #555;
+    }
+    span {
+        color: #333;
+        display: block;
+        margin-bottom: .1rem;
+        font-size: .12rem;
+        line-height: 1;
+    }
+}
+
+.copy-container {
+    background: #f5f5f5;
+    padding: .20rem .17rem .15rem;
+
+    .copy-hint {
+        font-size: .14rem;
+        line-height: 1;
+        color: #555;
+    }
+
+    .copy-btn {
+        position: absolute;
+        top: .15rem;
+        right: .17rem;
+        font-size: .14rem;
+    }
+
+    .copy-box {
+        position: relative;
+        display: block;
+        width: 100%;
+        font-size: .14rem;
+        color: #555;
+        border: 1px solid #eee;
+        padding: 0 .1rem;
+        box-sizing: border-box;
+        margin: .1rem auto 0;
+        user-select: text;
+        border-radius: 5px;
+    }
+}
+
+.c-share-cancel {
+    width: 100%;
+    height: .48rem;
+    border-top: solid 1px #eee;
+    text-align: center;
+    cursor: pointer;
+    span {
+        color: #333;
+        font-size: .16rem;
+        line-height: .48rem;
+    }
+}
+
+.hint-mask {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    background: rgba(0, 0, 0, .6);
+    top: 0;
+    left: 0;
+    z-index: 502;
+    text-align: right;
+
+    img {
+        width: 50%;
+        margin: .1rem .32rem;
+    }
+}
+</style>

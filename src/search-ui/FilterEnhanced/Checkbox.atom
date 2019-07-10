@@ -1,0 +1,136 @@
+<!-- @ignore -->
+<template>
+    <c-span
+        :col="col"
+        @click.native="handleClick"
+    >
+        <div
+            :class="{
+                'c-checkbox-checked': checked
+            }"
+            :style="{
+                'color': checked ? primaryColor : '#000',
+                'border-color': checked ? borderColor : '#f8f8f8'
+            }"
+            class="c-checkbox WA_LOG_BTN"
+        >
+            <!-- 文案 -->
+            <div class="c-line-clamp1">
+                {{ text }}
+            </div>
+            <!-- 只有当被选中时才显示 -->
+            <section a-if="checked">
+                <!-- 三角形 -->
+                <div
+                    :style="{
+                        'border-bottom': borderBottom
+                    }"
+                    class="c-checkbox-triangle"
+                />
+                <span class="c-checkbox-icon-wrapper">
+                    <i class="c-icon c-checkbox-icon">
+                        &#xe608
+                    </i>
+                </span>
+            </section>
+        </div>
+    </c-span>
+</template>
+
+<script type="config">
+    {
+        props: {
+            text: {
+                type: String
+            },
+            col: {
+                type: String,
+                default: '4'
+            },
+            checked: {
+                type: Boolean,
+                default: false
+            },
+            primaryColor: {
+                type: String,
+                default: '#000'
+            },
+            borderColor: {
+                type: String,
+                default: '#555'
+            }
+        },
+        data: {
+            defalutColor: '#555',
+            defaultBorder: '1px solid #f8f8f8'
+        },
+        components: {
+            'c-span': '../Row/Span',
+            'c-icon': '../Icon/Icon'
+        }
+    }
+</script>
+
+<script type="php">
+    function computed_borderBottom($ctx) {
+        $primaryColor = $ctx->_d['primaryColor'];
+        return '.18rem solid ' . $borderColor;
+    }
+</script>
+
+<script>
+export default {
+    methods: {
+        // 确定按钮点击
+        handleClick(e) {
+            this.$emit('click', e);
+        }
+    },
+    computed: {
+        borderBottom() {
+            return '.18rem solid ' + this.borderColor;
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+    .c-checkbox {
+        position: relative;
+        // 这里是为了兼容 Android 低版本浏览器里，右侧边线消失的问题
+        margin: 0 1px;
+        // 这里上下为 0.06rem 是为了实现 UE 提出的 38px 高度
+        padding: .06rem .1rem;
+        color: #000;
+        border: 1px solid #f8f8f8;
+        background-color: #f8f8f8;
+        text-align: center;
+        border-radius: .04rem;
+    }
+    .c-checkbox-checked {
+        background-color: #fff;
+    }
+    .c-checkbox-triangle {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-left: .18rem solid transparent;
+        border-bottom: .18rem solid #555;
+        box-sizing: border-box;
+    }
+    .c-checkbox-icon-wrapper {
+        position: absolute;
+        bottom: 0;
+        right: -.03rem;
+        width: .18rem;
+        height: .18rem;
+        font-size: .08rem;
+    }
+    .c-checkbox-icon {
+        color: #fff;
+        font-size: .1rem;
+        margin-left: .02rem;
+    }
+</style>

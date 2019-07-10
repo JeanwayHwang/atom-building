@@ -1,0 +1,105 @@
+<template>
+    <span
+        :style="{
+            height: defaultLineHeight
+                ? '24px'
+                : size + 'px'
+        }"
+        class="wrapper"
+        aria-hidden="true"
+    >
+        <span
+            ref="triangle"
+            :style="{
+                'border-color': color + ' transparent transparent',
+                'border-width': size + 'px ' + size + 'px 0',
+                'top': defaultLineHeight
+                    ? (24 - size) / 2 + 'px'
+                    : 0
+            }"
+            :class="[
+                direction === 1
+                    ? ''
+                    : $style.triangleUp,
+                animation
+                    ? direction === 1
+                        ? $style.triangleTransition
+                        : $style.triangleUpTransition
+                    : ''
+            ]"
+            class="triangle"
+        />
+    </span>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 颜色色值
+         */
+        color: {
+            type: String,
+            default: '#000'
+        },
+        /**
+         * 默认方向；1：向下；2：向上；
+         */
+        direction: {
+            type: Number,
+            default: 1
+        },
+        /**
+         * 是否开启点击动画
+         */
+        animation: {
+            type: Boolean,
+            default: true
+        },
+        /**
+         * 三角形的大小；默认不暴露
+         *
+         * @ignore
+         */
+        size: {
+            type: Number,
+            default: 4
+        },
+        /**
+         * 是否有默认行高
+         */
+        defaultLineHeight: {
+            type: Boolean,
+            default: true
+        }
+    },
+    components: {
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+
+<style module>
+    .wrapper {
+        display: inline-block;
+    }
+    .triangle {
+        position: relative;
+        display: inline-block;
+        vertical-align: top;
+        line-height: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+    }
+    .triangle-transition {
+        transition: transform .16s cubic-bezier(.46, 0, 1, 1);
+    }
+    .triangle-up {
+        -webkit-transform: rotate(180deg);
+                transform: rotate(180deg);
+    }
+    .triangle-up-transition {
+        transition: transform .3s cubic-bezier(.42, 0, .52, 1);
+    }
+</style>

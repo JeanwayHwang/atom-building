@@ -1,0 +1,91 @@
+<template>
+    <span class="c-mip-icon">
+        <c-touchable-feedback class="touchable c-gap-inner-left-small c-gap-inner-right-small">
+            <c-link
+                :url="url"
+                :params="params"
+                class="link"
+                @click.native="handleClick"
+            >
+                <c-icon
+                    type="mip"
+                    class="icon"
+                />
+            </c-link>
+        </c-touchable-feedback>
+    </span>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 跳转链接，默认跳转到MIP极速页
+         */
+        url: {
+            type: String,
+            default: 'https://m.baidu.com/sf?pd=gloryweb&actname=introduction&title=%E6%9E%81%E9%80%9F%E6%B5%8F%E8%A7%88%E6%A8%A1%E5%BC%8'
+        },
+        /* eslint-disable max-len */
+        /**
+         * 跳转链接所需的参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        params: {
+            type: Object,
+            default: {
+                type: 'sf',
+                tcUrl: 'https://m.baidu.com/sf?pd=gloryweb&actname=introduction&title=%E6%9E%81%E9%80%9F%E6%B5%8F%E8%A7%88%E6%A8%A1%E5%BC%8F',
+                sfUrl: '/sf?pd=gloryweb&actname=introduction&title=%E6%9E%81%E9%80%9F%E6%B5%8F%E8%A7%88%E6%A8%A1%E5%BC%8F'
+            }
+        }
+        /* eslint-enable max-len */
+    },
+    components: {
+        'c-icon': '../Icon/Icon',
+        'c-link': '../Link/Link',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file Mip 图标
+ * @author wangkai <wangkai37@baidu.com>
+ */
+export default {
+    methods: {
+        handleClick(e) {
+
+            /**
+             * 点击事件
+             *
+             * @event click
+             */
+            this.$emit('click');
+        }
+    }
+};
+</script>
+
+<style lang="less" module>
+.c-mip-icon {
+    position: relative;
+    .touchable {
+        display: inline-block;
+    }
+    .link {
+        display: inline-block;
+        width: .16rem;
+    }
+    .icon {
+        position: absolute;
+        top: 1px;
+        color: #7ACBFF;
+        font-size: 16px;
+    }
+}
+</style>

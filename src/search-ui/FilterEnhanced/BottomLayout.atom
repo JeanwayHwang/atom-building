@@ -1,0 +1,306 @@
+<!-- @ignore -->
+<template>
+    <section
+        ref="filterBottomLayout"
+        :style="{
+            'position': transition ? 'relative' : 'fixed',
+            'height': height,
+            'max-height': maxHeight,
+            'top': transition ? '-1px' : null,
+            'z-index': maskZIndex + 1
+        }"
+        class="c-filter-bottom-layout"
+    >
+        <!-- 列表布局 -->
+        <list-layout
+            a-if="bottomData && bottomData.type === 'list'"
+            ref="listLayout"
+            :data="bottomData"
+            :list-layer-max-height="listLayerMaxHeight"
+            :selected-color="primaryColor"
+            :unselected-color="secondColor"
+            :store="store"
+        />
+        <!-- 复合布局 -->
+        <multi-layout
+            a-if="bottomData && bottomData.type === 'multi'"
+            ref="multiLayout"
+            :data="bottomData"
+            :primary-color="primaryColor"
+            :transition="transition"
+            :store="store"
+        />
+        <!-- 自定义布局 -->
+        <custom-layout
+            a-if="bottomData && bottomData.type === 'custom'"
+            ref="customLayout"
+            :data="bottomData"
+            :primary-color="primaryColor"
+            :transition="transition"
+            :hide-custom-bottom-btn="hideCustomBottomBtn"
+            :store="store"
+        >
+            <slot/>
+        </custom-layout>
+    </section>
+</template>
+
+<script type="config">
+    {
+        props: {
+            // store
+            store: {
+                type: Object
+            },
+            // 传入的数据
+            bottomData: {
+                type: Object
+            },
+            // 主颜色
+            primaryColor: {
+                type: String
+            },
+            // 辅颜色
+            secondColor: {
+                type: String
+            },
+            // 复合布局的高度
+            multiHeight: String,
+            // 复合的最大高度
+            multiMaxHeight: {
+                type: String,
+                default: '70%'
+            },
+            // 自定义布局的高度
+            customHeight: String,
+            // 自定义布局的最大高度
+            customMaxHeight: {
+                type: String,
+                default: '70%'
+            },
+            hideCustomBottomBtn: {
+                type: Boolean,
+                default: false
+            },
+            // 列表浮层最大高度
+            listLayerMaxHeight: {
+                type: String
+            },
+            // 是否增加动画
+            transition: {
+                type: Boolean,
+                default: false
+            },
+            // 蒙层的 z-index
+            maskZIndex: {
+                type: Number,
+                default: 299
+            }
+        },
+        data: {
+            // 距离网页顶部的距离
+            top: 0,
+            // 网页的高度
+            pageHeight: 0,
+            // 下方浮层占满时的高度
+            diffHeight: 0,
+            // 高度
+            height: 'auto',
+            // 最大高度
+            maxHeight: 'auto',
+
+            /* 底部栏布局 */
+            // 底部栏真实的高度
+            multiLayoutHeight: null,
+            // 底部栏最大高度
+            multiLayoutMaxHeight: null,
+
+            /* 自定义布局 */
+            // 自定义布局高度
+            customLayoutHeight: null,
+            // 自定义布局最大高度
+            customLayoutMaxHeight: null
+        },
+        components: {
+            'list-layout': './ListLayout',
+            'multi-layout': './MultiLayout',
+            'custom-layout': './CustomLayout'
+        }
+    }
+</script>
+
+<script>
+    export default {
+        mounted() {
+
+            // 计算底部栏高度；底部栏高度其实在页面初始化时已经订好了
+            // 获得整个下方的 dom
+            const domFilterBottomLayout = this.$refs.filterBottomLayout;
+            // 得到距离顶部的高度
+            this.top = this.getElementTop(domFilterBottomLayout);
+            // 得到网页的高度
+            this.pageHeight = this.getBrowserHeight();
+            // 得到 diff 高度
+            this.diffHeight = this.pageHeight - this.top;
+
+            this.calculateMultiMaxHeight();
+            this.calculateMultiHeight();
+
+            this.calculateCustomMaxHeight();
+            this.calculateCustomHeight();
+
+            // multi
+            if (this.bottomData && this.bottomData.type === 'multi') {
+                this.height = this.multiLayoutHeight;
+                this.maxHeight = this.multiLayoutMaxHeight;
+            }
+            // custom
+            else if (this.bottomData && this.bottomData.type === 'custom') {
+                this.height = this.customLayoutHeight;
+                this.maxHeight = this.customLayoutMaxHeight;
+            }
+            else {
+                this.height = 'auto';
+                this.maxHeight = 'auto';
+            }
+        },
+        methods: {
+            // 获取浏览器高度
+            getBrowserHeight() {
+                return window.innerHeight;
+            },
+            // 获取 dom 绝对位置的纵坐标
+            getElementTop(element) {
+                // 对象解构
+                let {
+                    offsetTop: actualTop,
+                    offsetParent: current
+                } = element;
+                while (current !== null) {
+                    actualTop += current.offsetTop;
+                    current = current.offsetParent;
+                }
+                return actualTop;
+            },
+            // 计算复合布局的最大高度
+            calculateMultiMaxHeight() {
+                // 得到复合布局的高度；乘以百分比
+                if (this.multiMaxHeight.indexOf('%')) {
+                    // 去掉百分号
+                    let multiMaxHeight = this.multiMaxHeight.replace(/%/g, '');
+                    // 变成小数
+                    let multiMaxHeightPercent = parseFloat(multiMaxHeight) / 100;
+                    this.multiLayoutMaxHeight = multiMaxHeightPercent * this.diffHeight + 'px';
+                }
+                // 如果不包含百分比
+                else {
+                    this.multiLayoutMaxHeight = this.multiMaxHeight + 'px';
+                }
+            },
+            // 计算复合布局的高度
+            calculateMultiHeight() {
+                if (!this.$refs.multiLayout) {
+                    return;
+                }
+                // 如果存在自定义高度
+                if (this.multiHeight) {
+                    // 如果包含百分比
+                    if (this.multiHeight.indexOf('%')) {
+                        // 去掉百分号
+                        let multiHeight = this.multiHeight.replace(/%/g, '');
+                        // 变成小数
+                        let multiHeightPercent = parseFloat(multiHeight) / 100;
+                        this.multiLayoutHeight = multiHeightPercent * this.diffHeight + 'px';
+                    }
+                    // 如果不包含百分比
+                    else {
+                        this.multiLayoutHeight = this.multiHeight + 'px';
+                    }
+                }
+                // 如果不存在自定义高度
+                else {
+                    const multiLayoutDom = this.$refs.multiLayout.$el;
+                    this.multiLayoutHeight = multiLayoutDom.offsetHeight + 'px';
+                }
+            },
+            // 计算自定义布局的最大高度
+            calculateCustomMaxHeight() {
+                // 得到复合布局的高度；乘以百分比
+                if (this.customMaxHeight.indexOf('%')) {
+                    // 去掉百分号
+                    let customMaxHeight = this.customMaxHeight.replace(/%/g, '');
+                    // 变成小数
+                    let customMaxHeightPercent = parseFloat(customMaxHeight) / 100;
+                    this.customLayoutMaxHeight = customMaxHeightPercent * this.diffHeight + 'px';
+                }
+                // 如果不包含百分比
+                else {
+                    this.customLayoutMaxHeight = this.customMaxHeight + 'px';
+                }
+            },
+            // 计算自定义布局的高度
+            calculateCustomHeight() {
+                if (!this.$refs.customLayout) {
+                    return;
+                }
+                // 如果存在自定义高度
+                if (this.customHeight) {
+                    // 如果包含百分比
+                    if (this.customHeight.indexOf('%')) {
+                        // 去掉百分号
+                        let customHeight = this.customHeight.replace(/%/g, '');
+                        // 变成小数
+                        let customHeightPercent = parseFloat(customHeight) / 100;
+                        this.customLayoutHeight = customHeightPercent * this.diffHeight + 'px';
+                    }
+                    // 如果不包含百分比
+                    else {
+                        this.customLayoutHeight = this.customHeight + 'px';
+                    }
+                }
+                // 如果不存在自定义高度
+                else {
+                    // 算出真实的高度
+                    const customLayoutDom = this.$refs.customLayout.$el;
+                    this.customLayoutHeight = customLayoutDom.offsetHeight + 'px';
+                }
+            }
+        },
+        watch: {
+            bottomData(newData, oldData) {
+                // 这里要在 dom 生成之后才能获得到真实的高度
+                this.$nextTick(() => {
+
+                    // multi
+                    if (newData && newData.type === 'multi') {
+                        this.calculateMultiMaxHeight();
+                        this.calculateMultiHeight();
+                        this.height = this.multiLayoutHeight;
+                        this.maxHeight = this.multiLayoutMaxHeight;
+                    }
+                    // custom
+                    else if (newData && newData.type === 'custom') {
+                        this.calculateCustomMaxHeight();
+                        this.calculateCustomHeight();
+                        this.height = this.customLayoutHeight;
+                        this.maxHeight = this.customLayoutMaxHeight;
+                    }
+                    else {
+                        this.height = 'auto';
+                        this.maxHeight = 'auto';
+                    }
+                });
+            }
+        }
+    };
+</script>
+
+<style lang="less" scoped>
+    .c-filter-bottom-layout {
+        position: relative;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+</style>

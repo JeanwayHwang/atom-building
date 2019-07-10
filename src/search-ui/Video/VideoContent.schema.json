@@ -1,0 +1,128 @@
+{
+    "alias": [
+        "c-video-content"
+    ],
+    "type": "object",
+    "properties": {
+        "video": {
+            "type": "object",
+            "@ChineseName": "视频相关设置",
+            "description": "视频相关设置",
+            "properties": {
+                "src": {
+                    "type": "string",
+                    "@ChineseName": "视频地址",
+                    "description": "视频地址",
+                    "@Demo": "https://xxx.mp4"
+                },
+                "thumb": {
+                    "type": "string",
+                    "@ChineseName": "1:1 预览图地址",
+                    "description": "1:1 预览图地址",
+                    "@Demo": "https://xxx.png"
+                },
+                "poster": {
+                    "type": "string",
+                    "@ChineseName": "16:9预览图地址",
+                    "description": "16:9预览图地址",
+                    "@Demo": "https://xxx.png"
+                },
+                "icontype": {
+                    "type": "string",
+                    "@ChineseName": "遮罩图标",
+                    "description": "遮罩图标",
+                    "@Demo": "video_play3"
+                },
+                "icontxt": {
+                    "type": "string",
+                    "@ChineseName": "遮罩文字",
+                    "description": "遮罩文字",
+                    "@Demo": ""
+                },
+                "col": {
+                    "type": [
+                        "number",
+                        "string"
+                    ],
+                    "@ChineseName": "1:1 小图栅格数",
+                    "description": "1:1 小图栅格数",
+                    "@Demo": 4
+                },
+                "imgType": {
+                    "type": "string",
+                    "@ChineseName": "thumb 图片比例类型",
+                    "description": "thumb 图片比例类型",
+                    "@Demo": "s"
+                },
+                "logo": {
+                    "type": "string",
+                    "@ChineseName": "thumb 图片下方 logo",
+                    "description": "thumb 图片下方 logo",
+                    "@Demo": "https://xxx/png"
+                },
+                "wait": {
+                    "type": "boolean",
+                    "@ChineseName": "播放前是否显示蒙层",
+                    "description": "播放前是否显示蒙层",
+                    "@Demo": false
+                },
+                "shift": {
+                    "type": "boolean",
+                    "@ChineseName": "图片右侧内容是否右移",
+                    "description": "图片右侧内容是否右移",
+                    "@Demo": false
+                },
+                "vanish": {
+                    "type": "boolean",
+                    "@ChineseName": " 下侧内容是否不展现",
+                    "description": "下侧内容是否不展现",
+                    "@Demo": false
+                },
+                "smallLogo": {
+                    "type": "boolean",
+                    "@ChineseName": "logo 是否展示小样式",
+                    "description": "logo 是否展示小样式",
+                    "@Demo": false
+                },
+                "zoom": {
+                    "type": "boolean",
+                    "@ChineseName": "图片展开是否缩放",
+                    "description": "图片展开是否缩放",
+                    "@Demo": false
+                }
+            }
+        },
+        "text": {
+            "type": "object",
+            "@ChineseName": "右侧文字设置",
+            "description": "右侧文字设置",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "@ChineseName": "右侧文字内容",
+                    "description": "右侧文字内容",
+                    "@Demo": "内容内容内容"
+                },
+                "textClamp": {
+                    "type": [
+                        "number",
+                        "string"
+                    ],
+                    "@ChineseName": "右侧文字内容截断 默认为4行截断",
+                    "description": "右侧文字内容截断 默认为4行截断",
+                    "@Demo": "2"
+                },
+                "textColor": {
+                    "type": "string",
+                    "@ChineseName": "右侧文字内容的字体颜色",
+                    "description": "右侧文字内容的字体颜色",
+                    "@Demo": "#000"
+                }
+            }
+        }
+    },
+    "propsData": [
+        "video",
+        "text"
+    ]
+}

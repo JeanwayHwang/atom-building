@@ -1,0 +1,340 @@
+<template>
+    <div class="c-pull-refresh-wrap">
+        <div
+            :style="{
+                height: height + 'px'
+            }"
+            :class="{
+                'c-pull-refresh-header-loading': currentStep === 3,
+                'c-pull-refresh-header-loaded': currentStep === 4
+            }"
+            class="c-pull-refresh-header"
+            aria-live="assertive"
+        >
+            <div
+                :aria-hidden="currentStep !== 3"
+                class="c-pull-refresh-loading"
+                role="alert"
+                aria-label="加载中"
+            >
+                <i
+                    :style="{
+                        'background-position-y': iconPosY + 'px'
+                    }"
+                    class="c-pull-refresh-pulling-icon"
+                />
+                <i class="c-pull-refresh-loading-icon"/>
+                <span class="c-pull-refresh-loading-text c-gap-left-small"></span>
+            </div>
+            <div class="c-pull-refresh-loaded">
+                <c-icon
+                    type="commit"
+                    class="c-icon"
+                />
+                <span class="c-pull-refresh-loaded-text c-gap-left-middle">
+                    {{
+                        dataSize > 0
+                            ? '为你推荐' + dataSize + '条更新'
+                            : errorTip
+                    }}
+                </span>
+            </div>
+        </div>
+        <div
+            class="c-pull-refresh-content"
+            @touchstart="onTouchStart"
+            @touchmove="onTouchMove"
+            @touchend="onTouchEnd"
+            @touchcancel="onTouchEnd"
+        >
+            <!-- @slot 默认 slot -->
+            <slot/>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 下拉多少距离触发on-refresh
+         */
+        offset: {
+            type: Number,
+            default: 58
+        },
+        /**
+         * 异步请求失败后的提示
+         */
+        errorTip: {
+            type: String,
+            default: '暂时没有更新，休息一下吧'
+        },
+        /**
+         * tip提示展示时间
+         */
+        tipShowTime: {
+            type: Number,
+            default: 1280
+        }
+    },
+    data: {
+        curY: 0,
+        moveY: 0,
+        height: 0,
+        originY: 0,
+        iconPosY: 0,
+        loading: false,
+        triggerFlag: false,
+        scrollTopStart: 0,
+        dataSize: 0,
+        currentStep: 1
+    },
+    components: {
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+
+<script>
+const STATUS_NORMAL = 1;
+const STATUS_PULLING = 2;
+const STATUS_LOADING = 3;
+const STATUS_LOADED = 4;
+
+/**
+ * @const
+ * 更新动画icon是一个图片，通过position定位
+ * ICON_COUNT：icon总数
+ * PER_ICON_HEIGHT：每个icon的高度
+ */
+const ICON_COUNT = 26;
+const PER_ICON_HEIGHT = 22;
+export default {
+    methods: {
+        onTouchStart(e) {
+            if (this.loading) {
+                return;
+            }
+            this.currentStep = STATUS_NORMAL;
+            this.originY = e.touches[0].clientY;
+            this.scrollTopStart = window.pageYOffset;
+        },
+
+        onTouchMove(e) {
+            if (this.loading) {
+                return;
+            }
+            let curScrollTop = 0;
+            this.curY = e.touches[0].clientY;
+            this.moveY = this.curY - this.originY;
+            curScrollTop = this.scrollTopStart - this.moveY;
+            if (this.moveY > 0 && curScrollTop <= 0 && !this.scrollTopStart) {
+                e.preventDefault();
+                this.height = this.moveY;
+                this.currentStep = STATUS_PULLING;
+                this.triggerFlag = this.moveY > this.offset;
+
+                // 跟随动画
+                let limit = 20;
+                if (this.moveY >= limit) {
+                    let iconNum = Math.round(ICON_COUNT * (this.moveY - limit) / this.offset);
+                    iconNum = iconNum > ICON_COUNT - 1 ? ICON_COUNT - 1 : iconNum;
+                    this.iconPosY = iconNum * -PER_ICON_HEIGHT;
+                }
+            }
+        },
+
+        onTouchEnd(e) {
+            const that = this;
+            if (that.loading) {
+                return;
+            }
+            if (!that.triggerFlag) {
+                that.reset();
+                return;
+            }
+            that.loading = true;
+            this.currentStep = STATUS_LOADING;
+            this.height = this.offset;
+
+            /**
+             * on-refresh event.
+             *
+             * @event on-refresh
+             * @property {object} param1 defer
+             * @property {function} param1.success
+             * @property {function} param1.fail
+             */
+            that.$emit('on-refresh', {
+                success(size) {
+                    if (typeof size === 'number') {
+                        that.refreshCallback(size);
+                    }
+                    else {
+                        that.refreshCallback(0);
+                    }
+                },
+                fail() {
+                    that.refreshCallback(0);
+                }
+            });
+        },
+
+        refreshCallback(size) {
+            this.dataSize = size;
+            this.currentStep = STATUS_LOADED;
+            setTimeout(this.reset, this.tipShowTime);
+        },
+
+        reset() {
+            this.loading = false;
+            this.triggerFlag = false;
+            this.height = 0;
+            this.iconPosY = 0;
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.c-pull-refresh-header {
+    height: 0;
+    text-align: center;
+    overflow: hidden;
+    background-color: #fff;
+}
+.c-pull-refresh-pulling-icon {
+    display: inline-block;
+    margin: 18px 0;
+    width: 22px;
+    height: 22px;
+    background-image: url(./asset/icon_pulling.png);
+    background-size: 22px 572px;
+    background-position: 0 0;
+    vertical-align: middle;
+}
+.c-pull-refresh-loading-icon {
+    display: none;
+    margin: 20px 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    vertical-align: middle;
+    background-color: #2a2a31;
+    opacity: .3;
+    -webkit-animation: c-pull-refresh-loading-icon-animation 750ms;
+            animation: c-pull-refresh-loading-icon-animation 750ms;
+    -webkit-animation-timing-function: linear;
+            animation-timing-function: linear;
+    -webkit-animation-iteration-count: infinite;
+            animation-iteration-count: infinite;
+}
+.c-pull-refresh-loading-text {
+    display: inline-block;
+    font-size: 12px;
+    line-height: 1;
+    color: #c6c6c6;
+    margin-top: 11px;
+    margin-bottom: 11px;
+}
+.c-pull-refresh-loaded {
+    display: none;
+    height: 28px;
+    margin: 15px auto;
+    background-color: #f5f5f5;
+    color: #000;
+    padding: 0 16px;
+    border-radius: 14px;
+    -webkit-transform: translateY(31px);
+            transform: translateY(31px);
+    .c-icon,
+    .c-pull-refresh-loaded-text {
+        display: inline-block;
+        font-size: 12px;
+        line-height: 1;
+        margin-top: 8px;
+        margin-bottom: 8px;
+    }
+}
+.c-pull-refresh-header-loading {
+    .c-pull-refresh-pulling-icon {
+        display: none;
+    }
+    .c-pull-refresh-loading-icon {
+        display: inline-block;
+    }
+}
+.c-pull-refresh-header-loaded {
+    .c-pull-refresh-loading {
+        display: none;
+    }
+    .c-pull-refresh-loaded {
+        /* lesslint-disable vendor-prefixes-sort */
+        display: inline-block;
+        -webkit-transform: translateY(0);
+                transform: translateY(0);
+        -webkit-transition: -webkit-transform 280ms ease-out;
+        transition: -webkit-transform 280ms ease-out;
+        transition: transform 280ms ease-out;
+        transition: transform 280ms ease-out, -webkit-transform 280ms ease-out;
+        /* lesslint-enable vendor-prefixes-sort */
+    }
+}
+.c-pull-refresh-header-loading,
+.c-pull-refresh-header-loaded {
+    will-change: height;
+    -webkit-transition: height 300ms ease-out;
+            transition: height 300ms ease-out;
+}
+@-webkit-keyframes c-pull-refresh-loading-icon-animation {
+    0% {
+        opacity: .3;
+        -webkit-transform: rotateY(0deg);
+                transform: rotateY(0deg);
+    }
+    40% {
+        -webkit-transform: rotateY(90deg);
+                transform: rotateY(90deg);
+    }
+    50% {
+        opacity: .6;
+        -webkit-transform: rotateY(180deg);
+                transform: rotateY(180deg);
+    }
+    60% {
+        -webkit-transform: rotateY(270deg);
+                transform: rotateY(270deg);
+    }
+    100% {
+        opacity: .3;
+        -webkit-transform: rotateY(360deg);
+                transform: rotateY(360deg);
+    }
+}
+@keyframes c-pull-refresh-loading-icon-animation {
+    0% {
+        opacity: .3;
+        -webkit-transform: rotateY(0deg);
+                transform: rotateY(0deg);
+    }
+    40% {
+        -webkit-transform: rotateY(90deg);
+                transform: rotateY(90deg);
+    }
+    50% {
+        opacity: .6;
+        -webkit-transform: rotateY(180deg);
+                transform: rotateY(180deg);
+    }
+    60% {
+        -webkit-transform: rotateY(270deg);
+                transform: rotateY(270deg);
+    }
+    100% {
+        opacity: .3;
+        -webkit-transform: rotateY(360deg);
+                transform: rotateY(360deg);
+    }
+}
+</style>

@@ -1,0 +1,149 @@
+<template>
+    <div>
+        <c-row>
+            <c-span>
+                <div class="c-filter-multi-position">
+                    <input class="c-input" :value="leftVal" :placeholder="placeHold" ref="input1" a-model="leftVal" @blur="rangeStart">
+                    <span class="c-filter-multi-price-company" a-if="rangeInput.input.unit">{{rangeInput.input.unit}}</span>
+                </div>
+            </c-span>
+            <div class="c-gap-left-small c-gap-right-small c-filter-multi-line-middle"><span class="c-color-gray">—</span></div>
+            <c-span>
+                <div class="c-filter-multi-position">
+                    <input class="c-input" :value="rightVal" :placeholder="placeHold2" ref="input2" a-model="rightVal" @blur="rangeEnd">
+                    <span class="c-filter-multi-price-company" a-if="rangeInput.input.unit">{{rangeInput.input.unit}}</span>
+                </div>
+            </c-span>
+        </c-row>
+        <c-row a-if="rangeInput.input.listButton && rangeInput.input.listButton.length > 0" class="c-gap-top">
+            <template a-for="i in math_ceil(rangeInput.input.listButton.length / cols)">
+                <c-span a-for="j in cols" a-if="(i-1)*cols+(j-1) < rangeInput.input.listButton.length" >
+                    <div class="c-filter-multi-input-item" @click="changeBtnSel((i-1)*cols+(j-1))">
+                        <div class="WA_LOG_BTN c-line-clamp1">
+                            <span>{{rangeInput.input.listButton[(i-1)*cols+(j-1)].leftNum}}</span>
+                            <span>-</span>
+                            <span>{{rangeInput.input.listButton[(i-1)*cols+(j-1)].rightNum}}</span>
+                        </div>
+                    </div>
+                </c-span>
+                <c-span a-else></c-span>
+            </template>
+        </c-row>
+        <p class="c-color-red c-gap-top c-filter-multi-center" a-if="rangeTip === true && rangeInput.input.errortip">{{rangeInput.input.errortip}}</p>
+    </div>
+</template>
+
+<script type="config">
+    {
+        props: ['rangeInput'],
+        data: {
+            'startRange': '',
+            'endRange': '',
+            'rangeTip': false,
+            'placeHold': '',
+            'placeHold2': '',
+            'leftVal': rangeInput.input.leftVal,
+            'rightVal': rangeInput.input.rightVal,
+            'rangeFliter': {},
+            'cols': 3
+        },
+        components: {
+            'c-row': '../Row/Row',
+            'c-span': '../Row/Span'
+        }
+    }
+</script>
+
+<script>
+export default {
+    mounted() {
+        if (this.rangeInput.input.placeHold) {
+            this.placeHold = this.rangeInput.input.placeHold;
+            this.placeHold2 = this.rangeInput.input.placeHold2
+                ? this.rangeInput.input.placeHold2
+                : this.rangeInput.input.placeHold;
+
+        }
+    },
+    methods: {
+        rangeStart() {
+            this.startRange = this.$refs.input1.value;
+            if (this.checkNum((this.startRange))) {
+                this.leftVal = this.startRange;
+            }
+            else {
+                this.leftVal = '';
+            }
+        },
+        rangeEnd() {
+            this.endRange = this.$refs.input2.value;
+            if (this.checkNum((this.endRange))) {
+                this.rightVal = this.endRange;
+            }
+            else {
+                this.rightVal = '';
+            }
+        },
+        checkNum(val) {
+            return !isNaN(val);
+        },
+        changeBtnSel(idx) {
+            let btnVal = this.rangeInput.input.listButton[idx];
+            this.leftVal = btnVal.leftNum;
+            this.rightVal = btnVal.rightNum;
+        },
+        resetVal() {
+            this.leftVal = '';
+            this.rightVal = '';
+            this.rangeTip = false;
+            this.rangeFliter = {};
+        },
+        sureVal() {
+            if (this.leftVal !== '' && this.rightVal !== '' && Number(this.leftVal) < Number(this.rightVal)) {
+                this.rangeTip = false;
+                this.rangeFliter.filterKey = this.rangeInput.filterKey;
+                this.rangeFliter.status = '0';
+                this.rangeFliter[this.rangeInput.filterKey] = this.leftVal + '_' + this.rightVal;
+                this.$emit('sureSel', this.rangeFliter);
+            }
+            else {
+                if (!this.leftVal && !this.rightVal) {
+                    this.rangeTip = false;
+                    this.rangeFliter.status = '0';
+                }
+                else {
+                    this.rangeFliter.status = '1';
+                    this.rangeTip = true;
+                }
+            }
+        }
+    }
+};
+</script>
+<style scoped>
+    .c-filter-multi-position {
+        position: relative;
+    }
+    .c-filter-multi-price-company {
+        position: absolute;
+        top: .06rem;
+        right: .14rem;
+    }
+    .c-filter-multi-line-middle {
+        width: .07rem;
+        line-height: .38rem;
+        overflow: hidden;
+    }
+    .c-filter-multi-center {
+        text-align: center;
+    }
+    .c-filter-multi-input-item {
+        position: relative;
+        padding: .05rem 0;
+        color: #000;
+        border: 1px solid #f8f8f8;
+        background-color: #f8f8f8;
+        text-align: center;
+        border-radius: .04rem;
+    }
+</style>

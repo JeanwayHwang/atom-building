@@ -1,0 +1,88 @@
+{
+    "alias": [
+        "c-waterfall"
+    ],
+    "type": "object",
+    "properties": {
+        "waterfall": {
+            "type": "object",
+            "@ChineseName": "waterfall 组件实例",
+            "description": "waterfall 组件实例",
+            "properties": {
+                "imgList": {
+                    "type": "array",
+                    "@ChineseName": "图片数组",
+                    "description": "图片数组",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "src": {
+                                "type": "string",
+                                "@ChineseName": "图片 src",
+                                "description": "图片 src",
+                                "@Demo": "https://www.baidu.com/default.png"
+                            },
+                            "width": {
+                                "type": "number",
+                                "@ChineseName": "图片宽度",
+                                "description": "图片宽度",
+                                "@Demo": 150
+                            },
+                            "height": {
+                                "type": "number",
+                                "@ChineseName": "图片高度",
+                                "description": "图片高度",
+                                "@Demo": 300
+                            },
+                            "color": {
+                                "type": "string",
+                                "@ChineseName": "图片主颜色",
+                                "description": "图片主颜色",
+                                "@Demo": "#efefef"
+                            }
+                        }
+                    }
+                },
+                "column": {
+                    "type": "number",
+                    "@ChineseName": "列数",
+                    "@Demo": 2,
+                    "description": "列数；默认为 2"
+                },
+                "defaultPlaceholderImgColor": {
+                    "type": "string",
+                    "@ChineseName": "默认占位图颜色",
+                    "@Demo": "连网失败",
+                    "description": "默认占位图颜色；默认为 '#efefef'"
+                },
+                "loadingText": {
+                    "type": "string",
+                    "@ChineseName": "加载中文本",
+                    "@Demo": "正在加载...",
+                    "description": "加载中文本；默认为 '正在加载...'"
+                },
+                "loadEndText": {
+                    "type": "string",
+                    "@ChineseName": "加载到尾部文本",
+                    "@Demo": "到底了 没有更多内容了",
+                    "description": "加载到尾部文本；默认为 '到底了 没有更多内容了'"
+                },
+                "loadFailText": {
+                    "type": "string",
+                    "@ChineseName": "加载失败文本",
+                    "@Demo": "加载失败 点击重新加载",
+                    "description": "加载失败文本；默认为 '加载失败 点击重新加载'"
+                }
+            },
+            "propsData": [
+                "imgList",
+                "column",
+                "defaultPlaceholderImgColor",
+                "loadingText",
+                "loadEndText",
+                "loadFailText"
+            ]
+        }
+    }
+}

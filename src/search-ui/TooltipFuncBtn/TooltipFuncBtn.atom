@@ -1,0 +1,251 @@
+<template>
+    <div
+        :data-tool="{feedback: feedback,
+                     evaluate: evaluate.url ? evaluate.url : ''} | json"
+        class="func-btn-wrapper"
+    >
+        <!-- 蒙层 -->
+        <c-touchable-stop
+            class="mask-stop"
+            @click.native="onFuncBtnClick"
+        >
+            <div
+                class="mask"
+            />
+        </c-touchable-stop>
+        <c-touchable-stop>
+            <!-- 按钮 -->
+            <div
+                ref="funcBtn"
+                :style="[
+                    {
+                        top: '2px',
+                        width: '14px',
+                        height: '14px',
+                        borderRadius: '7px',
+                        backgroundColor: circleColor
+                    },
+                    size === 'large'
+                        ? {
+                            top: '3px',
+                            width: '16px',
+                            height: '16px',
+                            borderRadius: '8px'
+                        }
+                        : {}
+                ]"
+                class="func-btn"
+                @click="onFuncBtnClick"
+            >
+                <!-- 三角形 -->
+                <div
+                    :style="[
+                        {
+                            top: '5px',
+                            left: '3px',
+                            borderColor: triangleColor + ' transparent transparent transparent'
+                        },
+                        size === 'large'
+                            ? {
+                                top: '6px',
+                                left: '4px'
+                            }
+                            : {}
+                    ]"
+                    class="triangle"
+                />
+            </div>
+        </c-touchable-stop>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 圆形按钮的大小；'small'（小），'large'（大）
+         */
+        size: {
+            type: String,
+            default: 'small'
+        },
+
+        /**
+         * 反馈参数；详情请参考：[Atom 卡片反馈功能开发规范](http://sfe.baidu.com:8188/standard/feedback.md)
+         */
+        feedback: Object,
+
+        /**
+         * 评价数据
+         *
+         * @property {string} url 评价跳转链接
+         * @property {object} params 评价跳转链接的 urlParams
+         */
+        evaluate: {
+            type: Object,
+            default: {
+                url: '',
+                params: null
+            }
+        },
+
+        /**
+         * 分享参数；详情请参考：[Share 分享组件](http://soy.baidu-int.com/component/Share)
+         */
+        shareParams: {
+            type: Object
+        },
+
+        /**
+         * 三角形颜色
+         */
+        triangleColor: {
+            type: String,
+            default: '#fff'
+        },
+
+        /**
+         * 圆形颜色
+         */
+        circleColor: {
+            type: String,
+            default: '#e5e5e5'
+        }
+    },
+    data: {
+        // 提示层
+        tooltip: {
+            // 是否显示
+            show: false,
+            // 点击位置距离顶部的距离
+            top: 0,
+            // 点击位置距离底部的距离
+            left: 0
+        },
+        // 分享
+        share: {
+            show: false,
+            trans: true
+        },
+        mounted: false,
+        // 是否是 activated 态
+        activated: true,
+        // 按钮点击保护
+        clickProtect: false,
+        // timeout 句柄
+        clickProtectTimeout: null
+    },
+    components: {
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback',
+        'c-touchable-stop': '../TouchableFeedback/TouchableStop',
+        'c-link': '../Link/Link'
+    }
+}
+</script>
+
+<script>
+export default {
+    mounted() {
+        this.mounted = true;
+    },
+    activated() {
+        this.activated = true;
+    },
+    deactivated() {
+        this.activated = false;
+    },
+    methods: {
+        // 按钮点击事件
+        onFuncBtnClick(e) {
+            // 点击保护
+            if (this.clickProtect) {
+                return;
+            }
+            this.clickProtect = true;
+            this.clickProtectTimeout = setTimeout(() => {
+                this.clickProtect = false;
+            }, 300);
+
+            let domFuncBtn = this.$refs.funcBtn;
+            let rect = domFuncBtn.getBoundingClientRect();
+            this.tooltip.top = rect.top;
+            this.tooltip.left = rect.left;
+
+            // 这里是为了解决和整卡可点误触的情况，会触发两个电机效果
+            // 因为 deactivated 事件比较慢，延迟 100ms 才能获取 this.activated 的状态
+            setTimeout(() => {
+                // 必须是 this.activated 为  true 的时候才弹层
+                if (this.activated) {
+                    this.$refs.tooltip.showFunc(true);
+                }
+            }, 100);
+        },
+        // 提示层关闭事件
+        onTooltipClose() {
+            this.$refs.tooltip.hideFunc(true);
+        },
+        // 新反馈入口点击
+        handleFeedbackClick(obj) {
+            this.$emit('feedbackclick', obj);
+            // 这里增加 try catch 是因为 openFeedBack 是在 ala-cli root 模板里的代码，在组件上线时不能保证模板里一定存在该方法
+            try {
+                this.$root.openFeedBack();
+            }
+            catch (e) {
+            }
+            this.$refs.tooltip.hideFunc(false);
+        },
+        // 分享按钮点击
+        handleShareBtnClick() {
+            this.share.show = true;
+            this.$refs.tooltip.hideFunc(true);
+        },
+        // 分享关闭
+        handleShareClose() {
+            this.share.show = false;
+        }
+    }
+};
+</script>
+
+<style module lang="less">
+.func-btn-wrapper {
+    position: relative;
+    display: inline-block;
+    box-sizing: border-box;
+}
+.mask-stop {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -.05rem;
+    right: -.05rem;
+}
+.mask {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.func-btn {
+    position: relative;
+    display: inline-block;
+    .triangle {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 5px 4px 0 4px;
+    }
+}
+.tooltip-feedback-btn {
+    display: flex;
+    padding: .03rem 0;
+    border: 1px solid #EEE;
+    border-radius: 5px;
+    justify-content: center;
+    text-align: center;
+}
+</style>
+

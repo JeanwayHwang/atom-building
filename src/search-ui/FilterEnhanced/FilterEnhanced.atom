@@ -1,0 +1,993 @@
+<template>
+    <div data-module="c-fe">
+        <c-filter-frame
+            ref="filterFrame"
+            :options="mSelections"
+            :horizontal-transition="false"
+            :opacity-transition="false"
+            :row-tile="rowTile"
+            :stop-scroll-through="stopScrollThrough"
+            :show-mask="showMask"
+            :z-index="zIndex"
+            :primary-color="primaryColor"
+            background-color="#fff"
+            class="filter"
+            @taglayoutclick="handleTagLayoutClick"
+            @maskclick="handleMaskClick"
+        >
+            <!-- 标签栏 slot -->
+            <div slot="tagLayout">
+                <!-- @slot 标签栏右侧的自定义区域 -->
+                <slot name="tagLayout"/>
+            </div>
+            <template
+                a-for="(selection, selectionIndex) in mSelections"
+            >
+                <!-- type === list -->
+                <c-cascader
+                    a-if="selection.type === 'list'"
+                    ref="cascader"
+                    :key="selectionIndex"
+                    :column="selection.column"
+                    :column-overflow="cascaderColumnOverflow"
+                    :options="selection.options"
+                    :default-value="selection.defaultValue"
+                    :default-value-type="selection.defaultValueType"
+                    :ins="selection"
+                    :stop-scroll-through="stopScrollThrough"
+                    :selected-color="primaryColor"
+                    :deep-copy="false"
+                    @itemclick="handleCascaderItemClick({
+                        item: $event,
+                        selection
+                    })"
+                />
+                <!-- type === 'multi' -->
+                <div
+                    a-else-if="selection.type === 'multi'"
+                    :ref="'multiWrapper' + selectionIndex"
+                    :key="selectionIndex"
+                    :style="[
+                        {
+                            'max-height': multiMaxHeight + 'px'
+                        }
+                    ]"
+                    class="multi"
+                    @touchstart="handleMultiTouchStart({
+                        e: $event,
+                        selectionIndex
+                    })"
+                    @touchmove="handleMultiTouchMove({
+                        e: $event,
+                        selectionIndex
+                    })"
+                >
+                    <div
+                        :ref="'multi' + selectionIndex"
+                        :style="[
+                            {
+                                'max-height': multiMaxHeight + 'px'
+                            },
+                            selection.hideBtnLayout
+                                ? {
+                                    'padding-bottom': '.1rem'
+                                }
+                                : {
+                                    'padding-bottom': '.8rem'
+                                }
+                        ]"
+                        class="multi-inner"
+                    >
+                        <template
+                            a-for="(option, optionIndex) in selection.options"
+                        >
+                            <c-spread-tags
+                                a-if="option.type === 'radio'
+                                    || option.type === 'checkbox'
+                                "
+                                ref="spreadTag"
+                                :key="selectionIndex + ' ' + optionIndex"
+                                :options="option.options"
+                                :force-check="option.forceCheck"
+                                :label="option.label"
+                                :size="option.size"
+                                :type="option.type"
+                                :default-value="option.defaultValue"
+                                :spread-opts="{
+                                    show: option.noSpread
+                                        ? false
+                                        : option.options.length > 3,
+                                    spread: option.noSpread
+                                }"
+                                :ins="option"
+                                :primary-color="primaryColor"
+                                margin-inner="0 1px"
+                                class="c-gap-inner-top-small"
+                                @itemclick="handleSpreadTagsItemClick({
+                                    tagItem: $event,
+                                    option,
+                                    optionIndex,
+                                    selection
+                                })"
+                                @spreadchange="handleSpreadChange({
+                                    params: $event,
+                                    option,
+                                    optionIndex,
+                                    selection,
+                                    selectionIndex
+                                })"
+                            />
+                            <c-range-input
+                                a-else-if="option.type === 'rangeInput'"
+                                ref="rangeInput"
+                                :key="selectionIndex + ' ' + optionIndex"
+                                :options="option.options"
+                                :label="option.label"
+                                :type="option.type"
+                                :force-check="option.forceCheck"
+                                :default-value="option.defaultValue"
+                                :spread-opts="{
+                                    show: option.noSpread
+                                        ? false
+                                        : option.options.length > 3,
+                                    threshold: 2,
+                                    paddingBottom: '.05rem',
+                                    touchableFeedbackBottom: -.05
+                                }"
+                                :ins="option"
+                                :unit="option.input.unit"
+                                :error-tips="option.input.errorTips"
+                                :min="option.input
+                                    ? option.input.min
+                                    : {}
+                                "
+                                :max="option.input
+                                    ? option.input.max
+                                    : {}
+                                "
+                                :primary-color="primaryColor"
+                                margin-inner="0 1px"
+                                class="c-gap-inner-top-small"
+                                @change="handleRangeInputChange({
+                                    value: $event.value,
+                                    type: $event.type,
+                                    option,
+                                    optionIndex,
+                                    selection
+                                })"
+                                @spreadchange="handleSpreadChange({
+                                    params: $event,
+                                    option,
+                                    optionIndex,
+                                    selection,
+                                    selectionIndex
+                                })"
+                            />
+                        </template>
+                    </div>
+                    <!-- 按钮栏 -->
+                    <c-btn-layout
+                        a-if="!selection.hideBtnLayout"
+                        :primary-color="primaryColor"
+                        border-bottom="1px solid #fff"
+                        class="btn-layout"
+                        @click="handleBtnLayoutClick({
+                            btnLayoutObj: $event,
+                            selection,
+                            selectionIndex
+                        })"
+                    />
+                </div>
+                <!-- type === 'custom' -->
+                <div
+                    a-else-if="selection.type === 'custom'"
+                    :key="selectionIndex"
+                >
+                    <!-- @slot:custom${index} 自定义区域, slot 名称为 'custom' 字符串加索引 -->
+                    <slot :name="'custom' + selectionIndex"/>
+                </div>
+            </template>
+        </c-filter-frame>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 选项集
+         *
+         * @property {string} type='list' 筛选项的类型：`list`（级联类型），`multi`（复合类型）、`order`（排序类型）
+         * @property {string} text 筛选项标签的文案
+         * @property {string} key 筛选项的唯一标识；仅支持 `list`、`order` 类型
+         * @property {string} defaultValue 当前筛选项的默认值；仅支持 `list`、`order` 类型
+         * @property {number} column=1 当前级联筛选的级数（或者叫列数）；仅支持 `list` 类型
+         * @property {boolean} hideBtnLayout=false 是否隐藏按钮栏；仅支持 `multi` 类型
+         *
+         * @property {Array} options 当前筛选项的子选项们
+         * @property {string} options[].text 子选项的文案
+         * @property {string} options[].value 子选项的值
+         * @property {string} options[].extend 子选项的扩展说明
+         * @property {string} options[].key 当前子选项的唯一标识
+         * @property {string} options[].defaultValue 当前子选项的默认值，多个选项需要用`,`分隔开
+         * @property {string} options[].label 子选项的标签；仅支持 `multi` 类型
+         * @property {boolean} options[].noSpread 子选项大于3个是否不需要展开收起，默认为 false
+         * @property {string} options[].type='radio' 子选项的类型；仅支持 `multi` 类型：`radio`（单选框）、`checkbox`（多选框）、`rangeInput`（范围输入框）
+         * @property {boolean} options[].forceCheck=false 是否不论单选多选都强制使用箭头选中样式；这里的背景是，单选和多选的标签样式，其实单选是不带右下角箭头的，多选是带的，但这里需求需要单选样式也带箭头，所以会有这个属性，强行让单选也变成有箭头
+         * @property {boolean} options[].size=large 设置多选按钮的大小：'large' 大按钮，'normal' 正常按钮
+         * @property {string} options[].icon 第二级选项的图标，仅支持 `multi` 类型
+         * @property {Array} options[].options 子选项的子选项们，与`selections[].options`完全一致，仅支持 `list` 类型，多级级联时使用
+         *
+         * @property {object} options[].input 输入框配置；仅支持 `multi` 类型，`rangeInput`（范围输入框）
+         * @property {string} options[].input.unit 输入框单位；仅支持 `multi` 类型，`rangeInput`（范围输入框）
+         * @property {object} options[].input.min 最小值配置；仅支持 `multi` 类型，`rangeInput`（范围输入框）
+         * @property {string} options[].input.min.placeholder 最小值 placeholder；仅支持 `multi` 类型，`rangeInput`（范围输入框）
+         * @property {object} options[].input.max 最大值配置；仅支持 `multi` 类型，`rangeInput`（范围输入框）
+         * @property {string} options[].input.max.placeholder 最大值 placeholder；仅支持 `multi` 类型，`rangeInput`（范围输入框）
+         * @property {string} options[].input.errorTips='错误提示' 输入错误提示信息；仅支持 `multi` 类型，`rangeInput`（范围输入框）
+         */
+        selections: {
+            type: Array,
+            default: [],
+            required: true
+        },
+
+        /**
+         * 复合类型的配置
+         *
+         * @property {string} maxHeight='0.7' 复合类型弹层屏幕高度占比
+         */
+        multiOpts: {
+            type: Object,
+            default: {
+                maxHeight: 0.7
+            }
+        },
+
+        /**
+         * 是否是通栏
+         */
+        rowTile: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 是否阻止滚动穿透；如果在结果页里使用，则建议不阻止
+         */
+        stopScrollThrough: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 是否显示蒙层；如果在结果页里使用，则建议不显示
+         */
+        showMask: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 组件的`z-index`层级
+         */
+        zIndex: [Number, String],
+
+        /**
+         * 主颜色
+         */
+        primaryColor: String
+    },
+    data: {
+        mSelections: selections,
+        // 复合最大高度
+        multiMaxHeight: 999999,
+        // 级联项列的 overflow
+        cascaderColumnOverflow: 'auto',
+        // 浮层距离网页顶部的距离
+        toBottomDistance: 0
+    },
+    components: {
+        'c-filter-frame': '../FilterEnhanced/FilterFrame',
+        'c-cascader': '../Cascader/Cascader',
+        'c-spread-tags': '../Tags/SpreadTags',
+        'c-range-input': '../Input/RangeInput',
+        'c-btn-layout': '../Button/BtnLayout'
+    }
+}
+</script>
+
+<script>
+// dom 操作
+import {
+    getScreenHeight
+} from '../util/domUtil';
+
+// 设备信息
+import {
+    isIosSmall,
+    isLowChrome
+} from '../util/deviceUtil';
+
+// 屏幕翻转 mixin
+import orientationMixin from '../util/orientationMixin';
+
+// 阻止滚动穿透 mixin
+import stopScrollThroughMixin from '../util/stopScrollThroughMixin';
+
+export default {
+    mixins: [
+        orientationMixin,
+        stopScrollThroughMixin
+    ],
+    mounted() {
+        this.mounted = true;
+        // 设置 multi 最大高度
+        this.setMultiMaxHeight();
+    },
+    render() {
+        // 第一次 render
+        if (!this.renderCount) {
+            this.renderCount = 0;
+            this.init(this.mSelections);
+        }
+        this.renderCount++;
+        return this.$super.render();
+    },
+    watch: {
+        selections(newVal, oldVal) {
+            this.mSelections = newVal;
+        }
+    },
+    methods: {
+
+        /**
+         * 初始化，可在主动修改数据时主动调用该方法
+         *
+         * @param {Array} selections 筛选数据
+         * @public
+         */
+        init(selections) {
+            if (!selections) {
+                selections = this.mSelections;
+            }
+            // 遍历所有 selection
+            selections.forEach((selection, selectionIndex) => {
+                // 设置原始 text
+                selection.originText = selection.text;
+                // 级联类型
+                if (selection.type === 'list') {
+                    // 因为 selection 会变，所以需要把 selection 单独拿出来记住
+                    const originSelection = selection;
+                    // 因为 selection 会变，所以需要把 colum 单独拿出来
+                    const column = selection.column;
+                    // 特殊递归；找出相等的选项
+                    for (let i = 0; i < column; i++) {
+                        // 先设置一个初始值
+                        let selectedOption = null;
+                        for (let j = 0; j < selection.options.length; j++) {
+                            // 找到选中项
+                            if (selection.options[j].value === selection.defaultValue) {
+                                selectedOption = selection.options[j];
+                            }
+                        }
+                        // 如果有选中的选项
+                        if (selectedOption) {
+                            // 递归；比较特殊的递归方式
+                            selection = selectedOption;
+                            // 设置 Tag 文案
+                            this.setTagText(originSelection, selectedOption);
+                        }
+                    }
+                }
+                // 复合类型
+                else if (selection.type === 'multi') {
+                    // 安排一下
+                    this.processMultiSelection(selection);
+                }
+                // 排序类型
+                else if (selection.type === 'order') {
+                    // 默认值存在 并且 options 存在
+                    if (
+                        (selection.defaultValue || selection.defaultValue === '')
+                            && selection.options
+                    ) {
+                        // 遍历选项
+                        selection.options.forEach((option, optionIndex) => {
+                            // 找出选项相同的项
+                            if (option.value === selection.defaultValue) {
+                                // 设置文案
+                                selection.text = option.text;
+                                // 设置加粗
+                                selection.selected = true;
+                                // 设置方向
+                                selection.direction = optionIndex === 0
+                                    ? 'up'
+                                    : 'down';
+                            }
+                        });
+                    }
+                }
+            });
+            // 依次调用子组件的 init()
+            this.$nextTick(() => {
+                if (this.$refs.filterFrame) {
+                    this.$refs.filterFrame.init();
+                }
+                let refCascaders = this.$refs.cascader;
+                if (refCascaders) {
+                    refCascaders.forEach((cascader, cascaderIndex) => {
+                        cascader.init();
+                    });
+                }
+                let spreadTags = this.$refs.spreadTag;
+                if (spreadTags) {
+                    spreadTags.forEach((spreadTag, spreadTagIndex) => {
+                        spreadTag.init();
+                    });
+                }
+                let rangeInputs = this.$refs.rangeInput;
+                if (rangeInputs) {
+                    rangeInputs.forEach((rangeInput, rangeInputIndex) => {
+                        rangeInput.init();
+                    });
+                }
+            });
+        },
+        // 设置 multi 最大高度
+        setMultiMaxHeight() {
+            if (this.$refs.filterFrame.$el.getBoundingClientRect) {
+                // 计算出当前筛选的 dom 距离屏幕底部的距离
+                this.toBottomDistance = getScreenHeight() - this.$refs.filterFrame.$el.getBoundingClientRect().top;
+            }
+            if (this.multiOpts.maxHeight <= 1) {
+                this.multiMaxHeight = (getScreenHeight() - 44) * this.multiOpts.maxHeight;
+            }
+            else {
+                this.multiMaxHeight = this.multiOpts.maxHeight;
+            }
+            // 取个整
+            this.multiMaxHeight = Math.floor(this.multiMaxHeight);
+        },
+        // 横竖屏切换监听
+        mediaQueryOrientationListenerMixin(mediaQueryList) {
+            if (mediaQueryList.matches) {
+                // 竖屏
+            }
+            else {
+                // 横屏
+            }
+            // 设置 multi 最大高度
+            setTimeout(() => {
+                this.setMultiMaxHeight();
+            }, 500);
+        },
+
+        /**
+         * 设置 selectedIndex
+         *
+         * @param {number} selectedIndex 需要设置的索引
+         */
+        setSelectedIndex(selectedIndex) {
+            this.$refs.filterFrame.setSelectedIndex(selectedIndex);
+        },
+
+        // Tag Layout 点击
+        handleTagLayoutClick(obj) {
+
+            /**
+             * 上方标签项点击
+             *
+             * @event taglayoutclick
+             * @property {object} param1 事件参数
+             * @property {string} param1.direction 方向
+             * @property {number} param1.lastSelectedIndex 上一次被选中的索引
+             * @property {object} param1.option 被选中的选项
+             * @property {number} param1.selectedIndex 选中项的索引
+             * @property {object} param1.selection 当前筛选项的实例
+             * @property {string} param1.type 筛选项类型
+             */
+            this.$emit('taglayoutclick', obj);
+
+            this.setMultiMaxHeight();
+
+            // *** 取消还原数据的功能
+            // 如果是打开浮层
+            if (obj.selectedIndex !== -1 && obj.lastSelectedIndex === -1) {
+                // 备份筛选项数据
+                this.bakSelections();
+            }
+            // 如果再次点击当前 tag 收起浮层，并且 tag 的类型不为排序类型
+            else if (obj.selectedIndex === -1 && obj.lastSelectedIndex !== -1 && obj.type !== 'order') {
+                // 取消
+                this.cancel();
+            }
+
+            // 级联类型
+            if (obj.type === 'list') {
+                // *** 兼容低版本浏览器
+                this.compatibleLowChromeCoreBrower(obj.direction);
+            }
+            // 复合类型
+            else if (obj.type === 'multi') {
+            }
+            // 排序类型
+            else if (obj.type === 'order') {
+                // 触发确定事件
+                this.confirm();
+            }
+        },
+        // 蒙层点击
+        handleMaskClick(obj) {
+
+            /**
+             * 蒙层阴影点击
+             *
+             * @event maskclick
+             * @property {object} param1 事件参数
+             * @property {number} param1.selectedIndex 选中项的索引
+             */
+            this.$emit('maskclick', obj);
+
+            // *** 兼容低版本浏览器
+            this.compatibleLowChromeCoreBrower('down');
+
+            // *** 取消
+            this.cancel();
+        },
+        // TODO: 兼容低内核浏览器
+        compatibleLowChromeCoreBrower(direction) {
+            // *** 兼容；如果是低版本内核
+            // 修复 Android 低版本浏览器，内核内部 dom overflow: scroll 会影响外层 dom overflow: hidden 的问题
+            if ((isIosSmall() || isLowChrome())) {
+                // 打开浮层
+                if (direction === 'up') {
+                    this.cascaderColumnOverflow = 'hidden';
+                    // 动效做完后改回 auto
+                    setTimeout(() => {
+                        this.cascaderColumnOverflow = 'auto';
+                    }, 400);
+                }
+                // 关闭浮层
+                else if (direction === 'down') {
+                    this.cascaderColumnOverflow = 'hidden';
+                }
+            }
+        },
+        // 级联项点击
+        handleCascaderItemClick(obj) {
+
+            /**
+             * 级联类型项点击
+             *
+             * @event cascaderitemclick
+             * @property {object} param1 事件参数
+             * @property {object} param1.item 点击的级联项
+             * @property {object} param1.section 当前筛选项
+             */
+            this.$emit('cascaderitemclick', obj);
+            // 只有一列
+            if (parseInt(obj.item.column, 10) === 1) {
+                // 设置标签的文案
+                this.setTagText(obj.selection, obj.item.option);
+                // 确定
+                this.confirm();
+            }
+            // 多列
+            else {
+                // 做高度变化动效
+                this.$refs.filterFrame.setHeight(obj.item.height);
+                // 如果是最后一列
+                if (parseInt(obj.item.column, 10) === obj.item.columnIndex + 1) {
+                    // 设置标签的文案
+                    this.setTagText(obj.selection, obj.item.option, obj.item.previousOption);
+                    // 确定
+                    this.confirm();
+                }
+            }
+        },
+        // 设置标签的文案
+        setTagText(selection, option, previousOption) {
+            // 值存在或者为空字符串
+            if (option.value || option.value === '') {
+                // 设置 text
+                selection.text = option.text;
+                // 设置加粗
+                selection.selected = true;
+            }
+            // 如果有上一级的文案
+            else if (previousOption) {
+                // 设置 text
+                selection.text = previousOption.text;
+                // 设置不加粗
+                selection.selected = true;
+            }
+            // 值为 undefined 或者为 null
+            else {
+                // 设置 text
+                selection.text = selection.originText;
+                // 设置不加粗
+                selection.selected = false;
+            }
+        },
+        // 展开收起改变事件（点击后的 nextTick）
+        handleSpreadChange(obj) {
+            let multiWrapper = this.$refs['multiWrapper' + obj.selectionIndex][0];
+            // 拿到之前的高度
+            let oldHeight = multiWrapper.offsetHeight;
+            // 计算出新的高度
+            let newHeight = oldHeight + obj.params.diffHeight;
+            // 拿到当前展开收起的状态
+            let spread = obj.params.spread;
+            // 展开；只有展开的时候才计算，因为收起的时候会有减法，不准确
+            if (spread) {
+                // 保存收起高度
+                obj.selection.foldHeight = oldHeight;
+                // 保存展开高度
+                obj.selection.spreadHeight = newHeight;
+                // 如果展开高度大于最大高度
+                if (obj.selection.spreadHeight > this.multiMaxHeight) {
+                    // 将展开高度设置为最大高度
+                    obj.selection.spreadHeight = this.multiMaxHeight;
+                }
+            }
+            // 只有在没有占满最大高度的时候才主动设置 Content 的高度
+            if (obj.selection.foldHeight < this.multiMaxHeight) {
+                // 设置高度
+                this.$refs.filterFrame.setHeight(spread ? obj.selection.spreadHeight : obj.selection.foldHeight);
+            }
+        },
+        // 选项点击
+        handleSpreadTagsItemClick(obj) {
+            // 设置对应 key 的值
+            obj.option.defaultValue = obj.tagItem.valueStr;
+            obj.e = obj.tagItem.e;
+
+            /**
+             * 复合类型，二级项点击
+             *
+             * @event spreadtagsitemclick
+             * @property {object} param1 事件参数
+             * @property {object} param1.option 点击的一级选项
+             * @property {number} param1.optionIndex 点击的一级选项的索引
+             * @property {object} param1.section 当前筛选项的实例
+             * @property {object} param1.tagItem 点击的二级选项
+             */
+            this.$emit('spreadtagsitemclick', obj);
+
+            // 如果是单选，并且传入了隐藏按钮栏的标识，直接确定
+            if (obj.option.type === 'radio' && obj.selection.hideBtnLayout) {
+                this.confirm();
+            }
+        },
+        // 范围输入框改变
+        handleRangeInputChange(obj) {
+            // 按 , 分隔
+            let defaultValueArr = obj.option.defaultValue
+                ? obj.option.defaultValue.split(',').map(item => item.trim())
+                : [];
+            // 如果没有最小值，设置最小值
+            if (!obj.option.minValue && defaultValueArr.length > 0) {
+                obj.option.minValue = defaultValueArr[0];
+            }
+            // 如果没有最大值，设置最大值
+            if (!obj.option.maxValue && defaultValueArr.length > 1) {
+                obj.option.maxValue = defaultValueArr[1];
+            }
+            // 设置最小值
+            if (obj.type === 'min') {
+                obj.option.minValue = obj.value;
+            }
+            // 设置最大值
+            if (obj.type === 'max') {
+                obj.option.maxValue = obj.value;
+            }
+            // 设置值
+            obj.option.defaultValue = obj.option.minValue + ',' + obj.option.maxValue;
+            // 如果是 ','，需要特殊处理一下
+            if (!obj.option.minValue && !obj.option.maxValue) {
+                obj.option.defaultValue = '';
+            }
+        },
+        // 按钮栏点击
+        handleBtnLayoutClick(obj) {
+            // 重置
+            if (obj.btnLayoutObj.index === 0) {
+
+                /**
+                 * 复合类型，重置按钮点击
+                 *
+                 * @event spreadtagsitemclick
+                 * @property {object} param1 事件参数
+                 * @property {object} param1.btnLayoutObj 按钮栏相关的值
+                 * @property {object} param1.section 当前筛选项的实例
+                 * @property {number} param1.sectionIndex 当前筛选项的索引
+                 */
+                this.$emit('btnresetclick', obj);
+                this.reset(obj.selection.options);
+            }
+            // 确定
+            else if (obj.btnLayoutObj.index === 1) {
+                // 复合
+                if (obj.selection.type === 'multi') {
+                    let isOk = true;
+                    obj.selection.options.forEach((option, optionIndex) => {
+                        // 范围输入时需要校验输入值
+                        if (option.type === 'rangeInput') {
+                            let err = option.vnode.check();
+                            if (err.errno !== 0) {
+                                isOk = false;
+                            }
+                        }
+                    });
+                    isOk && this.confirm();
+                }
+            }
+        },
+        // 处理 multi 类型数据
+        processMultiSelection(selection) {
+            if (!selection) {
+                return;
+            }
+            // 遍历
+            for (let i = 0; i < selection.options.length; i++) {
+                let option = selection.options[i];
+                // 如果有默认值
+                if (option.defaultValue) {
+                    // 设置加粗
+                    selection.selected = true;
+                    return;
+                }
+            }
+            // 设置不加粗
+            selection.selected = false;
+        },
+        // 重置
+        reset(options) {
+            options.forEach((option, optionIndex) => {
+                // 清空默认值
+                option.defaultValue = '';
+                // radio / checkbox
+                if ((option.type === 'radio' || option.type === 'checkbox') && option.options) {
+                    option.options.forEach((option2, option2Index) => {
+                        this.$set(option2, 'selected', false);
+                    });
+                }
+                // 范围输入
+                else if (option.type === 'rangeInput') {
+                    // 调用 vnode 的 reset 方法
+                    option.vnode.reset();
+                }
+            });
+        },
+        // 确定
+        confirm() {
+            // 关闭浮层
+            this.$refs.filterFrame.close();
+            // 兼容；如果是低版本内核；修复 Android 低版本浏览器内核 内部 dom overflow: scroll 会影响外层 dom overflow: hidden 的问题；
+            if (isIosSmall() || isLowChrome()) {
+                // 设置级联列的 overflow 为 hidden
+                this.cascaderColumnOverflow = 'hidden';
+            }
+            // 计算最后要传出的参数
+            let allResults = {};
+            this.mSelections.forEach((selection, selectionIndex) => {
+                // 级联
+                if (selection.type === 'list') {
+                    let selectedData = selection.vnode.getSelectedData();
+                    Object.keys(selectedData).forEach((key, keyIndex) => {
+                        allResults[key] = selectedData[key];
+                    });
+                }
+                // 复合
+                else if (selection.type === 'multi') {
+                    // 该 selection 是否被加粗；默认不加粗
+                    let selected = false;
+                    selection.options.forEach((option, optionIndex) => {
+                        // 放入键值对
+                        allResults[option.key] = option.defaultValue || '';
+                        if (option.defaultValue) {
+                            // 加粗
+                            selected = true;
+                        }
+                    });
+                    // 设置加粗
+                    selection.selected = selected;
+                }
+                // 排序
+                else if (selection.type === 'order') {
+                    // 箭头向上
+                    if (selection.direction === 'up') {
+                        // 设置文案
+                        if (selection.options && selection.options[0]) {
+                            selection.text = selection.options[0].text;
+                            selection.defaultValue = selection.options[0].value;
+                        }
+                    }
+                    // 箭头向下
+                    else if (selection.direction === 'down') {
+                        // 设置文案
+                        if (selection.options && selection.options[1]) {
+                            selection.text = selection.options[1].text;
+                            selection.defaultValue = selection.options[1].value;
+                        }
+                    }
+                    // 放入键值对
+                    allResults[selection.key] = selection.defaultValue || '';
+                }
+            });
+            this.$emit('change', {
+                allResults
+            });
+        },
+        // 取消
+        cancel() {
+            // 遍历筛选项
+            this.mSelections.forEach((selection, selectionIndex) => {
+                // 如果是复合
+                if (selection.type === 'multi') {
+                    // 遍历项
+                    selection.options.forEach((option, optionIndex) => {
+                        // 从备份中还原
+                        option.defaultValue = option.defaultValueBak || '';
+                        // 单选/多选
+                        if (option.type === 'radio' || option.type === 'checkbox') {
+                            option.vnode && option.vnode.setDefaultValue(option.defaultValue);
+                        }
+                        // 范围输入
+                        else if (option.type === 'rangeInput') {
+                            option.vnode && option.vnode.setDefaultValue(option.defaultValue);
+                        }
+                    });
+                }
+            });
+        },
+
+        /**
+         * 关闭蒙层
+         */
+        close() {
+            this.$refs.filterFrame.close();
+        },
+        handleMultiTouchStart(obj) {
+            if (!this.stopScrollThrough) {
+                return;
+            }
+            this.handleTouchStartStopScrollThroughMixin(obj.e);
+        },
+        handleMultiTouchMove(obj) {
+            if (!this.stopScrollThrough) {
+                return;
+            }
+            let multi = this.$refs['multi' + obj.selectionIndex][0];
+            this.handleTouchMoveStopScrollThroughMixin(obj.e, multi);
+        },
+        // 备份筛选项数据
+        bakSelections() {
+            // 遍历筛选项
+            this.mSelections.forEach((selection, selectionIndex) => {
+                // 如果是复合
+                if (selection.type === 'multi') {
+                    // 遍历项
+                    selection.options.forEach((option, optionIndex) => {
+                        // 备份值
+                        option.defaultValueBak = option.defaultValue || '';
+                    });
+                }
+            });
+        }
+    }
+};
+</script>
+
+<script type="php">
+function render($ctx, $isXml = false) {
+    // 引用赋值
+    $mSelections = & $ctx->_d['mSelections'];
+    // 为空判断
+    if (empty($mSelections)) {
+        return;
+    }
+    // 遍历 selection
+    foreach ($mSelections as $selectionIndex => $selection) {
+        // 设置原始 text
+        $mSelections[$selectionIndex]['originText'] = $selection['text'];
+        // 级联类型 并且 默认值存在
+        if ($selection['type'] === 'list' && !empty($selection['defaultValue'])) {
+            // 新建临时 selection，作为递归的变量
+            $tempSelection = $selection;
+            // 列数 column
+            $column = $selection['column'];
+            // 特殊递归；找出相等的选项
+            for ($i = 0; $i < $column; $i++) {
+                // option 的个数
+                $optionCount = count($tempSelection['options']);
+                // 遍历 options
+                for ($j = 0; $j < $optionCount; $j++) {
+                    $option = $tempSelection['options'][$j];
+                    // 找到选中项
+                    if ($option['value'] === $tempSelection['defaultValue']) {
+                        // 选中的选项；引用赋值
+                        $selectedOption = $option;
+                    }
+                }
+                // 如果有选中的选项
+                if (!empty($selectedOption)) {
+                    // 递归；比较特殊的递归方式
+                    $tempSelection = $selectedOption;
+                    // 设置显示文案
+                    if (!empty($selectedOption['value'])) {
+                        // 设置 text
+                        $mSelections[$selectionIndex]['text'] = $selectedOption['text'];
+                        // 设置加粗
+                        $mSelections[$selectionIndex]['selected'] = true;
+                    }
+                }
+            }
+        }
+        // 复合类型
+        else if ($selection['type'] === 'multi') {
+            // 引用赋值
+            $multiSelection = & $mSelections[$selectionIndex];
+            // 选中态
+            $selected = false;
+            foreach ($selection['options'] as $optionIndex => $option) {
+                // 如果默认值存在
+                if (!empty($option['defaultValue'])) {
+                    $selected = true;
+                }
+            }
+            // 设置文案选中态
+            $multiSelection['selected'] = $selected;
+        }
+        // 排序类型
+        else if ($selection['type'] === 'order') {
+            // 引用赋值
+            $orderSelection = & $mSelections[$selectionIndex];
+            if (
+                (!empty($orderSelection['defaultValue']) || $orderSelection['defaultValue'] === '')
+                    && !empty($orderSelection['options'])
+            ) {
+                // 遍历选项
+                foreach ($orderSelection['options'] as $optionIndex => $option) {
+                    // 找出选项相同的项
+                    if ($option['value'] === $orderSelection['defaultValue']) {
+                        // 设置文案
+                        $orderSelection['text'] = $option['text'];
+                        // 设置加粗
+                        $orderSelection['selected'] = true;
+                        // 设置方向
+                        $orderSelection['direction'] = $optionIndex === 0
+                            ? 'up'
+                            : 'down';
+                    }
+                }
+            }
+        }
+    }
+    return parent::render($ctx);
+}
+</script>
+
+<style module>
+.multi {
+    position: relative;
+    background-color: #fff;
+}
+.multi-inner {
+    padding-left: .17rem;
+    padding-right: .17rem;
+    height: 100%;
+    overflow: scroll;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+}
+.btn-layout {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    bottom: -1px;
+    z-index: 1;
+}
+</style>

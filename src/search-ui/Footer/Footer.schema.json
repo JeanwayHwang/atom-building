@@ -1,0 +1,63 @@
+{
+    "alias": [
+        "c-footer"
+    ],
+    "type": "object",
+    "properties": {
+        "footer": {
+            "type": "object",
+            "properties": {
+                "leftText": {
+                    "type": "string",
+                    "@ChineseName": "footer 左侧文本",
+                    "@Demo": "左侧文本",
+                    "description": "footer 左侧文本"
+                },
+                "leftIcon": {
+                    "type": "string",
+                    "@ChineseName": "footer 左侧图标",
+                    "@Demo": "左侧图标",
+                    "description": "footer 左侧图标"
+                },
+                "rightText": {
+                    "type": "string",
+                    "@ChineseName": "footer 右侧文本",
+                    "@Demo": "左侧文本",
+                    "description": "footer 右侧文本"
+                },
+                "rightUrl": {
+                    "type": "string",
+                    "@ChineseName": "footer 右侧链接",
+                    "@Demo": "https://m.baidu.com/search?url=xxx",
+                    "description": "footer 右侧链接"
+                },
+                "showUrl": {
+                    "type": "string",
+                    "@ChineseName": "footer 左侧外链",
+                    "@Demo": "https://v.qq.com",
+                    "description": "footer 右侧链接"
+                },
+                "divider": {
+                    "type": "boolean",
+                    "@ChineseName": "footer 是否有分隔符",
+                    "@Demo": false,
+                    "description": "footer 是否有分隔符"
+                },
+                "time": {
+                    "type": "number",
+                    "@ChineseName": "footer 显示时间",
+                    "@Demo": 1528082849067,
+                    "description": "footer 显示时间"
+                },
+                "feedback": {
+                    "$ref": "./Feedback.schema.json#/properties/feedback"
+                }
+            },
+            "propsData": [
+                "leftText",
+                "rightText",
+                "rightUrl"
+            ]
+        }
+    }
+}

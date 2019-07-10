@@ -1,0 +1,17 @@
+{
+    "alias": [
+        "c-page-scroll-item"
+    ],
+    "type": "object",
+    "properties": {
+        "pageScrollItems": {
+            "type": "array",
+            "@ChineseName": "pageScroll 组件内容结构",
+            "description": "pageScroll 组件内容结构，一维数组",
+            "items": {
+                "type": "object",
+                "isContainer": true
+            }
+        }
+    }
+}

@@ -1,0 +1,32 @@
+{
+    "alias": [
+        "c-more"
+    ],
+    "type": "object",
+    "properties": {
+        "more": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": [
+                        "string",
+                        "object"
+                    ],
+                    "@ChineseName": "article 标题内容",
+                    "@Demo": "https://m.baidu.com/search?url=xxx",
+                    "description": "article 标题链接"
+                },
+                "text": {
+                    "type": "string",
+                    "@ChineseName": "article 标题内容",
+                    "@Demo": "这里是 article 标题",
+                    "description": "article 标题内容"
+                }
+            },
+            "propsData": [
+                "url",
+                "text"
+            ]
+        }
+    }
+}

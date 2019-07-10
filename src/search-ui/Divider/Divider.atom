@@ -1,0 +1,45 @@
+<template>
+    <div class="c-divider" role="separator">
+        <!-- 细 -->
+        <hr
+            a-if="type === 'thin'"
+            class="thin c-gap-top-small c-gap-bottom-small"
+        >
+        <!-- 粗 -->
+        <div
+            a-else-if="type === 'thick'"
+            class="thick"
+        />
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 分隔线粗细；'thin'：1px；'thick'：8px
+         */
+        type: {
+            type: String,
+            default: 'thin'
+        }
+    }
+}
+</script>
+
+<style lang="less" scoped>
+.c-divider {
+    // 细
+    .thin {
+        display: block;
+        height: 1px;
+        background-color: #eee;
+        border: none;
+    }
+    // 粗
+    .thick {
+        height: 8px;
+        background: #f5f5f5;
+    }
+}
+</style>

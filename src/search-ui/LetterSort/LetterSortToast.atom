@@ -1,0 +1,50 @@
+<!-- @ignore -->
+<template>
+    <div
+        a-show="isDisplay"
+        :style="{
+            background: color
+        }"
+        class="c-letter-sort-toast"
+    >
+        {{ letterName }}
+    </div>
+</template>
+
+<style scoped lang="less">
+.c-letter-sort-toast {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 76px;
+    height: 76px;
+    line-height: 76px;
+    font-size: 24px;
+    border-radius: 4px;
+    text-align: center;
+    background: rgba(0, 0, 0, .8);
+    color: #fff;
+}
+</style>
+
+<script type="config">
+{
+    props: {
+        letterName: {
+            type: String,
+            required: true
+        },
+        color: {
+            type: String,
+            default: 'rgba(0, 0, 0, .8)',
+            required: false
+        },
+        isDisplay: {
+            type: Boolean,
+            default: false,
+            required: false
+        }
+    }
+}
+</script>

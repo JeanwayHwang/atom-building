@@ -1,0 +1,60 @@
+{
+    "alias": [
+        "c-selector"
+    ],
+    "type": "object",
+    "properties": {
+        "selector": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "标题",
+                    "description": "标题",
+                    "@Demo": "这是标题"
+                },
+                "type": {
+                    "type": "string",
+                    "@ChineseName": "选框类型",
+                    "description": "选框类型",
+                    "@Demo": "multi",
+                    "enum": ["radio", "multi"]
+                },
+                "data": {
+                    "type": "array",
+                    "@ChineseName": "数据列表",
+                    "description": "数据列表",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "@ChineseName": "选项展示数据",
+                                "description": "选项展示数据",
+                                "@Demo": "按时间升序"
+                            },
+                            "value": {
+                                "type": "string",
+                                "@ChineseName": "选项值",
+                                "description": "选项值",
+                                "@Demo": "1"
+                            },
+                            "selected": {
+                                "type": "boolean",
+                                "@ChineseName": "是否处于选中状态",
+                                "description": "是否处于选中状态",
+                                "@Demo": "false"
+                            }
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "title",
+                "data",
+                "multiple"
+            ]
+        }
+    }
+}

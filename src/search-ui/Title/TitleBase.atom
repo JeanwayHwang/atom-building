@@ -1,0 +1,137 @@
+<!--@ignore-->
+<template>
+    <!-- t2 标题默认 1 行截断 -->
+    <h3
+        :style="[
+            color
+                ? {
+                    color
+                }
+                : {},
+            fontWeight
+                ? {
+                    fontWeight
+                }
+                : {}
+        ]"
+        :class="[
+            {
+                'c-font-medium c-color-link': size === 't2',
+                'c-title-label': label,
+                'c-line-clamp1': !clamp && size === 't2',
+                ['c-line-clamp' + clamp]: clamp,
+                'clamp-strategy-l1s2': clampStrategy === 'L1S2' && !label && !icon
+            }
+        ]"
+        class="c-title"
+        role="text"
+    >
+        <span
+            class="c-title-text"
+            a-html="text"
+        />
+        <c-label
+            a-if="label"
+            :text="label"
+            :type="labelType"
+            class="c-gap-left-small"
+        />
+        <c-icon
+            a-if="icon"
+            :type="icon"
+            class="c-gap-left-small"
+            aria-hidden="true"
+        />
+    </h3>
+</template>
+
+<script type="config">
+{
+    props: {
+        text: String,
+        icon: String,
+        label: String,
+        labelType: String,
+        size: {
+            type: String,
+            default: 't1'
+        },
+        // 多行截断行数
+        clamp: [String, Number],
+        // 标题颜色
+        color: {
+            type: String
+        },
+
+        /**
+         * 字体粗细 css font-weight
+         */
+        fontWeight: {
+            type: String
+        },
+
+        /**
+         * 截断策略；
+         *
+         * - 'default' 大屏设备（网页宽度 376px 及以上）1行截断，小屏设备（网页宽度 376px 以下）不截断；
+         * - 'L1S2' 大屏设备（网页宽度 376px 及以上）1行截断，小屏设备（网页宽度 376px 以下）且没有标签且没有图标时2行截断，有标签或者有图标时不截断；
+         */
+        clampStrategy: {
+            type: String
+        }
+    },
+    components: {
+        'c-icon': '../Icon/Icon',
+        'c-label': '../Label/Label'
+    }
+}
+</script>
+
+<style lang="less" scoped>
+    .c-title > .c-icon {
+        font-size: 17px;
+    }
+    // 大屏时；这里不用 c-title-wrap 是因为 c-title-wrap 在大屏时会为 display: none
+    @media (min-width: 376px) {
+        // 有标签时
+        .c-title-label {
+            position: relative;
+            display: block;
+            padding-right: 33px;
+            width: 100%;
+            overflow: visible;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+        .c-title-label .c-text {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .c-title-label .c-title-text {
+            display: inline-block;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: bottom;
+        }
+    }
+    // 小屏
+    @media (max-width: 375px) {
+        .clamp-strategy-l1s2 .c-title-text {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            -webkit-line-clamp: 2;
+        }
+    }
+    h3.c-font-medium {
+        font-size: 16px;
+        line-height: 26px;
+    }
+    .ttsvoice-aladdin-speaker {
+        margin-top: 0 !important;
+    }
+</style>

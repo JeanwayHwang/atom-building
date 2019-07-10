@@ -1,0 +1,220 @@
+<template>
+    <div
+        class="c-to-top-wrapper WA_LOG_BTN"
+        role="button"
+        aria-label="回到顶部"
+        data-module="c-tt"
+        @click="handleClick"
+    >
+        <!-- 这里用 isHidden 和 show 两个变量是因为有动效，需要在动效结束后隐藏 -->
+        <c-touchable-feedback
+            ref="toTopTouchableFeedback"
+            :style="{
+                'width': size,
+                'height': size,
+                'right': right,
+                'bottom': bottom,
+                'z-index': zIndex,
+                'visibility': isHidden ? 'hidden' : 'visible',
+                'opacity': show ? '1' : '0'
+            }"
+            class="c-to-top"
+            border-radius="50%"
+            background-color="rgba(0, 0, 0, .2)"
+        >
+            <c-icon
+                :style="{
+                    'font-size': iconFontSize,
+                    'line-height': size
+                }"
+                aria-hidden="true"
+                type="back_to_top"
+                class="c-color-link"
+            />
+        </c-touchable-feedback>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 组件的大小（高和宽）
+         */
+        size: {
+            type: String,
+            default: '40px'
+        },
+        /**
+         * 组件距离页面右边的距离（组件是fixed定位的）
+         */
+        right: {
+            type: String,
+            default: '17px'
+        },
+        /**
+         * 组件距离页面底部的距离（组件是fixed定位的）
+         */
+        bottom: {
+            type: String,
+            default: '73px'
+        },
+        /**
+         * 组件的"z-index"属性
+         */
+        zIndex: {
+            type: Number,
+            default: 200
+        },
+        /**
+         * 内部向上箭头(icon)的字体大小
+         */
+        iconFontSize: {
+            type: String,
+            default: '20px'
+        },
+        /**
+         * 组件展示阈值，页面向上滑动了多少个可视窗口的距离的时候展示组件
+         */
+        showThreshold: {
+            type: Number,
+            default: 1
+        }
+    },
+    data: {
+        show: false, // 是否显示
+        isHidden: false, // 是否 visibility hidden
+        lastScrollTop: 0, // 上一次的滚动位置
+        diffScrollTop: 0, // scrollTop 差值
+        curScrollTop: 0, // 当前 scrollTop
+        touchMoveCount: 0, // 触发 touchmove 事件的次数
+        scrollCount: 0 // 滚动事件触发的次数
+    },
+    components: {
+        'c-icon': '../Icon/Icon',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+/**
+ * @file 返回顶部组件
+ * @author dongrenguang (dongrenguang@baidu.com)
+ *         wangkai37 (wangkai37@baidu.com)
+ */
+
+export default {
+    mounted() {
+        // 获取网页可视区域高度
+        const visualHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+        this.scrollHeightThreshold = visualHeight * this.showThreshold;
+        this.inited = false;
+        this.$root.$on('attach', () => {
+            this.attach();
+        });
+        this.$root.$on('detach', () => {
+            this.detach();
+        });
+        if (!this.inited) {
+            this.attach();
+        }
+    },
+    beforeDestroy() {
+        this.detach();
+    },
+    methods: {
+        attach() {
+            if (!this.inited) {
+                this.inited = true;
+            }
+            window.addEventListener('scroll', this.onScroll);
+            window.addEventListener('touchstart', this.handleWindowTouchStart);
+            // 监听动画完成事件
+            this.$refs.toTopTouchableFeedback.$el.addEventListener('webkitTransitionEnd', this.handleTransitionEnd);
+            this.$refs.toTopTouchableFeedback.$el.addEventListener('transitionend', this.handleTransitionEnd);
+        },
+        detach() {
+            window.removeEventListener('scroll', this.onScroll);
+            window.removeEventListener('touchstart', this.handleWindowTouchStart);
+        },
+        // window touchstart
+        handleWindowTouchStart(e) {
+            // 获得当前 scrollTop
+            this.lastScrollTop = this.scrollTop(window);
+        },
+        // 判断是否展现
+        judgeIsShow() {
+            // 获得当前 scrollTop
+            this.curScrollTop = this.scrollTop(window);
+            if (this.lastScrollTop) {
+                this.diffScrollTop = this.lastScrollTop - this.curScrollTop;
+                if (this.curScrollTop <= this.scrollHeightThreshold) {
+                    this.show = false;
+                    return;
+                }
+                if (this.diffScrollTop > 1) {
+                    // 在控制透明度前要先显示出来
+                    this.isHidden = false;
+                    this.show = true;
+                }
+                else if (this.diffScrollTop < -1) {
+                    this.show = false;
+                }
+            }
+            this.lastScrollTop = this.curScrollTop;
+        },
+        // 点击事件
+        handleClick(e) {
+            this.show = false;
+            this.scrollTop(window, 0);
+
+            /**
+             * click event.
+             *
+             * @event click
+             */
+            this.$emit('click', e);
+        },
+        onScroll() {
+            this.scrollCount++;
+            this.judgeIsShow();
+        },
+        // 得到当前滚动到顶部的位置
+        scrollTop(el, value) {
+            const hasScrollTop = 'scrollTop' in el;
+            if (value === undefined) {
+                return hasScrollTop ? el.scrollTop : el.pageYOffset;
+            }
+            if (hasScrollTop) {
+                el.scrollTop = value;
+            }
+            else {
+                el.scrollTo(el.scrollX, value);
+            }
+        },
+        // transition 动画结束
+        handleTransitionEnd() {
+            if (this.show) {
+                this.isHidden = false;
+            }
+            else {
+                this.isHidden = true;
+            }
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+    .c-to-top {
+        transition: all .3s ease-in-out;
+        position: fixed;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, .95);
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .12);
+        text-align: center;
+        box-sizing: border-box;
+    }
+</style>

@@ -1,0 +1,168 @@
+<!-- @ignore -->
+<template>
+    <c-touchable-feedback
+        :open="!!(item.url || (item.params && item.params.tcUrl))"
+        :url="item.url"
+        :url-params="item.params"
+        is-jump
+        class="c-scroll-article-item"
+    >
+        <c-link
+            :url="item.url"
+            :params="item.params"
+        >
+            <template
+                a-if="item.src || item.defaultImageType"
+            >
+                <c-img
+                    a-if="item.type != 'video'"
+                    :src="item.src"
+                    :default-image-type="item.defaultImageType"
+                    :border-radius="{
+                        tl: true,
+                        tr: true,
+                        bl: false,
+                        br: false
+                    }"
+                    type="y"
+                    class="c-scroll-article-item-rel c-gap-top-zero"
+                />
+                <c-video-thumbnail
+                    a-else
+                    :img="item.src"
+                    :icontype-defined="item.icontypeDefined"
+                    :show-col-defined="item.showColDefined"
+                    :show-txt="item.duration"
+                    img-type="y"
+                />
+            </template>
+            <div
+                :style="{
+                    'margin-top': (item.src || item.defaultImageType)
+                        ? '.05rem'
+                        : '.1rem'
+                }"
+                class="c-scroll-article-item-inner"
+            >
+                <c-line
+                    clamp="2"
+                    class="c-font-normal c-color-link"
+                >
+                    <span class="c-gap-right-small">
+                        <c-label
+                            a-if="item.labelText"
+                            :text="item.labelText"
+                            :type="item.labelType"
+                        />
+                    </span>
+                    {{ item.title }}
+                </c-line>
+                <c-line
+                    a-if="!(item.src || item.defaultImageType)"
+                    class="c-color c-gap-top-small"
+                    clamp="4"
+                >
+                    {{ item.content }}
+                </c-line>
+            </div>
+        </c-link>
+        <div
+            a-if="item.source || item.time || showExt"
+            class="c-scroll-article-extInfo c-color-gray c-line-clamp1"
+        >
+            <slot>
+                <c-link
+                    :url="item.url"
+                    :params="item.params"
+                    class="c-line-clamp1"
+                >
+                    <c-timespan
+                        a-if="item.time"
+                        :time="item.time"
+                        class="c-gap-right-large"
+                    />
+                    <span
+                        a-if="item.source"
+                    >
+                        {{ item.source }}
+                    </span>
+                </c-link>
+            </slot>
+        </div>
+    </c-touchable-feedback>
+</template>
+
+<script type="config">
+{
+    props: {
+        idx: {
+            type: Number
+        },
+        item: {
+            type: Object
+        },
+        showExt: {
+            type: Boolean,
+            default: false
+        }
+    },
+    components: {
+        'c-img': '../Image/Image',
+        'c-link': '../Link/Link',
+        'c-line': '../Line/Line',
+        'c-timespan': '../Timespan/Timespan',
+        'c-video-thumbnail': '../Video/VideoThumbnail',
+        'c-label': '../Label/Label',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<style scoped lang="less">
+.c-scroll-article-item {
+    padding-bottom: 113%;
+    height: 1px;
+    border: 1px solid #f1f1f1;
+    position: relative;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.c-scroll-article-item-inner {
+    margin: .1rem .08rem;
+    white-space: pre-line;
+    word-break: normal;
+    word-wrap: normal;
+}
+.c-scroll-article-extInfo {
+    position: absolute;
+    left: 0;
+    bottom: .1rem;
+    width: 100%;
+    padding: 0 .08rem;
+    box-sizing: border-box;
+    a {
+        color: #999;
+    }
+}
+@media screen and (min-width: 321px) and (max-width: 375px) {
+    .c-scroll-article-item {
+        padding-bottom: 117%;
+    }
+}
+@media screen and (max-width: 320px) {
+    .c-scroll-article-item {
+        padding-bottom: 131%;
+    }
+}
+@media screen and (max-width: 290px) {
+    .c-scroll-article-item {
+        padding-bottom: 150%;
+    }
+}
+</style>
+
+<style>
+.c-scroll-article-item .c-img {
+    margin: 0;
+}
+</style>

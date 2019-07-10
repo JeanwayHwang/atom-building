@@ -1,0 +1,341 @@
+<!-- @ignore -->
+<!-- 上方 tag 栏 -->
+<template>
+    <section class="c-row c-line-bottom c-filter-tag-layout c-row-tile">
+        <!-- tag -->
+        <template a-for="(item, index) in tagList">
+            <!-- 排序类型；WA_LOG_TAB 是为了增加切换日志 -->
+            <div
+                a-if="item.type === 'order'"
+                :key="index"
+                class="WA_LOG_TAB c-span1 c-filter-tag-item"
+                @click="handleFilterTagClick({
+                    index,
+                    item
+                })"
+            >
+                <span
+                    :style="{
+                        'font-weight': item.defaultValue || item.defaultValue === '' ? 'bold' : '',
+                        'color': item.defaultValue || item.defaultValue === '' ? selectedColor : unselectedColor
+                    }"
+                    class="c-line-clamp1"
+                >
+                    {{ item.defaultValue || item.defaultValue === '' ? item.text : item.originText }}
+                </span>
+                <span
+                    a-if="item.type === 'order'"
+                    class="c-filter-tag-item-icon-order"
+                >
+                    <!-- 上箭头 -->
+                    <span
+                        class="
+                            c-gap-inner-left-small
+                            c-filter-tag-item-icon-wrapper
+                            c-filter-tag-item-icon-wrapper-up
+                        "
+                    >
+                        <i
+                            :style="{
+                                'border-color': item.defaultValue === item.options[0].value
+                                    ? arrowSelectedBorderColor
+                                    : arrowUnselectedBorderColor
+                            }"
+                            class="c-filter-tag-item-icon c-filter-tag-item-icon-up"
+                        />
+                    </span>
+                    <!-- 下箭头 -->
+                    <span
+                        class="
+                            c-gap-inner-left-small
+                            c-filter-tag-item-icon-wrapper
+                            c-filter-tag-item-icon-wrapper-down
+                        "
+                    >
+                        <i
+                            :style="{
+                                'border-color': item.defaultValue === item.options[1].value
+                                    ? arrowSelectedBorderColor
+                                    : arrowUnselectedBorderColor
+                            }"
+                            class="c-filter-tag-item-icon"
+                        />
+                    </span>
+                </span>
+            </div>
+            <!-- 普通类型；为空判断不包括空字符串 '' -->
+            <div
+                a-else
+                :key="index"
+                :class="{
+                    'c-filter-tag-item-bold': (index === curTagIndex
+                        || item.selected
+                        || (item.defaultValue
+                        || item.defaultValue === ''
+                    ))
+                }"
+                :style="{
+                    color: (index === curTagIndex
+                        || item.selected
+                        || (item.defaultValue
+                        || item.defaultValue === ''
+                    ))
+                        ? selectedColor
+                        : unselectedColor
+                }"
+                class="WA_LOG_TAB c-span1 c-filter-tag-item"
+                @click="handleFilterTagClick({
+                    index,
+                    item
+                })"
+            >
+                <span class="c-filter-tag-item-text c-line-clamp1">
+                    {{
+                        (item.defaultValue || item.defaultValue === '')
+                            ? item.text
+                            : item.originText
+                    }}
+                </span>
+                <!-- 图标 -->
+                <i
+                    :class="{
+                        'c-filter-tag-item-icon-current-selected': index === curTagIndex
+                    }"
+                    :style="{
+                        'border-color': (index === curTagIndex
+                            || item.selected
+                            || (item.defaultValue
+                            || item.defaultValue === ''
+                        ))
+                            ? arrowSelectedBorderColor
+                            : arrowUnselectedBorderColor
+                    }"
+                    class="c-gap-left-small c-filter-tag-item-icon"
+                />
+            </div>
+        </template>
+        <!-- 这里的 slot 用来放置图标 -->
+        <slot/>
+    </section>
+</template>
+
+<script type="config">
+    {
+        props: {
+            // store
+            store: {
+                type: Object
+            },
+            // tag 数据
+            tagList: {
+                type: Array
+            },
+            // 是否添加动效，默认关闭；这里主要是为了兼容线上已使用的用法
+            transition: Boolean,
+            // 当前选中的 tag 索引
+            curTagIndex: {
+                type: Number,
+                default: -1
+            },
+            // 选中的颜色
+            selectedColor: {
+                type: String,
+                default: '#333'
+            },
+            // 未选中的颜色
+            unselectedColor: {
+                type: String,
+                default: '#666'
+            },
+            // 蒙层的 z-index
+            maskZIndex: {
+                type: Number,
+                default: 299
+            }
+        },
+        components: {
+            'c-icon': '../Icon/Icon'
+        }
+    }
+</script>
+
+<script>
+    export default {
+        methods: {
+            // tag 点击
+            handleFilterTagClick(obj) {
+                // 行为；打开浮层：open；关闭浮层：close；不打开也不关闭（排序浮层）则为空字符串
+                let action = '';
+                // 如果是排序类型
+                if (obj.item.type === 'order') {
+                    let selectedIndex = 0;
+                    obj.item.options.forEach((option, optionIndex) => {
+                        // 如果默认值和选项的值相等
+                        if (obj.item.defaultValue === option.value) {
+                            selectedIndex = optionIndex;
+                        }
+                    });
+                    // 将默认值置为另一个值
+                    this.$set(obj.item, 'defaultValue', obj.item.options[(selectedIndex + 1) % 2].value);
+                    // 当前改变项的数据
+                    const currentChange = {
+                        type: obj.item.type,
+                        index: obj.item.index,
+                        result: {
+                            [obj.item.key]: obj.item.defaultValue
+                        }
+                    };
+                    // 触发确认
+                    this.store.confirmAction(currentChange);
+                    // 当前有 tag 被选中时，触发取消事件
+                    if (this.store.state.curTagIndex !== -1) {
+                        action = 'close';
+                        // 关闭底部区域
+                        this.store.closeBottomLayoutAction(false, {
+                            index: obj.item.index,
+                            type: obj.item.type
+                        });
+                    }
+                }
+                // 其他类型
+                else {
+                    // 如果本次选中的项和上次选中的项相同
+                    if (this.curTagIndex === obj.index) {
+                        // 关闭底部区域
+                        action = 'close';
+                        this.store.closeBottomLayoutAction(false, {
+                            index: obj.item.index,
+                            type: obj.item.type
+                        });
+                        // 触发标签点击回调事件
+                        this.$emit('tagitemclick', {
+                            index: obj.index,
+                            action
+                        });
+                        return;
+                    }
+                    // 如果本次选中的项和上次选中的项不同
+                    // 当前有 tag 被选中时，相当于取消，恢复数据
+                    if (this.store.state.curTagIndex !== -1) {
+                        // 恢复数据
+                        this.store.recoveryData();
+                    }
+                    // 保存本次选中项索引
+                    this.store.setCurTagIndexAction(obj.index);
+                    // 设置底部数据
+                    this.store.setBottomDataAction(obj.item);
+                    action = 'open';
+                }
+                // 触发标签点击回调事件
+                this.$emit('tagitemclick', {
+                    index: obj.index,
+                    action
+                });
+            }
+        },
+        computed: {
+            // 箭头被选中时的 border-color
+            arrowSelectedBorderColor() {
+                return this.selectedColor + ' transparent transparent';
+            },
+            // 箭头未被选中时的 border-color
+            arrowUnselectedBorderColor() {
+                return this.unselectedColor + ' transparent transparent';
+            }
+        }
+    };
+</script>
+
+<script type="php">
+    // 箭头被选中时的 border-color
+    function computed_arrowSelectedBorderColor($ctx) {
+        $selectedColor = $ctx->_d['selectedColor'];
+        return $selectedColor . ' transparent transparent';
+    }
+    // 箭头未被选中时的 border-color
+    function computed_arrowUnselectedBorderColor($ctx) {
+        $unselectedColor = $ctx->_d['unselectedColor'];
+        return $unselectedColor . ' transparent transparent';
+    }
+</script>
+
+<style lang="less" scoped>
+    // 上方 tag 栏
+    .c-filter-tag-layout {
+        position: relative;
+        padding: .08rem .17rem;
+        background: #fff;
+        overflow: hidden;
+    }
+    // 一级 tag
+    .c-filter-tag-item {
+        display: box;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-pack: center;
+        -webkit-justify-content: center;
+                justify-content: center;
+        -webkit-box-align: center;
+        -webkit-align-items: center;
+                align-items: center;
+        text-align: center;
+    }
+    // 箭头图标
+    .c-filter-tag-item-icon {
+        transition: transform .16s cubic-bezier(0.46, 0, 1, 1);
+        display: inline-block;
+        width: 0;
+        height: 0;
+        border-width: 4px 4px 0;
+        border-style: solid;
+    }
+    // 箭头图标被选中的样式
+    .c-filter-tag-item-icon-current-selected {
+        transition: transform .3s cubic-bezier(0.42, 0, 0.52, 1);
+        -webkit-transform: rotate(180deg);
+                transform: rotate(180deg);
+    }
+    // 仅仅加粗，适用于复合筛选有默认值时
+    .c-filter-tag-item-bold {
+        font-weight: bold;
+    }
+    // 向上的箭头
+    .c-filter-tag-item-icon-up {
+        -webkit-transform: rotate(180deg);
+                transform: rotate(180deg);
+    }
+    // 排序
+    .c-filter-tag-item-icon-order {
+        height: 100%;
+        display: box;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-flex-direction: column;
+                flex-direction: column;
+        -webkit-box-pack: center;
+        -webkit-justify-content: center;
+                justify-content: center;
+        -webkit-box-align: center;
+        -webkit-align-items: center;
+                align-items: center;
+        text-align: center;
+    }
+    .c-filter-tag-item-icon-wrapper {
+        height: 100%;
+        display: box;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+    }
+    .c-filter-tag-item-icon-wrapper-up {
+        -webkit-box-align: end;
+        -webkit-align-items: flex-end;
+                align-items: flex-end;
+    }
+    .c-filter-tag-item-icon-wrapper-down {
+        padding-top: .025rem;
+    }
+</style>

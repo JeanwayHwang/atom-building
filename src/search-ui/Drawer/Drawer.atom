@@ -1,0 +1,371 @@
+<template>
+    <div
+        ref="drawer"
+        :style="{
+            'position': isFixed ? 'fixed' : 'relative',
+            'z-index': zIndexData
+        }"
+        data-module="c-dr"
+        class="c-drawer"
+    >
+        <!-- 蒙层 -->
+        <transition
+            name="c-mask-show"
+            @after-leave="afterMaskLeave"
+            @before-enter="beforeMaskEnter"
+        >
+            <div
+                a-show="isOpenData"
+                class="c-mask"
+                role="button"
+                aria-label="关闭"
+                @click="handleClose"
+                @touchmove.prevent
+            />
+        </transition>
+        <c-row class="c-drawer-row">
+            <transition name="c-mask-show-left">
+                <!-- 蒙层提示 -->
+                <c-span
+                    a-show="isOpenData"
+                    ref="maskTips"
+                    :col="cols.left"
+                    class="mask-tips"
+                    @click.native="handleClose"
+                >
+                    <!-- 只有当第一次打开时才提示 -->
+                    <div
+                        a-if="openCount === 1"
+                        class="close-tips"
+                    >
+                        <c-icon
+                            a-if="leftTips && leftTips.icon"
+                            :type="leftTips.icon"
+                            class="icon"
+                        />
+                        <div
+                            a-if="leftTips && leftTips.text"
+                            class="text c-font-normal"
+                        >
+                            {{ leftTips.text }}
+                        </div>
+                    </div>
+                </c-span>
+            </transition>
+            <transition name="c-panel-show">
+                <!-- 弹层面板 -->
+                <c-span
+                    a-show="isOpenData"
+                    ref="panel"
+                    :col="cols.right"
+                    class="panel"
+                >
+                    <div class="c-panel-wrapper">
+                        <!-- 标题 -->
+                        <div
+                            a-if="title"
+                            class="title c-line-bottom c-font-big c-color-link"
+                        >
+                            {{ title }}
+                        </div>
+                        <!-- 列表 -->
+                        <section
+                            a-if="list && list.length > 0"
+                            class="list-wrapper c-gap-bottom-small"
+                        >
+                            <div class="list">
+                                <c-touchable-feedback
+                                    a-for="(item, index) in list"
+                                    :key="index"
+                                    :top="-.02"
+                                    class="c-gap-top-small"
+                                    @click.native="handleListItemClick({
+                                        item,
+                                        index
+                                    })"
+                                >
+                                    <div
+                                        :class="{
+                                            'item-checked': item.checked,
+                                            'c-color-link': item.checked
+                                        }"
+                                        class="item c-font-medium c-gap-inner-top c-gap-inner-bottom c-line-clamp1"
+                                    >
+                                        {{ item.text }}
+                                    </div>
+                                </c-touchable-feedback>
+                            </div>
+                        </section>
+                        <!-- @slot 内容区插槽，可完全自定义 -->
+                        <slot/>
+                    </div>
+                </c-span>
+            </transition>
+        </c-row>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 控制是否显示
+         */
+        isOpen: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 标题
+         */
+        title: String,
+
+        /**
+         * 单选类型列表数据
+         *
+         * @property {string} text 显示文案
+         */
+        list: {
+            type: Array,
+            default: []
+        },
+
+        /**
+         * 方向
+         */
+        direction: {
+            type: String,
+            default: 'right'
+        },
+
+        /**
+         * 栅格比例
+         *
+         * @property {number} [left=4] 左边区域宽度（1-12）
+         * @property {number} [right=4] 右边边区域宽度（1-12）
+         */
+        cols: {
+            type: Object,
+            default: {
+                left: 4,
+                right: 8
+            }
+        },
+
+        /**
+         * 左侧蒙层关闭提示
+         *
+         * @property {string} [text=轻触关闭目录] 提示文案
+         * @property {string} [icon=gesture] 提示icon
+         */
+        leftTips: {
+            type: Object,
+            default: {
+                text: '轻触关闭目录',
+                icon: 'gesture'
+            }
+        },
+
+        /**
+         * zIndex
+         */
+        zIndex: {
+            type: Number,
+            default: 501
+        }
+    },
+    data: {
+        // 这里把 isOpen 放入 data 里，是为了在销毁时手动关闭 isOpen
+        isOpenData: isOpen,
+        // 这里把 zIndex 放入 data 里，是为了在销毁时手动设置 z-index 为 -1
+        zIndexData: zIndex,
+        // 是否开启 fixed
+        isFixed: false,
+        // 打开计数；这里是为了只有当第一次打开时才提示
+        openCount: 0
+    },
+    components: {
+        'c-line': '../Line/Line',
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-icon': '../Icon/Icon',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script>
+export default {
+    mounted() {
+        this.$root.$on('attach', () => {
+        });
+        this.$root.$on('detach', this.detach);
+    },
+    methods: {
+        detach() {
+            this.isFixed = false;
+            this.isOpenData = false;
+            this.zIndexData = -1;
+            this.handleClose();
+        },
+        handleClose() {
+
+            /**
+             * 关闭浮层事件，需要监听该事件控制抽屉组件是否显示
+             *
+             * @event close
+             */
+            this.$emit('close');
+        },
+        afterMaskLeave() {
+            this.isFixed = false;
+        },
+        beforeMaskEnter() {
+            this.isFixed = true;
+        },
+        handleListItemClick(obj) {
+            // 清空所有 checked
+            this.list.forEach(item => {
+                this.$set(item, 'checked', false);
+            });
+            // 设置 checked
+            this.$set(obj.item, 'checked', true);
+
+            /**
+             * 单选类型时选择后的改变事件
+             *
+             * @event change
+             * @property {object} param1.item 选中项数据
+             * @property {number} param1.index 选中项索引
+             */
+            this.$emit('change', obj);
+            // 关闭
+            this.$emit('close');
+        }
+    },
+    watch: {
+        isOpen(newVal, oldVal) {
+            // 如果是 isOpen === true，记一次数
+            if (newVal) {
+                this.openCount++;
+            }
+            this.isOpenData = this.isOpen;
+            this.zIndexData = this.zIndex;
+        }
+    },
+    beforeDestory() {
+        this.detach();
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.c-drawer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    // 蒙层
+    .c-mask {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    .c-drawer-row {
+        position: relative;
+        height: 100%;
+        // 蒙层提示
+        .mask-tips {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            .close-tips {
+                color: #fff;
+                .icon {
+                    display: inline-block;
+                    font-size: 26px;
+                }
+            }
+        }
+        // 弹层面板
+        .panel {
+            // 面板
+            .c-panel-wrapper {
+                position: absolute;
+                display: flex;
+                flex-direction: column;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                height: 100%;
+                background: #fff;
+                .title {
+                    padding-left: .17rem;
+                    padding-right: .17rem;
+                    height: 44px;
+                    line-height: 44px;
+                    font-weight: bold;
+                    box-sizing: content-box;
+                    border-color: #f1f1f1;
+                }
+                .list-wrapper {
+                    position: relative;
+                    flex: 1;
+                    overflow: auto;
+                    -webkit-overflow-scrolling: touch;
+                    .item {
+                        padding-left: .17rem;
+                        padding-right: .17rem;
+                    }
+                    .item-checked {
+                        font-weight: bold;
+                    }
+                }
+            }
+        }
+    }
+    // 动效阴影
+    .c-mask-show-enter-active {
+        transition: opacity .3s cubic-bezier(0.42, 0, 0.52, 1)
+    }
+    .c-mask-show-leave-active {
+        transition: opacity .3s cubic-bezier(0, 0, 0.3, 1);
+    }
+    .c-mask-show-enter,
+    .c-mask-show-leave-to {
+        opacity: 0;
+    }
+    // 蒙层提示动效
+    .c-mask-show-left-enter-active {
+        transition: all .3s cubic-bezier(0.42, 0, 0.52, 1);
+    }
+    .c-mask-show-left-leave-active {
+        transition: all .3s cubic-bezier(0, 0, 0.3, 1);
+    }
+    .c-mask-show-left-enter,
+    .c-mask-show-left-leave-to {
+        opacity: 0;
+    }
+    // 动效面板
+    .c-panel-show-enter-active {
+        transition: all .3s cubic-bezier(0.42, 0, 0.52, 1);
+    }
+    .c-panel-show-leave-active {
+        transition: all .16s cubic-bezier(0.46, 0, 1, 1);
+    }
+    .c-panel-show-enter,
+    .c-panel-show-leave-to {
+        // 解决iphone6手百translate3d时入场动画消失的问题，同时通过scale开启硬件加速
+        transform: translateX(100%) scaleZ(0);
+        backface-visibility: hidden;
+        perspective: 1000;
+    }
+}
+</style>

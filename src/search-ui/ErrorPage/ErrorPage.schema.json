@@ -1,0 +1,73 @@
+{
+    "alias": [
+        "c-error-page"
+    ],
+    "type": "object",
+    "properties": {
+        "errorPage": {
+            "type": "object",
+            "@ChineseName": "ErrorPage 空白页组件实例",
+            "description": "ErrorPage 空白页组件实例，ErrorPage 的基础相关数据",
+            "properties": {
+                "logo": {
+                    "type": "string",
+                    "@ChineseName": "logo图片名",
+                    "@Demo": "blank",
+                    "description": "ErrorPage logo图片名,全屏图片可选分别是空白页(blank),页面出错(error),网络问题(trouble)，半屏可选分别是暂无内容(noContent),暂无评论(noComment),网络问题(network)"
+                },
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "标题内容",
+                    "@Demo": "这里是 ErrorPage 标题",
+                    "description": "ErrorPage 标题内容"
+                },
+                "desc": {
+                    "type": "string",
+                    "@ChineseName": "描述文案",
+                    "@Demo": "这里是描述文案",
+                    "description": "ErrorPage 描述文案"
+                },
+                "hasBtn": {
+                    "type": "boolean",
+                    "@ChineseName": "是否有按钮",
+                    "@Demo": false,
+                    "description": "ErrorPage 是否有按钮"
+                },
+                "btnUrl": {
+                    "type": "string",
+                    "@ChineseName": "按钮的链接",
+                    "@Demo": "http://www.baidu.com",
+                    "description": "ErrorPage 按钮的链接"
+                },
+                "btnText": {
+                    "type": "string",
+                    "@ChineseName": "按钮的文字",
+                    "@Demo": "点击重试",
+                    "description": "ErrorPage 按钮的文字"
+                },
+                "black": {
+                    "type": "boolean",
+                    "@ChineseName": "是否是黑夜模式",
+                    "@Demo": false,
+                    "description": "ErrorPage 是否是黑夜模式"
+                },
+                "searchcraft": {
+                    "type": "boolean",
+                    "@ChineseName": "是否是简搜",
+                    "@Demo": false,
+                    "description": "ErrorPage 是否是简搜,需垂类根据ua判断"
+                }
+            },
+            "propsData": [
+                "logo",
+                "title",
+                "desc",
+                "hasBtn",
+                "btnUrl",
+                "btnText",
+                "black",
+                "searchcraft"
+            ]
+        }
+    }
+}

@@ -1,0 +1,303 @@
+<template>
+    <div
+        class="c-stars-wrapper"
+    >
+        <div
+            :style="{
+                fontSize,
+                color
+            }"
+            class="c-stars-container"
+            @click="click"
+        >
+            <!-- 空 icon -->
+            <div>
+                <c-icon
+                    a-for="n in 5"
+                    :type="emptyIcon"
+                    :key="n"
+                    :style="[
+                        emptyColor
+                            ? {
+                                color: emptyColor
+                            }
+                            : {}
+                    ]"
+                    :class="[
+                        !disabled
+                            ? 'WA_LOG_BTN'
+                            : ''
+                    ]"
+                    :data-index="n"
+                    :aria-label="`${n}分`"
+                    :aria-hidden="disabled"
+                    role="button"
+                    class="c-stars-bar-empty-icon-item"
+                />
+            </div>
+            <!-- 选中 icon -->
+            <div
+                class="c-stars-bar-active"
+            >
+                <!-- 整数部分 -->
+                <c-icon
+                    a-for="n in numIntegerPart"
+                    :type="icon"
+                    :key="n"
+                    :class="[
+                        !disabled
+                            ? 'WA_LOG_BTN'
+                            : ''
+                    ]"
+                    :data-index="n"
+                    :aria-label="`${n}分`"
+                    :aria-hidden="disabled"
+                    role="button"
+                    class="c-stars-bar-active-item"
+                />
+                <!-- 小数部分 -->
+                <span
+                    a-if="numDecimalPart"
+                    class="decimal"
+                >
+                    <c-icon
+                        :style="{
+                            width: numDecimalPart * 100 + '%'
+                        }"
+                        :type="icon"
+                        :class="[
+                            !disabled
+                                ? 'WA_LOG_BTN'
+                                : ''
+                        ]"
+                        class="c-icon decimal-inner"
+                    />
+                </span>
+            </div>
+        </div>
+        <span
+            a-if="showText"
+            :style="{
+                fontSize: textFontSize,
+                color: textColor,
+                marginLeft: textGap
+            }"
+            aria-live="polite"
+        >
+            {{ text ? text : oStars }}
+        </span>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 星星数，范围是：0 ~ 5；可以为小数（例：3.5）
+         */
+        stars: {
+            type: Number,
+            default: 0
+        },
+
+        /**
+         * 星星的图标类型
+         */
+        icon: {
+            type: String,
+            default: 'star'
+        },
+
+        /**
+         * 镂空星星的图标名
+         */
+        emptyIcon: {
+            type: String,
+            default: 'empty_star'
+        },
+
+        /**
+         * 激活状态的星星颜色
+         */
+        color: {
+            type: String,
+            default: '#f60'
+        },
+
+        /**
+         * 镂空状态的星星颜色
+         */
+        emptyColor: String,
+
+        /**
+         * 星星的大小
+         */
+        fontSize: {
+            type: String,
+            default: '.1rem'
+        },
+
+        /**
+         * 右侧文案
+         */
+        text: String,
+
+        /**
+         * 是否显示右侧文案
+         */
+        showText: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 右侧文字的字体大小
+         */
+        textFontSize: {
+            type: String,
+            default: '.14rem'
+        },
+
+        /**
+         * 右侧文字的颜色
+         */
+        textColor: {
+            type: String,
+            default: '#999'
+        },
+
+        /**
+         * 右侧文与星星之间的间距
+         */
+        textGap: {
+            type: String,
+            default: '.05rem'
+        },
+
+        /**
+         * 是否禁止交互
+         */
+        disabled: {
+            type: Boolean,
+            default: true
+        }
+    },
+    data: {
+        oStars: stars
+    },
+    components: {
+        'c-icon': '../Icon/Icon'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        click(e) {
+            if (this.disabled) {
+                return;
+            }
+            let index = parseInt(e.target.dataset.index, 10);
+            if (index >= 0) {
+                this.change(index);
+            }
+        },
+        change(index) {
+            if (index === this.oStars) {
+                return;
+            }
+
+            /**
+             * 评分改变时触发
+             *
+             * @event change
+             * @property {number} current 当前的数量
+             * @property {number} old 更改前的数量
+             */
+            this.$emit('change', {
+                current: index,
+                old: this.oStars
+            });
+            this.oStars = index;
+        }
+    },
+    computed: {
+        // 整数部分
+        numIntegerPart() {
+            return Math.floor(this.oStars);
+        },
+        // 小数部分
+        numDecimalPart() {
+            return this.oStars - Math.floor(this.oStars);
+        }
+    },
+    watch: {
+        stars(newVal) {
+            this.change(newVal);
+        }
+    }
+};
+</script>
+
+<script type="php">
+function computed_numIntegerPart($ctx) {
+    if (!is_numeric($ctx->_d["oStars"])) {
+        return 0;
+    }
+    $oStars = $ctx->_d["oStars"];
+    return floor($oStars);
+}
+function computed_numDecimalPart($ctx) {
+    if (!is_numeric($ctx->_d["oStars"])) {
+        return 0;
+    }
+    $oStars = $ctx->_d["oStars"];
+    return $oStars - floor($oStars);
+}
+</script>
+
+<style lang="less" scoped>
+.c-stars-wrapper {
+    display: inline-block;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+.c-stars-wrapper > * {
+    display: inline-block;
+    vertical-align: bottom;
+}
+.c-stars-container {
+    position: relative;
+}
+.c-stars-bar-active {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: all .3s;
+}
+// 右侧间距
+.c-stars-bar-active-item,
+.c-stars-bar-empty-icon-item {
+    flex-shrink: 0;
+    margin-right: .03rem;
+    &:last-child {
+        margin-right: 0;
+    }
+}
+// 小数部分
+.decimal {
+    display: flex;
+    align-items: center;
+    .decimal-inner {
+        display: inline-block;
+        height: 100%;
+        vertical-align: top;
+        overflow: hidden;
+    }
+}
+</style>

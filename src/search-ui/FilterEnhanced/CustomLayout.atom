@@ -1,0 +1,158 @@
+<!-- @ignore -->
+<template>
+    <section
+        ref="filterCustomLayout"
+        class="c-filter-custom-layout"
+    >
+        <!-- list -->
+        <section
+            a-if="data && data.type === 'custom'"
+            ref="filterCustomLayout"
+            class="c-filter-custom-list-layout"
+        >
+            <slot/>
+        </section>
+        <!-- 底部按钮栏 -->
+        <div
+            a-if="data && data.type === 'custom' && !hideCustomBottomBtn"
+            ref="filterCustomBottomBtnLayout"
+            class="c-filter-custom-bottom-btn-layout c-line-top"
+        >
+            <c-row
+                :style="transition
+                    ? {
+                        'padding-left': '0',
+                        'padding-right': '0'
+                    }
+                    : null
+                "
+            >
+                <c-span>
+                    <c-btn
+                        :style="{
+                            'color': primaryColor,
+                            'border-color': primaryColor
+                        }"
+                        text="重置"
+                        class="c-filter-custom-bottom-btn-reset WA_LOG_BTN"
+                        @click="handleResetBtnClick"
+                    />
+                </c-span>
+                <c-span>
+                    <c-btn
+                        :style="{
+                            'background-color': primaryColor,
+                            'border-color': primaryColor
+                        }"
+                        text="确定"
+                        class="c-filter-custom-bottom-btn-confirm WA_LOG_BTN"
+                        @click="handleConfirmBtnClick"
+                    />
+                </c-span>
+            </c-row>
+        </div>
+    </section>
+</template>
+
+<script type="config">
+    {
+        props: {
+            // store
+            store: {
+                type: Object
+            },
+            // 数据
+            data: {
+                type: Object
+            },
+            // 主颜色
+            primaryColor: {
+                type: String
+            },
+            // 隐藏自定义按钮栏
+            hideCustomBottomBtn: {
+                type: Boolean,
+                default: false
+            },
+            // 是否增加动画
+            transition: Boolean
+        },
+        components: {
+            'c-row': '../Row/Row',
+            'c-span': '../Row/Span',
+            'c-btn': '../Button/Button'
+        }
+    }
+</script>
+
+<script>
+    export default {
+        methods: {
+            // 重置按钮点击
+            handleResetBtnClick() {
+                this.store.customResetBtnClick();
+            },
+            // 确定按钮点击
+            handleConfirmBtnClick() {
+                this.store.customConfirmBtnClick();
+            }
+        }
+    };
+</script>
+
+<style lang="less" scoped>
+    .c-filter-custom-layout {
+        height: 100%;
+        width: 100%;
+        background: #fff;
+    }
+    .c-filter-custom-list-layout {
+        position: relative;
+        // 预留出底部按钮栏的距离
+        padding: 0 .17rem .7rem .17rem;
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        background: #fff;
+        // iOS 弹性滚动
+        -webkit-overflow-scrolling: touch;
+
+        &::-webkit-scrollbar {
+            width: 3px;
+        }
+        &::-webkit-scrollbar-thumb:vertical {
+            background-color: #e0e0e0;
+            border-radius: 3px;
+        }
+        &::-webkit-scrollbar-track-piece:vertical:decrement,
+        &::-webkit-scrollbar-track-piece:vertical:increment {
+            background-color: rgba(255, 255, 255, 0);
+        }
+    }
+    .c-filter-custom-bottom-btn-layout {
+        // 这里设置为 relative 是为了动画时从 tag 下方划出
+        position: relative;
+        padding: .1rem .17rem;
+        width: 100%;
+        bottom: .69rem;
+        left: 0;
+        background-color: #fff;
+        -webkit-box-sizing: border-box;
+                box-sizing: border-box;
+        z-index: 1;
+
+        .c-filter-custom-bottom-btn-confirm {
+            background-color: #555;
+            border-color: #555;
+            color: #fff;
+
+            &:active {
+                background-color: #333;
+                border-color: #555;
+                color: #fff;
+            }
+        }
+    }
+</style>

@@ -1,0 +1,126 @@
+{
+    "alias": [
+        "c-video-col"
+    ],
+    "type": "object",
+    "properties": {
+        "videoCol": {
+            "type": "object",
+            "@ChineseName": "VideoCol 组件实例",
+            "description": "VideoCol 组件实例，VideoCol 的基础相关数据",
+            "properties": {
+                "item": {
+                    "type": "object",
+                    "@ChineseName": "视频信息",
+                    "description": "视频信息",
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "@ChineseName": "跳转连接",
+                            "description": "跳转连接",
+                            "@Demo": "https://m.baidu.com"
+                        },
+                        "title": {
+                            "type": "string",
+                            "@ChineseName": "标题",
+                            "description": "标题",
+                            "@Demo": "震惊！！这是一个标题"
+                        },
+                        "poster": {
+                            "type": "string",
+                            "@ChineseName": "图片缩略图地址",
+                            "description": "图片缩略图地址",
+                            "@Demo": "https://m.baidu.com/static/index/plus/homepage-newlogo.png"
+                        },
+                        "source": {
+                            "type": "string",
+                            "@ChineseName": "来源",
+                            "description": "来源",
+                            "@Demo": "汽车之家"
+                        },
+                        "duration": {
+                            "type": "number",
+                            "@ChineseName": "视频的显示时长(单位秒)",
+                            "description": "视频的显示时长(单位秒)",
+                            "@Demo": 80
+                        },
+                        "pubtime": {
+                            "type": "number",
+                            "@ChineseName": "发布时间",
+                            "description": "发布时间，标准时间戳",
+                            "@Demo": 1503314822000
+                        },
+                        "playtime": {
+                            "type": "number",
+                            "@ChineseName": "已播放次数",
+                            "description": "已播放次数",
+                            "@Demo": 234
+                        },
+                        "score": {
+                            "type": "number",
+                            "@ChineseName": "评分",
+                            "description": "评分",
+                            "@Demo": 8.5
+                        },
+                        "labelFront": {
+                            "type": "string",
+                            "@ChineseName": "标题左侧标签文案",
+                            "description": "标题左侧标签文案",
+                            "@Demo": "标签1"
+                        },
+                        "labelFrontType": {
+                            "type": "string",
+                            "@ChineseName": "标题前的标签类型，可参考 Label 组件",
+                            "description": "标题前的标签类型，可参考 Label 组件",
+                            "@Demo": "标签1"
+                        }
+                    }
+                },
+                "imgType": {
+                    "type": "string",
+                    "@ChineseName": "图片类型",
+                    "description": "图片类型",
+                    "@Demo": "y"
+                },
+                "iconType": {
+                    "type": "string",
+                    "@ChineseName": "描述图片右下角遮罩内自定义icon图标",
+                    "description": "描述图片右下角遮罩内自定义icon图标",
+                    "@Demo": "baidu"
+                },
+                "titleClamp": {
+                    "type": [
+                        "string",
+                        "number"
+                    ],
+                    "@ChineseName": "标题截断，默认为1行截断",
+                    "description": "标题截断，默认为1行截断",
+                    "@Demo": "2"
+                },
+                "infoLine": {
+                    "type": [
+                        "string",
+                        "number"
+                    ],
+                    "@ChineseName": "来源信息，可选，默认为1行展现，2为两行展现，有效值1或2",
+                    "description": "来源信息，可选，默认为1行展现，2为两行展现，有效值1或2",
+                    "@Demo": "2"
+                },
+                "titleFixHeight": {
+                    "type": "boolean",
+                    "@ChineseName": "标题是否定高",
+                    "description": "标题是否定高",
+                    "@Demo": true
+                }
+            },
+            "propsData": [
+                "item",
+                "imgType",
+                "iconType",
+                "titleClamp",
+                "infoLine",
+                "titleFixHeight"
+            ]
+        }
+    }
+}

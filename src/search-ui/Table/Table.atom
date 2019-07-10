@@ -1,0 +1,225 @@
+<template>
+    <table
+        :class="[
+            (type !== 'standardLine' && type !== 'standardBlock') ? 'c-table-abstract' : '',
+            type !== 'abstractMulti' ? 'c-blocka' : '',
+            type == 'standardBlock' ? 'c-table-slink' : '','c-gap-bottom-small'
+        ]"
+        :aria-colcount="content.tRow.length"
+        :aria-rowcount="content.tRow[0].length"
+        class="c-table"
+    >
+        <tbody class="c-blocka">
+            <!-- table head -->
+            <tr
+                a-if="content.tHead"
+                class="c-row"
+            >
+                <th
+                    a-for="(thItem, i) in content.tHead"
+                    :key="i"
+                    :class="[
+                        content.cols ? 'c-span' + content.cols[i] : 'c-span' + gridClass
+                    ]"
+                    class="c-line-clamp1"
+                >
+                    {{ thItem }}
+                </th>
+            </tr>
+            <!-- 标准表格，整行可点 -->
+            <!-- eslint-disable atom/tr-in-table -->
+            <template
+                a-if="type === 'standardLine'"
+            >
+                <tr
+                    a-for="(trItem, i) in content.tRow"
+                    :key="i"
+                    class="c-blocka c-row"
+                >
+                    <td class="c-table-stantline-tr">
+                        <!-- 整行可点添加点击态 当设置了 url 的时候打开 -->
+                        <c-touchable-feedback
+                            :is-jump="!!(trItem.url || (trItem.params && trItem.params.tcUrl))"
+                            :top="-.11"
+                            :bottom="-.11"
+                            :left="-.17"
+                            :right="-.17"
+                            :url="trItem.url"
+                            :url-params="trItem.params"
+                            expand
+                        >
+                            <c-link
+                                :url="trItem.url"
+                                :params="trItem.params"
+                                class="c-row"
+                            >
+                                <div
+                                    a-for="(tdItem, tdi) in trItem.tCell"
+                                    :key="tdi"
+                                    :aria-rowindex="i + 1"
+                                    :aria-colindex="tdi + 1"
+                                    :class="[
+                                        content.cols ? 'c-span' + content.cols[tdi] : 'c-span' + gridClass,
+                                        type !== 'abstractLine' ? 'c-color-link' : 'c-color'
+                                    ]"
+                                    role="cell"
+                                    class="c-line-clamp1"
+                                >
+                                    {{ tdItem.text }}
+                                </div>
+                            </c-link>
+                        </c-touchable-feedback>
+                    </td>
+                </tr>
+            </template>
+            <!-- 标准表格，单个可点 -->
+            <!-- 概览表格，整体可点 单行内容 -->
+            <template
+                a-if="type !== 'abstractMulti' && type !== 'standardLine'"
+            >
+                <tr
+                    a-for="(trItem, i) in content.tRow"
+                    :key="i"
+                    class="c-blocka c-row"
+                >
+                    <td
+                        a-for="(tdItem, tdi) in trItem.tCell"
+                        :key="tdi"
+                        :class="[
+                            content.cols ? 'c-span' + content.cols[tdi] : 'c-span' + gridClass
+                        ]"
+                        :aria-rowindex="i + 1"
+                        :aria-colindex="tdi + 1"
+                        role="cell"
+                        class="c-line-clamp1 c-color"
+                    >
+                        <c-slink
+                            a-if="tdItem.url && type === 'standardBlock'"
+                            :type="'auto'"
+                            :url="tdItem.url"
+                            :text="tdItem.text"
+                            :params="tdItem.params"
+                            class="c-table-td-block"
+                        />
+                        </c-slink>
+                        <template
+                            a-if="!tdItem.url || type !== 'standardBlock'"
+                        >
+                            {{ tdItem.text }}
+                        </template>
+                    </td>
+                </tr>
+            </template>
+            <!-- 概览表格，整体可点 多行内容 -->
+            <template
+                a-if="type === 'abstractMulti'"
+            >
+                <tr
+                    a-for="(trItem, i) in content.tRow"
+                    :key="i"
+                    class="c-blocka c-row"
+                >
+                    <td
+                        a-for="(tdItem, tdi) in trItem.tCell"
+                        :key="tdi"
+                        :class="[
+                            content.cols ? 'c-span' + content.cols[tdi] : 'c-span' + gridClass
+                        ]"
+                        :aria-rowindex="i + 1"
+                        :aria-colindex="tdi + 1"
+                        role="cell"
+                        class="c-line-clamp1 c-color"
+                    >
+                        <template
+                            a-if="!tdItem.abstract"
+                        >
+                            {{ tdItem.text }}
+                        </template>
+                        <div
+                            a-if="tdItem.abstract"
+                            class="c-line-clamp1"
+                        >
+                            {{ tdItem.text }}
+                        </div>
+                        <div
+                            a-if="tdItem.abstract"
+                            class="c-line-clamp1 c-table-gray"
+                        >
+                            {{ tdItem.abstract }}
+                        </div>
+                    </td>
+                </tr>
+            </template>
+            <!-- eslint-enable atom/tr-in-table -->
+        </tbody>
+    </table>
+</template>
+
+<style lang="less" scoped>
+.c-table-slink tbody .c-row {
+    justify-content: center;
+    align-items: center;
+}
+.c-table-slink tbody td {
+    border-bottom: 0;
+    padding-top: 0;
+    padding-bottom: .05rem;
+}
+.c-table-slink tbody tr:nth-child(2) th,
+.c-table-slink tbody tr:nth-child(2) td {
+    padding-top: .1rem;
+}
+.c-table-slink tbody tr:last-child th,
+.c-table-slink tbody tr:last-child td {
+    padding-bottom: .1rem;
+}
+.c-table .c-table-stantline-tr {
+    width: 100%;
+    display: block;
+}
+.c-table .c-row th,
+.c-table .c-row td {
+    padding-right: 1.03092784%;
+    padding-left: 1.03092784%;
+}
+</style>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 表格数据
+         *
+         * @property {Array} cols 栅格数组，设置表格的栅格比例，数组中每一项为 number
+         * @property {Array} tHead 表头数组，数组中每一项为string
+         * @property {Array} tRow 表行数组
+         * @property {String} tRow.url 整行可点的链接
+         * @property {object} tRow.params 整行可点的链接类型
+         * @property {String} tRow.params.type 链接参数中的类型
+         * @property {String} tRow.params.sfUrl 链接参数中的链接
+         * @property {String} tRow.params.options 链接参数中的选项
+         * @property {Array} tRow.tCell 表单行内容数组
+         * @property {String} tRow.tCell.url 表单元格可点的链接
+         * @property {object} tRow.tCell.params 表单元格可点的链接类型
+         * @property {String} tRow.tCell.params.type 链接参数中的类型
+         * @property {String} tRow.tCell.params.sfUrl 链接参数中的链接
+         * @property {String} tRow.tCell.params.options 链接参数中的选项
+         * @property {String} tRow.tCell.text 表单元格文案内容
+         * @property {String} tRow.tCell.abstract 表单元格灰色文案内容
+         */
+        content: Object,
+        /**
+         * 表格类型（standardLine：整行可点；standardBlock：单个可点；abstractLine：概要表格-单行；abstractMulti：概览表格：多行）
+         */
+        type: String
+    },
+    components: {
+        'c-link': '../Link/Link',
+        'c-slink': '../Slink/Slink',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    },
+    data: {
+        gridClass: 12 / content.tRow[0].tCell.length
+    }
+}
+</script>

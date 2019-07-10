@@ -1,0 +1,200 @@
+<template>
+    <p
+        :class="[
+            color ? ('c-color-' + color) : '',
+            onLineLabel ? 'variant-one-line-label' : clampClass
+        ]"
+        :style="{
+            'text-align': align,
+            'height': fixHeight ? '3.43em' : 'auto',
+            'font-size': fontSize + 'px',
+            'line-height': (fontSize + 10) + 'px',
+            'margin-bottom': (fixHeight || !text) ? 0 : '',
+            'padding-right': onLineLabel ? labelWidth : ''
+        }"
+        class="c-text-line"
+        @click="$emit('click', $event)"
+    >
+        <c-label
+            a-if="labelFront"
+            :text="labelFront"
+            :type="labelFrontType"
+            class="c-gap-right-small"
+        />
+        <span
+            a-if="text"
+            class="c-text-line-text"
+            a-html="text"
+        />
+        <c-label
+            a-if="label"
+            :text="label"
+            :type="labelType"
+            class="c-gap-left-small"
+        />
+    </p>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 文本内容
+         */
+        text: String,
+        /**
+         * 显示行数，范围为1-5
+         */
+        clamp: {
+            type: [String, Number],
+            default: 1
+        },
+        /**
+         * 文案颜色，可选值参照c-color-*
+         */
+        color: String,
+        /**
+         * 文案对齐方式，可选值为text-align可选值
+         */
+        align: {
+            type: String,
+            default: 'left'
+        },
+        /**
+         * t1 ~ t4
+         */
+        size: {
+            type: String,
+            default: 't3'
+        },
+        /**
+         * 是否定高
+         */
+        fixHeight: {
+            type: Boolean,
+            default: false
+        },
+        /**
+         * 标签文本
+         */
+        label: String,
+        /**
+         * 标签类型，可参考Label组件
+         */
+        labelType: String,
+        /**
+         * 标题前的标签文本
+         */
+        labelFront: String,
+        /**
+         * 标题前的标签类型，可参考Label组件
+         */
+        labelFrontType: String
+    },
+    computed: {
+        clampClass: 'c-line-clamp' + clamp,
+        /* eslint-disable eqeqeq */
+        onLineLabel: clamp == 1 && !!label
+        /* eslint-enable eqeqeq */
+    },
+    components: {
+        'c-label': '../Label/Label'
+    }
+}
+</script>
+
+<script type="php">
+    static $fontSizeMap = array(
+        't1' => 18,
+        't2' => 16,
+        't3' => 14,
+        't4' => 12,
+    );
+
+    function computed_fontSize($ctx) {
+        $size = $ctx->_d["size"];
+        return self::$fontSizeMap[$size];
+    }
+
+    function computed_labelWidth($ctx) {
+        if (empty($ctx->_d["label"])) {
+            return 0;
+        }
+        $size = $ctx->_d["size"];
+        $label = $ctx->_d["label"];
+        return (12 * (strlen($label) + mb_strlen($label, 'utf8')) / 4 + 9) . 'px';
+    }
+
+    function computed_height($ctx) {
+        $size = $ctx->_d["size"];
+        $clamp = $ctx->_d["clamp"];
+        if ($clamp <= 1) {
+            return 'auto';
+        }
+        return ((self::$fontSizeMap[$size] + 10) * $clamp) . 'px';
+    }
+</script>
+
+<script>
+/**
+ * @file 一个文字的容器，里面只能是文字，主要是为了 hack 浏览器多行截断的 bug
+ * @author cxtom <cxtom2008@gmail.com>
+ */
+
+const SIZE_MAP = {
+    t1: 18,
+    t2: 16,
+    t3: 14,
+    t4: 12
+};
+
+export default {
+
+    computed: {
+        fontSize() {
+            return SIZE_MAP[this.size];
+        },
+        labelWidth() {
+            if (!this.label) {
+                return 0;
+            }
+            return (12 * this.label.replace(/[^\x00-\xff]/g, '1').length + 9) + 'px';
+        },
+        height() {
+            if (this.clamp <= 1) {
+                return 'auto';
+            }
+            return (SIZE_MAP[this.size] + 10) * this.clamp + 'px';
+        }
+    }
+
+    /**
+     * click event.
+     *
+     * @event click
+     */
+};
+</script>
+
+<style lang="less" scoped>
+p.c-text-line {
+
+    &.variant-one-line-label {
+
+        position: relative;
+        box-sizing: border-box;
+        width: 100%;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+
+        .c-text-line-text {
+            display: inline-block;
+            overflow: hidden;
+            max-width: 100%;
+            vertical-align: bottom;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    }
+}
+</style>

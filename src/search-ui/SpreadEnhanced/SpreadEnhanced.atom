@@ -1,0 +1,775 @@
+<!-- @ignore -->
+<template>
+    <div class="c-spread-wrapper">
+        <!-- 上方的展开收起按钮 -->
+        <div
+            a-if="isShow
+                && noFoldButtonShow
+                && (
+                type === 'list' && len > threshold
+                || type === 'height' && typeHeightButtonShow
+                || type === 'paragraph'
+            ) && !bottom"
+            :class="[
+                'c-spread-button',
+                'c-color',
+                'WA_LOG_OTHER',
+                hasBorder ? 'c-line-bottom' : '',
+                gapTopClass,
+                gapBottomClass
+            ]"
+            @click="change"
+        >
+            <c-touchable-feedback
+                :top="-btnFeedbackTop"
+                :bottom="-btnFeedbackBottom"
+                :left="-.17"
+                :right="-.17"
+            >
+                <div class="c-flexbox">
+                    <div a-if="hasButtonSlot" class="c-spread-button-slot">
+                        <slot name="button"/>
+                    </div>
+                    <div a-else class="c-spread-button-content">
+                        <span a-if="spreadText || foldText" class="c-font-normal c-spread-tips">
+                            {{ hasSpread ? foldText : spreadText }}
+                        </span>
+                        <span a-if="spreadRightText || foldRightText" class="c-spread-tips-right">
+                            {{ hasSpread ? foldRightText : spreadRightText }}
+                        </span>
+                    </div>
+                    <svg
+                        a-if="hasIcon"
+                        class="c-gap-left-small"
+                        xmlns="http://www.w3.org/2000/svg"
+                        version="1.1"
+                        width="14"
+                        height="24"
+                    >
+                        <path
+                            :d="iconStatus ? 'M0 15 L6 9 L12 15' : 'M0 9 L6 15 L12 9'"
+                            fill="#fff"
+                            stroke="currentColor"
+                            stroke-width="1"
+                        >
+                            <animate
+                                ref="svgAnimateSpread"
+                                attributeName="d"
+                                from="M0 9 L6 15 L12 9"
+                                to="M0 15 L6 9 L12 15"
+                                dur=".3s"
+                                begin="indefinite"
+                                calcMode="spline"
+                                keySplines="0.18, 0, 0.26, 1"
+                            />
+                            <animate
+                                ref="svgAnimateFold"
+                                attributeName="d"
+                                from="M0 15 L6 9 L12 15"
+                                to="M0 9 L6 15 L12 9"
+                                dur=".3s"
+                                begin="indefinite"
+                                calcMode="spline"
+                                keySplines="0.18, 0, 0.26, 1"
+                            />
+                        </path>
+                    </svg>
+                </div>
+            </c-touchable-feedback>
+        </div>
+        <!-- 展开收起内容 -->
+        <div class="c-spread-animate">
+            <div
+                a-if="!bottom && type == 'list'"
+                :class="[
+                    isAnimate ? 'c-spread-animate-height' : ''
+                ]"
+                :style="{
+                    height: (animateHeight + 'px')
+                }"
+            />
+            <div
+                ref="content"
+                :class="[
+                    'c-spread-content',
+                    useTransition && transition
+                        ? (!bottom && type == 'list')
+                            ? 'c-spread-margin-transition'
+                            : 'c-spread-transition'
+                        : ''
+                ]"
+                :style="{
+                    height: (height !== null) ? (height + 'px') : 'auto',
+                    top: marginTop + 'px'
+                }"
+                @click="noFoldButtonShow
+                    && !(
+                        isShow && (
+                        type === 'list' && len > threshold
+                        || type === 'height' && typeHeightButtonShow
+                        || type === 'paragraph'
+                )) && change()"
+            >
+                <div ref="innerContent">
+                    <template a-if="type === 'list'">
+                        <div
+                            a-for="index in len"
+                            a-show="index <= oThreshold"
+                            ref="list"
+                            :key="index"
+                        >
+                            <slot :name="'__c__' + (index - 1)"/>
+                        </div>
+                    </template>
+                    <template a-else-if="type === 'paragraph'">
+                        <div
+                            ref="paraContent"
+                            :class="[clampClass, 'WA_LOG_OTHER']"
+                        >
+                            <slot name="paragraph"/>
+                        </div>
+                        <div
+                            ref="shadow"
+                            :style="{
+                                display: switcher ? 'none' : 'block'
+                            }"
+                            class="c-spread-content-shadow"
+                        >
+                            <slot name="paragraph-shadow"/>
+                        </div>
+                    </template>
+                    <template a-else>
+                        <slot/>
+                    </template>
+                </div>
+            </div>
+        </div>
+        <!-- 下方的展开收起按钮 -->
+        <div
+            a-if="isShow
+                && noFoldButtonShow
+                && (
+                type === 'list' && len > threshold
+                || type === 'height' && typeHeightButtonShow
+                || type === 'paragraph'
+            ) && bottom"
+            :class="[
+                'c-spread-button-bottom',
+                'c-color',
+                'WA_LOG_OTHER',
+                hasBorder ? 'c-line-top' : '',
+                gapTopClass,
+                gapBottomClass,
+                oFoldMask ? 'c-spread-button-mask' : ''
+            ]"
+            :aria-expanded="hasSpread"
+            :aria-label="hasSpread ? `已${spreadText}.双击以${foldText}` : `已${foldText}.双击以${spreadText}`"
+            aria-live="polite"
+            @click="change"
+        >
+            <c-touchable-feedback
+                :top="-btnFeedbackTop"
+                :bottom="-btnFeedbackBottom"
+                :left="-.17"
+                :right="-.17"
+            >
+                <span
+                    a-if="spreadText || foldText"
+                    class="c-font-normal"
+                >
+                    {{ hasSpread ? foldText : spreadText }}
+                </span>
+                <svg
+                    a-if="hasIcon"
+                    class="c-gap-left-small"
+                    xmlns="http://www.w3.org/2000/svg"
+                    version="1.1"
+                    width="14"
+                    height="24"
+                    aria-hidden="true"
+                >
+                    <path
+                        :d="iconStatus ? 'M0 15 L6 9 L12 15' : 'M0 9 L6 15 L12 9'"
+                        fill="#fff"
+                        stroke="currentColor"
+                        stroke-width="1"
+                    >
+                        <animate
+                            ref="svgAnimateSpread"
+                            attributeName="d"
+                            from="M0 9 L6 15 L12 9"
+                            to="M0 15 L6 9 L12 15"
+                            dur=".3s"
+                            begin="indefinite"
+                            calcMode="spline"
+                            keySplines="0.18, 0, 0.26, 1"
+                        />
+                        <animate
+                            ref="svgAnimateFold"
+                            attributeName="d"
+                            from="M0 15 L6 9 L12 15"
+                            to="M0 9 L6 15 L12 9"
+                            dur=".3s"
+                            begin="indefinite"
+                            calcMode="spline"
+                            keySplines="0.18, 0, 0.26, 1"
+                        />
+                    </path>
+                </svg>
+            </c-touchable-feedback>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        show: {
+            type: Boolean,
+            default: true
+        },
+        type: {
+            type: String,
+            default: 'list'
+        },
+        threshold: {
+            type: Number,
+            default: 1
+        },
+        foldHeight: {
+            type: Number,
+            default: 24
+        },
+        isShow: {
+            type: Boolean,
+            default: true
+        },
+        hasBorder: {
+            type: Boolean,
+            default: false
+        },
+        hasIcon: {
+            type: Boolean,
+            default: true
+        },
+        spreadText: {
+            type: String,
+            default: '展开'
+        },
+        foldText: {
+            type: String,
+            default: '收起'
+        },
+        spreadRightText: {
+            type: String,
+            default: ''
+        },
+        foldRightText: {
+            type: String,
+            default: ''
+        },
+        transition: {
+            type: Boolean,
+            default: true
+        },
+        bottom: {
+            type: Boolean,
+            default: true
+        },
+        reset: {
+            type: Boolean,
+            default: false
+        },
+        btnPaddingTop: {
+            type: Number,
+            default: 10
+        },
+        btnPaddingBottom: {
+            type: Number,
+            default: 10
+        },
+        noFold: {
+            type: Boolean,
+            default: false
+        },
+        step: Number,
+        foldMask: {
+            type: Boolean,
+            default: false
+        },
+        status: {
+            type: Boolean,
+            default: false
+        }
+    },
+    data: {
+        // 负值为第一次render标志位
+        len: -1,
+        hasSpread: status,
+        // 箭头的状态
+        iconStatus: status,
+        oThreshold: threshold,
+        // 表示是否处于展开或收起的过程中
+        isActive: false,
+        height: null,
+        marginTop: 0,
+        // 进行展开收起操作的开关，如果收起和展开高度相同，则设置为 true，标识后面的 js 不用执行
+        switcher: false,
+        gapTopClass: 'c-gap-inner-top',
+        gapBottomClass: 'c-gap-inner-bottom',
+        btnFeedbackTop: .1,
+        btnFeedbackBottom: .1,
+        // 控制初始渲染没有过渡效果
+        useTransition: false,
+        delay: transition ? 280 : 0,
+        typeHeightButtonShow: true,
+        noFoldButtonShow: true,
+        oFoldMask: foldMask,
+        hasButtonSlot: false,
+        curStatus: false,
+        animateHeight: 0,
+        isAnimate: false
+    },
+    computed: {
+        clampClass: hasSpread ? '' : ('c-line-clamp' + oThreshold)
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-icon': '../Icon/Icon',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<script type="php">
+    function render($ctx) {
+        $type = $ctx->_d['type'];
+        $vnodes = $ctx->slots['default'];
+        if (count($vnodes)) {
+            if ($type === 'list') {
+                foreach ($vnodes as $index => $vnode) {
+                    $ctx->slots['__c__' . $index] = array($vnode);
+                }
+                if ($ctx->_d['status'] && !$ctx->_d['oThreshold'] && $ctx->_d['len'] <0) {
+                    $ctx->_d['oThreshold'] = count($vnodes);
+                }
+                $ctx->_d['len'] = count($vnodes);
+
+            }
+            else if ($type === 'paragraph') {
+                $vnode = $vnodes[0];
+                $ctx->slots['paragraph'] = array($vnode);
+                $ctx->slots['paragraph-shadow'] = array($vnode);
+            }
+            else if (!$ctx->_d['status'] && !$ctx->_d['height']) {
+                $ctx->_d['height'] = $ctx->_d['foldHeight'];
+            }
+
+            switch ($ctx->_d['btnPaddingTop']) {
+                case 0:
+                    $ctx->_d['gapTopClass'] = '';
+                    $ctx->_d['btnFeedbackTop'] = 0;
+                    break;
+                case 5:
+                    $ctx->_d['gapTopClass'] = 'c-gap-inner-top-small';
+                    $ctx->_d['btnFeedbackTop'] = 0.05;
+                    break;
+                case 10:
+                    $ctx->_d['gapTopClass'] = 'c-gap-inner-top';
+                    $ctx->_d['btnFeedbackTop'] = 0.1;
+                    break;
+                case 15:
+                    $ctx->_d['gapTopClass'] = 'c-gap-inner-top-large';
+                    $ctx->_d['btnFeedbackTop'] = 0.15;
+                    break;
+            }
+            switch ($ctx->_d['btnPaddingBottom']) {
+                case 0:
+                    $ctx->_d['gapBottomClass'] = '';
+                    $ctx->_d['btnFeedbackBottom'] = 0.15;
+                    break;
+                case 5:
+                    $ctx->_d['gapBottomClass'] = 'c-gap-inner-bottom-small';
+                    $ctx->_d['btnFeedbackBottom'] = 0.05;
+                    break;
+                case 10:
+                    $ctx->_d['gapBottomClass'] = 'c-gap-inner-bottom';
+                    $ctx->_d['btnFeedbackBottom'] = 0.1;
+                    break;
+                case 15:
+                    $ctx->_d['gapBottomClass'] = 'c-gap-inner-bottom-large';
+                    $ctx->_d['btnFeedbackBottom'] = 0.15;
+                    break;
+            }
+        }
+
+        if (count($ctx->slots['button'])) {
+            $ctx->_d['hasButtonSlot'] = true;
+        }
+
+        return parent::render($ctx);
+    }
+</script>
+
+<script>
+
+export default {
+    render() {
+        let type = this.type;
+        let vnodes = this.$slots.default;
+        if (vnodes && vnodes.length) {
+            if (type === 'list') {
+                vnodes.forEach((vnode, index) => {
+                    this.$slots['__c__' + index] = [vnode];
+                });
+                if (this.status && !this.oThreshold && this.len < 0) {
+                    this.oThreshold = vnodes.length;
+
+                }
+                this.len = vnodes.length;
+            }
+            else if (type === 'paragraph') {
+                let vnode = vnodes[0];
+                this.$slots.paragraph = [vnode];
+                this.$slots['paragraph-shadow'] = [vnode];
+            }
+            else if (!this.status && !this.height) {
+                this.height = this.foldHeight;
+            }
+
+            this.getClass();
+        }
+
+        if (this.$slots.button && this.$slots.button.length) {
+            this.hasButtonSlot = true;
+        }
+
+        return this.$super.render();
+    },
+    methods: {
+        getClass() {
+            switch (this.btnPaddingTop) {
+                case 0:
+                    this.gapTopClass = '';
+                    this.btnFeedbackTop = 0;
+                    break;
+                case 5:
+                    this.gapTopClass = 'c-gap-inner-top-small';
+                    this.btnFeedbackTop = .05;
+                    break;
+                case 10:
+                    this.gapTopClass = 'c-gap-inner-top';
+                    this.btnFeedbackTop = .1;
+                    break;
+                case 15:
+                    this.gapTopClass = 'c-gap-inner-top-large';
+                    this.btnFeedbackTop = .15;
+                    break;
+            }
+            switch (this.btnPaddingBottom) {
+                case 0:
+                    this.gapBottomClass = '';
+                    // 当展开收起按钮下边距为0时，表示展开收起按钮在卡片最下方，这里将点击态覆盖到卡片最下边
+                    this.btnFeedbackBottom = .15;
+                    break;
+                case 5:
+                    this.gapBottomClass = 'c-gap-inner-bottom-small';
+                    this.btnFeedbackBottom = .05;
+                    break;
+                case 10:
+                    this.gapBottomClass = 'c-gap-inner-bottom';
+                    this.btnFeedbackBottom = .1;
+                    break;
+                case 15:
+                    this.gapBottomClass = 'c-gap-inner-bottom-large';
+                    this.btnFeedbackBottom = .15;
+                    break;
+            }
+        },
+        change() {
+            this.isAnimate = true;
+            if (this.switcher || this.isActive) {
+                return;
+            }
+
+            let newThreshold = !this.step ? null
+                : (this.hasSpread ? this.oThreshold - this.step : this.oThreshold + this.step);
+            let newStatus = this.type === 'list' && this.step
+                ? !(newThreshold < this.len) : !this.hasSpread;
+
+            this.oFoldMask = this.foldMask && !newStatus;
+            this.curStatus = newStatus;
+
+            this.isActive = true;
+
+            if (this.hasSpread) {
+                this.fold();
+                this.$emit('change', newStatus);
+            }
+            else {
+                this.spread(() => {
+                    this.$emit('change', newStatus);
+                });
+            }
+        },
+        fold() {
+            let num = this.step ? this.oThreshold - this.step : this.threshold;
+            if (this.bottom || this.type !== 'list') {
+                if (this.type === 'list') {
+                    if (!this.threshold) {
+                        this.height = 0;
+                    }
+                    else {
+                        this.height = this.getListHeight(num - 1);
+                    }
+
+                }
+                else if (this.type === 'height') {
+                    this.height = this.foldHeight;
+                }
+                else {
+                    this.$refs.paraContent.setAttribute('class', 'c-line-clamp' + num + ' WA_LOG_OTHER');
+                    let height = this.$refs.innerContent.clientHeight;
+                    this.height = height;
+                    this.$refs.paraContent.setAttribute('class', 'WA_LOG_OTHER');
+
+                }
+            }
+            if (num <= this.threshold && this.$refs.svgAnimateFold) {
+                this.$refs.svgAnimateFold.beginElement();
+            }
+
+            setTimeout(() => {
+                if (num <= this.threshold) {
+                    this.hasSpread = false;
+                    this.iconStatus = false;
+                    this.marginTop = -this.height;
+                    this.animateHeight = 0;
+                }
+            }, 0);
+
+            setTimeout(() => {
+                this.oThreshold = num;
+                this.isActive = false;
+            }, this.delay);
+        },
+        spread(callback) {
+            let num = this.step ? this.oThreshold + this.step : this.len;
+            if (this.type === 'list' && !this.threshold || this.type === 'height') {
+                this.height = this.$refs.content.clientHeight;
+            }
+
+            this.oThreshold = num;
+            if (this.oThreshold >= this.len) {
+                this.hasSpread = true;
+                if (this.$refs.svgAnimateSpread) {
+                    this.$refs.svgAnimateSpread.beginElement();
+                }
+            }
+            this.$nextTick(() => {
+                let targetHeight = this.$refs.innerContent.clientHeight;
+                this.height = targetHeight;
+
+
+                if (this.noFold && this.hasSpread) {
+                    this.noFoldButtonShow = false;
+                }
+                setTimeout(() => {
+                    this.isActive = false;
+                    this.iconStatus = this.hasSpread;
+                    this.marginTop = 0;
+                    this.animateHeight = targetHeight;
+                }, 0);
+                callback();
+            });
+        },
+        getListHeight(index) {
+            if (!(index < this.$refs.list.length)) {
+                return -1;
+            }
+            let lastItem = this.$refs.list[index];
+            let height = lastItem.offsetTop + lastItem.offsetHeight;
+            return height;
+
+        },
+
+        sendSpreadChange() {
+            let innerContentHeight = this.$refs.innerContent.offsetHeight;
+            if (this.hasSpread) {
+                this.height = innerContentHeight;
+                return;
+            }
+            if (this.type === 'paragraph') {
+                this.height = innerContentHeight;
+                this.$forceUpdate();
+                this.$nextTick(() => {
+                    let shadowHeight = this.$refs.shadow.clientHeight;
+                    if (this.height === shadowHeight) {
+                        this.switcher = true;
+                        this.$emit('spreadOff');
+                    }
+                    else {
+                        this.switcher = false;
+                        this.$emit('spreadOn');
+                    }
+                });
+            }
+            if (this.type === 'height') {
+                if (innerContentHeight <= this.foldHeight) {
+                    this.typeHeightButtonShow = false;
+                    this.height = innerContentHeight;
+                    this.switcher = true;
+                }
+                else {
+                    this.typeHeightButtonShow = true;
+                    this.switcher = false;
+                    this.height = this.foldHeight;
+                }
+            }
+            if (this.type === 'list') {
+                this.height = innerContentHeight;
+            }
+        },
+        onOrientationChange() {
+            setTimeout(() => {
+                this.sendSpreadChange();
+            }, 200);
+        },
+        init() {
+            this.sendSpreadChange();
+            this.marginTop = this.status ? 0 : -this.$refs.content.clientHeight;
+            this.animateHeight = !this.status ? 0 : this.$refs.content.clientHeight;
+            if (this.type === 'list') {
+                this.height = this.$refs.content.clientHeight;
+            }
+            this.$nextTick(() => {
+                this.useTransition = true;
+            });
+
+            window.addEventListener('orientationchange', this.onOrientationChange);
+            let init = false;
+            this.$root.$on('attach', () => {
+                if (init) {
+                    this.onOrientationChange();
+                    return;
+                }
+                init = true;
+
+            });
+        }
+    },
+    mounted() {
+        if (this.show) {
+            this.init();
+        }
+    },
+    destroyed() {
+        if (this.show) {
+            window.removeEventListener('orientationchange', this.onOrientationChange);
+        }
+    },
+    watch: {
+        reset(value) {
+            if (value && this.hasSpread) {
+                this.fold();
+            }
+        },
+        show(value) {
+            if (value) {
+                this.init();
+            }
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.c-spread-wrapper {
+    position: relative;
+}
+.c-spread-content {
+    background: #fff;
+    &-shadow {
+        position: absolute;
+        right: 9999px;
+        width: 100%;
+    }
+}
+
+.c-spread-animate {
+    overflow: hidden;
+    position: relative;
+    margin: 0 -.17rem;
+    padding: 0 .17rem;
+    z-index: 0;
+}
+.c-spread-animate-height {
+    transition: height .3s cubic-bezier(0.18, 0.0, 0.26, 1);
+}
+.c-spread-transition {
+    -webkit-transition: height .3s cubic-bezier(0.18, 0.0, 0.26, 1);
+            transition: height .3s cubic-bezier(0.18, 0.0, 0.26, 1);
+}
+.c-spread-margin-transition {
+    position: absolute;
+    left: .17rem;
+    right: .17rem;
+    -webkit-transition: top .3s cubic-bezier(0.18, 0.0, 0.26, 1);
+            transition: top .3s cubic-bezier(0.18, 0.0, 0.26, 1);
+}
+.c-spread-button {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+    &-slot,
+    &-content {
+        flex: 1 1 auto;
+    }
+    &-bottom {
+        position: relative;
+        background-color: #fff;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+        text-align: center;
+    }
+    &-mask::after {
+        content: '';
+        width: 100%;
+        height: .4rem;
+        background: linear-gradient(rgba(255, 255, 255, 0), #fff);
+        position: absolute;
+        top: -.4rem;
+        left: 0;
+        right: 0;
+    }
+    .c-spread-tips {
+        float: left;
+    }
+    .c-spread-tips-right,
+    .c-spread-icon {
+        float: right;
+    }
+}
+svg {
+    vertical-align: bottom;
+}
+.c-line-clamp0 {
+    height: 0;
+}
+// 由于 pmd 中的 c-line-clamp1 不支持子 DOM 的省略号截断，这里覆盖 pmd 中的样式
+.c-line-clamp1 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 1;
+    white-space: normal;
+}
+@total: 5;
+.loop(@total) when (@total > 1) {
+    .loop((@total - 1));
+    // 由于 pmd 中多行截断为了兼容截断下边空白间距消失的问题，多加了 margin-bottom: .05rem。这里把它去掉，防止收起状态和展开状态行数相同时，依旧会展开收起的情况
+    .c-line-clamp@{total} {
+        margin-bottom: 0;
+    }
+}
+.loop(@total);
+</style>

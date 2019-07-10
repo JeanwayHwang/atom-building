@@ -1,0 +1,43 @@
+{
+    "alias": [
+        "c-carousel"
+    ],
+    "type": "object",
+    "properties": {
+        "carousel": {
+            "type": "object",
+            "@ChineseName": "carousel 组件实例",
+            "description": "carousel 组件实例，carousel 的基础相关数据",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "@ChineseName": "轮播图数据",
+                    "description": "轮播图数据",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "imgSrc": {
+                                "type": "string",
+                                "@ChineseName": "图片路径",
+                                "@Demo": "http://www.baidu.com/defaultimg.png",
+                                "description": "图片路径"
+                            },
+                            "url": {
+                                "type": [
+                                    "string",
+                                    "object"
+                                ],
+                                "@ChineseName": "图片跳转链接",
+                                "@Demo": "https://m.baidu.com/search?url=xxx",
+                                "description": "图片跳转链接，兼容 string 和 object 方式传入"
+                            }
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "list"
+            ]
+        }
+    }
+}

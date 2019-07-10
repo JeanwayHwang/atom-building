@@ -1,0 +1,693 @@
+<template>
+    <div
+        data-module="c-kh"
+        class="kg-header-wrapper"
+    >
+        <!-- eslint-disable atom/max-len -->
+        <!-- 功能按钮 -->
+        <c-tooltip-func-btn
+            a-if="!isWeaken && ((feedback && feedback.suggest && feedback.suggest.is_show == 1) || evaluate || shareParams)"
+            :feedback="feedback"
+            :evaluate="evaluate"
+            :share-params="shareParams"
+            :triangle-color="backgroundColor"
+            circle-color="rgba(245,245,245,.5)"
+            size="large"
+            class="func-btn c-gap-left"
+            @feedbackclick="handleFeedbackClick"
+        />
+        <!-- eslint-enable atom/max-len -->
+        <!-- 标题区域 -->
+        <div
+            a-if="headerImg || title || abstract || showHead"
+            :data-module="titleDataModule"
+            :style="[
+                {
+                    'color': fontColor,
+                    'background-color': backgroundColor,
+                    'background-image': backgroundImage,
+                    'background-size': bgSize,
+                    'min-height': headerHeight
+                },
+                background
+                    ? {
+                        background
+                    }
+                    : {}
+            ]"
+            :class="$platform == 'pc' ? 'c-kg-header-pc' : ''"
+            class="c-kg-header c-row-tile c-kg-header-vertical-center"
+        >
+            <div
+                :style="{
+                    background: isWeaken
+                        ? ''
+                        : bg2
+                }"
+            >
+                <c-link
+                    :url="url"
+                    :params="params"
+                    :style="{
+                        'min-height': headerHeight
+                    }"
+                    :voice-tag="title"
+                    voice-action="click"
+                >
+                    <c-touchable-feedback
+                        :open="!isWeaken && !!(url || (params && params.tcUrl))"
+                        :is-jump="!!(url || (params && params.tcUrl))"
+                        :background-color="feedbackColor.header"
+                        :bottom="isWeaken
+                            ? -0.05
+                            : 0
+                        "
+                        :style="{
+                            'color': fontColor,
+                            'min-height': headerHeight
+                        }"
+                        class="c-kg-header-vertical-center"
+                    >
+                        <c-row
+                            :class="{
+                                'c-gap-bottom-small': isWeaken
+                            }"
+                        >
+                            <c-span
+                                a-if="headerImg"
+                                :class="{
+                                    'v-center': headerImgAlign === 'v-center'
+                                }"
+                                :col="$platform === 'pc' ? 4 : 2"
+                                aria-hidden="true"
+                                class="headimg"
+                            >
+                                <c-img
+                                    :src="headerImg"
+                                    :type="headerImgType"
+                                    :is-show-default-image="false"
+                                    background-color="inherit"
+                                />
+                            </c-span>
+                            <!-- 左侧标题 -->
+                            <c-span
+                                :col="headerImg
+                                    ? $platform === 'pc' ? 19 : 9
+                                    : bgImg && halfBg
+                                        ? $platform === 'pc' ? 12 : 6
+                                        : $platform === 'pc' ? 23 : titleColumnNumber
+                                "
+                                :class="$platform === 'pc' ? 'c-kg-header-vertical-center-pc' : ''"
+                                class="c-kg-header-vertical-center"
+                            >
+                                <c-line
+                                    :clamp="bgImg && halfBg ? 2 : 1"
+                                    :style="{
+                                        color: fontColor
+                                    }"
+                                    :class="[
+                                        {
+                                            'c-font-sigma': !isWeaken,
+                                            'c-font-medium': isWeaken,
+                                            'c-gap-top-small': isWeaken && !headerImg
+                                        },
+                                        !isWeaken && titleColumnNumber === 7 && titleLength > 6 && titleLength <= 8
+                                            ? 'title-font-6-8'
+                                            : '',
+                                        !isWeaken && titleColumnNumber === 7 && titleLength > 8 && titleLength <= 9
+                                            ? 'title-font-8-9'
+                                            : '',
+                                        !isWeaken && titleColumnNumber === 7 && titleLength > 9
+                                            ? 'title-font-9'
+                                            : ''
+                                    ]"
+                                    class="c-kg-header-title"
+                                >
+                                    <!-- @slot 标题支持拓展，拓展将覆盖title属性文本 -->
+                                    <slot name="title">
+                                        {{ title }}
+                                    </slot>
+                                </c-line>
+                                <c-line
+                                    :class="{
+                                        'c-kg-header-abstract-weak': isWeaken
+                                    }"
+                                    :style="{
+                                        color: fontColor
+                                    }"
+                                    clamp="1"
+                                    class="c-kg-header-abstract c-font-normal"
+                                >
+                                    <!-- @slot 摘要描述支持拓展，拓展将覆盖abstract属性文本 -->
+                                    <slot name="abstract">
+                                        {{ abstract }}
+                                    </slot>
+                                </c-line>
+                            </c-span>
+                            <!-- 半图占位 col -->
+                            <c-span
+                                a-if="bgImg && halfBg"
+                                col="5"
+                            />
+                            <!-- 自定义 titleColumnNumber 时占位 col -->
+                            <c-span
+                                a-else-if="titleColumnNumber < totalCols - rightColumnNumber"
+                                :col="totalCols - titleColumnNumber - rightColumnNumber"
+                            />
+                            <!-- 分享 col -->
+                            <c-span
+                                a-if="rightColumnNumber && $platform !== 'pc'"
+                                :col="rightColumnNumber"
+                                class="c-kg-header-share"
+                            >
+                                <!-- @slot 分享拓展，可以配合`Share`组件实现分享功能 -->
+                                <slot
+                                    a-if="!isWeaken"
+                                    name="share"
+                                />
+                            </c-span>
+                        </c-row>
+                        <!-- @slot 额外的拓展信息，位置在描述信息下一行，一般使用在宣发样式下 -->
+                        <slot name="extInfo"/>
+                    </c-touchable-feedback>
+                </c-link>
+                <div
+                    a-if="halfBg"
+                    :style="{
+                        'background-image': bgImg
+                            ? 'url(' + bgImg + ')'
+                            : null,
+                        'background-size': bgSize
+                    }"
+                    class="c-kg-header-half-bg"
+                    aria-hidden="true"
+                />
+            </div>
+        </div>
+        <!-- 强样式 -->
+        <c-navs
+            a-if="tabList && tabList.length && !isWeaken"
+            :label-list="tabList"
+            :background-color="navBackgroundColor"
+            :selected-color="navFontColor"
+            :item-style="{
+                color: navFontColor,
+                opacity: '0.5'
+            }"
+            :selected-index="selectedIndex"
+            :feedback-color="feedbackColor.tabs"
+            :disable-event="disableEvent"
+            :bottom-line="false"
+            :allow-scroll="tabScroll"
+            :is-expand="false"
+            @clickItem="onClick"
+        />
+        <!-- 弱样式 -->
+        <c-tabs
+            a-if="tabList && tabList.length && isWeaken"
+            :selected="selectedIndex"
+            :disable-event="disableEvent"
+            :gap-top="!!(headerImg || title || abstract || showHead)"
+            :gap-bottom="false"
+            :allow-scroll="tabScroll"
+            no-content
+            @clickHeaderItem="onClick"
+        >
+            <c-tabs-item
+                a-for="(tab, index) in tabList"
+                :label="tab.txt"
+                :key="index"
+                :params="{
+                    url: tab.url,
+                    linkOption: tab.params
+                }"
+                :tab-data-module="tab.dataModule ? tab.dataModule : ''"
+            />
+        </c-tabs>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 标题文案
+         */
+        title: {
+            type: String
+        },
+
+        /**
+         * 标题所占栅格数
+         */
+        titleColumnNumber: {
+            type: Number,
+            default: 11
+        },
+
+        /**
+         * 右侧`slot`所占栅格数
+         */
+        rightColumnNumber: {
+            type: Number,
+            default: 1
+        },
+
+        /**
+         * 跳转链接
+         */
+        url: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 跳转链接所需参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        params: {
+            type: Object
+        },
+
+        /**
+         * 摘要
+         */
+        abstract: {
+            type: String
+        },
+
+        /**
+         * 头图区图片地址
+         */
+        headerImg: {
+            type: String
+        },
+
+        /**
+         * 头图比例，值有（s,l,w,x,y）
+         *
+         * @see See [栅格图片](http://pmd.baidu.com/doc/#image)
+         */
+        headerImgType: {
+            type: String,
+            default: 's'
+        },
+
+        /**
+         * 头图对齐方式
+         */
+        headerImgAlign: {
+            type: String
+        },
+
+        /**
+         * css background 主要用来实现背景色渐变
+         */
+        background: {
+            type: String
+        },
+
+        /**
+         * 头图区背景颜色
+         */
+        bgColor: {
+            type: String,
+            default: '#7d7d7d'
+        },
+
+        /**
+         * 头图区背景图，最好保持和背景颜色同一色调，图片尺寸要求:
+         * - 宣发样式高度 >= 164px, 非宣发样式高度 >= 88px
+         * - 非半图模式下，background-size采用cover铺满
+         * - 半图模式下，background-size采用auto 100%，高度撑满，宽度自适应
+         * - 合理控制图片大小
+         */
+        bgImg: {
+            type: String
+        },
+
+        /**
+         * 背景拉伸方式
+         */
+        bgSize: {
+            type: String
+        },
+
+        /**
+         * 头图区第二层背景，在第一层背景之上，可以配合第一层实现一些特殊样式
+         */
+        bg2: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 背景图是否为半图（占屏宽1/2），只有设置背景图之后才有意义
+         * 同时影响title展现，半图title最多展现2行，占屏幕宽度1/2
+         */
+        halfBg: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 字体颜色
+         */
+        color: {
+            type: String,
+            default: '#fff'
+        },
+
+        /**
+         * 一级导航数据
+         *
+         * @property {string} txt 文案
+         * @property {string} url 跳转链接
+         * @property {string} params 跳转链接所需参数
+         * @property {string} dataModule 统计区块名称
+         */
+        tabList: {
+            type: Array
+        },
+
+        /**
+         * tab区字体颜色，未设置时和color保持着一致
+         */
+        tabColor: {
+            type: String
+        },
+
+        /**
+         * tab区背景颜色，未设置时和bgColor保持着一致
+         */
+        tabBgColor: {
+            type: String
+        },
+
+        /**
+         * 一级导航默认选中项
+         */
+        selectedIndex: {
+            type: Number,
+            default: 0
+        },
+
+        /**
+         * 是否为弱化样式，弱化样式下样式固定，背景图，背景色，字体颜色，分享设置等无效
+         */
+        isWeaken: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 禁用tab点击事件
+         */
+        disableEvent: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 宣发样式，高度更高，tab特殊样式
+         */
+        disperse: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 设置头部和tab区域的点击态颜色
+         */
+        feedbackColor: {
+            type: Object,
+            default: {
+                header: 'rgba(225,225,225,0.08)',
+                tabs: 'rgba(225,225,225,0.08)'
+            }
+        },
+
+        /**
+         * 导航栏是否滚动
+         */
+        tabScroll: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 反馈参数；详情请参考：[Atom 卡片反馈功能开发规范](http://sfe.baidu.com:8188/standard/feedback.md)
+         */
+        feedback: Object,
+
+        /**
+         * 评价数据；详见 [TooltipFuncBtn 组件文档](http://soy.baidu-int.com/component/TooltipFuncBtn)
+         *
+         * @property {string} url 评价跳转链接
+         * @property {object} params 评价跳转链接的 urlParams
+         */
+        evaluate: Object,
+
+        /**
+         * 分享参数；详情请参考：[Share 分享组件](http://soy.baidu-int.com/component/Share)
+         */
+        shareParams: Object,
+
+        /**
+         * 顶部标题区域的data-module属性
+         */
+        titleDataModule: {
+            type: String,
+            default: ''
+        }
+    },
+    data: {
+        showHead: false,
+        fontColor: isWeaken
+            ? '#000'
+            : color,
+        backgroundColor: isWeaken
+            ? '#fff'
+            : bgColor,
+        backgroundImage: (isWeaken || halfBg)
+            ? 'none'
+            : (bgImg
+                ? 'url(' + bgImg + ')'
+                : 'none'),
+        navFontColor: isWeaken
+            ? '#000'
+            : tabColor
+                ? tabColor
+                : color,
+        navBackgroundColor: isWeaken
+            ? '#f8f8f8'
+            : tabBgColor
+                ? tabBgColor
+                : bgColor,
+        screenWidth: 0
+    },
+    components: {
+        'c-img': '../Image/Image',
+        'c-span': '../Row/Span',
+        'c-row': '../Row/Row',
+        'c-link': '../Link/Link',
+        'c-line': '../Line/Line',
+        'c-icon': '../Icon/Icon',
+        'c-tabs': '../Tabs/Tabs',
+        'c-tabs-item': '../Tabs/TabsItem',
+        'c-navs': '../Navs/Navs',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback',
+        'c-tooltip-func-btn': '../TooltipFuncBtn/TooltipFuncBtn'
+    }
+}
+</script>
+
+<script>
+export default {
+    render() {
+        let vNodeTitle = this.$slots.title;
+        let vNodeAbstract = this.$slots.abstract;
+        let vNodeExtInfo = this.$slots.extInfo;
+        if (vNodeTitle && vNodeTitle.length
+            || vNodeAbstract && vNodeAbstract.length
+            || vNodeExtInfo && vNodeExtInfo.length
+        ) {
+            this.showHead = true;
+        }
+        return this.$super.render();
+    },
+    watch: {
+        bgColor(newBgColor) {
+            this.backgroundColor = this.isWeaken ? '#fff' : newBgColor;
+            this.navBackgroundColor = this.isWeaken ? '#f8f8f8' : this.tabBgColor ? this.tabBgColor : newBgColor;
+        }
+    },
+    methods: {
+        onClick(value) {
+
+            /**
+             * tab点击时触发
+             *
+             * @event navclick
+             * @property {object} param1 事件对象
+             * @property {number} param1.index 点击项的索引
+             */
+            !this.disableEvent && this.$emit('navclick', value);
+        },
+        // 新反馈入口点击
+        handleFeedbackClick(obj) {
+            this.$emit('feedbackclick', obj);
+        }
+    },
+    computed: {
+        titleLength() {
+            return this.title
+                ? this.title.length
+                : 0
+            ;
+        },
+        headerHeight() {
+            return this.isWeaken
+                ? 'auto'
+                : this.$platform === 'pc' && (this.bgImg || this.bg2)
+                    ? (this.disperse ? '213px' : '114px')
+                    : (this.disperse ? '1.64rem' : '.88rem');
+        },
+        totalCols() {
+            // pc 上的 kgheader 头部内总栅格数为23，而非正常的24。因为 pc kgheader 的边距为20px，而不是9px
+            return this.$platform === 'pc' ? 23 : 12;
+        }
+    }
+};
+</script>
+
+<script type="php">
+function render ($ctx, $isXml = false) {
+    $vNodeTitle = $ctx->slots['title'];
+    $vNodeAbstract = $ctx->slots['abstract'];
+    $vNodeExtInfo = $ctx->slots['extInfo'];
+    if(!empty($vNodeTitle) || !empty($vNodeAbstract) || !empty($vNodeExtInfo)) {
+        $ctx->_d['showHead'] = true;
+    }
+    return parent::render($ctx, false);
+}
+function computed_titleLength($ctx) {
+    return empty($ctx->_d["title"])
+        ? 0
+        : mb_strlen($ctx->_d["title"], 'UTF8')
+    ;
+}
+function computed_headerHeight($ctx) {
+    return $ctx->_d['isWeaken']
+        ? 'auto'
+        : ($ctx->_d['$platform'] === 'pc' && ($ctx->_d['bgImg'] || $ctx->_d['bg2'])
+            ? ($ctx->_d["disperse"] ? '213px' : '114px')
+            : ($ctx->_d["disperse"] ? '1.64rem' : '.88rem'));
+}
+function computed_totalCols($ctx) {
+    return $ctx->_d['$platform'] === 'pc' ? 23 : 12;
+}
+</script>
+
+<style scoped lang="less">
+.kg-header-wrapper {
+    position: relative;
+}
+.c-row-tile {
+    overflow: hidden;
+}
+.c-kg-header {
+    background: no-repeat right top / cover;
+    position: relative;
+    padding-bottom: 1px;
+    margin-bottom: -1px;
+}
+.c-kg-header-half-bg {
+    background: no-repeat right top / cover;
+    position: absolute;
+    height: 100%;
+    width: 50%;
+    right: 0;
+    top: 0;
+    z-index: 0;
+}
+.c-kg-header-vertical-center {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+       -moz-box-orient: vertical;
+    -webkit-box-direction: normal;
+       -moz-box-direction: normal;
+    -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    -webkit-box-pack: center;
+       -moz-box-pack: center;
+    -ms-flex-pack: center;
+    -webkit-justify-content: center;
+            justify-content: center;
+}
+.c-kg-header-vertical-center-pc {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    margin-top: -25px;
+}
+.c-kg-header-abstract {
+    opacity: .6;
+}
+.c-kg-header-abstract-weak {
+    opacity: 1;
+    // csshint-disable disallow-important
+    color: #555!important;
+}
+.c-kg-header-share {
+    z-index: 1;
+}
+// KG 标题优化
+.title-font-6-8,
+.title-font-8-9,
+.title-font-9 {
+    font: 24px/34px Arial, Helvetica, sans-serif;
+}
+@media screen and (max-width: 374px) {
+    .title-font-6-8,
+    .title-font-8-9,
+    .title-font-9 {
+        font: 19px/29px Arial, Helvetica, sans-serif;
+    }
+}
+@media screen and (min-width: 375px) and (max-width: 413px) {
+    .title-font-8-9,
+    .title-font-9 {
+        font: 19px/29px Arial, Helvetica, sans-serif;
+    }
+}
+@media screen and (min-width: 414px) {
+    .title-font-9 {
+        font: 19px/29px Arial, Helvetica, sans-serif;
+    }
+}
+.c-kg-header-pc {
+    .c-row {
+        padding: 0 20px;
+    }
+}
+.headimg {
+    display: flex;
+}
+.v-center {
+    align-items: center;
+}
+.func-btn {
+    position: absolute;
+    right: 0;
+    top: 15px;
+    z-index: 2;
+}
+</style>

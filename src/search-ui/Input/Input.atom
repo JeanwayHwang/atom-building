@@ -1,0 +1,465 @@
+<template>
+    <div :class="{[$style.active]: showClose}" class="wrapper">
+        <div
+            :style="{
+                padding: paddingWrapper
+            }"
+            rl-type="stop"
+            class="wrapper-inner"
+        >
+            <!-- 输入框 -->
+            <input
+                ref="input"
+                :type="type"
+                :style="[
+                    {
+                        'margin-top': marginTop,
+                        'margin-bottom': marginBottom,
+                        'margin-left': marginLeft,
+                        'margin-right': marginRight,
+                        'color': disabled ? disabledColor : (focus ? primaryColor : unfocusColor),
+                        'border-color': disabled
+                            ? disabledBordercolor
+                            : (borderColor != null
+                                ? borderColor
+                                : (focus
+                                    ? primaryColor
+                                    : unfocusBorderColor
+                                )
+                            ),
+                        'padding-left': leftTextLength + 'rem',
+                        'padding-right': rightTextLength + 'rem',
+                        'border-width': noBorder ? '0px' : '',
+                        'opacity': 1,
+                        '-webkit-text-fill-color': disabled ? '#dbdbdb' : '',
+                        'border-radius': '5px'
+                    },
+                    paddingLeft
+                        ? {
+                            'padding-left': paddingLeft
+                        }
+                        : {},
+                    paddingRight
+                        ? {
+                            'padding-right': paddingRight
+                        }
+                        : {}
+                ]"
+                :placeholder="placeholder"
+                :disabled="disabled"
+                :value="innerValue"
+                :name="name"
+                :class="{[$style.active]: !value}"
+                :maxlength="maxLength"
+                class="c-input WA_LOG_OTHER"
+                @change="handleChange"
+                @input="handleInput"
+                @focus="handleFocus"
+                @blur="handleBlur"
+            >
+        </div>
+        <!-- 左侧文字；左侧文字移下来是因为 z-index 相同时，绝对定位的元素，后面的会覆盖前面的-->
+        <span
+            a-if="leftText"
+            :style="{
+                color: leftColor ? leftColor : (focus ? primaryColor : unfocusColor)
+            }"
+            rl-type="stop"
+            class="left-text"
+        >
+            {{ leftText }}
+        </span>
+        <!-- 右侧文字 -->
+        <span
+            a-if="rightText"
+            :style="{
+                color: rightColor ? rightColor : (focus ? primaryColor : unfocusColor)
+            }"
+            rl-type="stop"
+            class="right-text"
+        >
+            {{ rightText }}
+        </span>
+        <!-- 关闭按钮 -->
+        <c-icon
+            a-if="showClose && isShowCloseIcon"
+            rl-type="stop"
+            type="close"
+            class="close WA_LOG_BTN"
+            @click="handleClose"
+        />
+        <c-line a-if="message" class="message-color" aria-live="polite">{{ message }}</c-line>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 输入类型，如text、password等
+         */
+        type: {
+            type: String,
+            default: 'text'
+        },
+
+        /**
+         * 占位
+         */
+        placeholder: String,
+
+        /**
+         * 输入框的值
+         */
+        value: [String, Number],
+
+        /**
+         * 是否禁用
+         */
+        disabled: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 表单中的名称
+         */
+        name: String,
+
+        /**
+         * 错误提示信息
+         */
+        message: String,
+
+        /**
+         * 左侧文案
+         */
+        leftText: String,
+
+        /**
+         * 左侧文案颜色
+         */
+        leftColor: String,
+
+        /**
+         * 右侧文案
+         */
+        rightText: String,
+
+        /**
+         * 右侧文案颜色
+         */
+        rightColor: String,
+
+        /**
+         * 是否显示清除按钮
+         */
+        isShowCloseIcon: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 主题颜色
+         */
+        primaryColor: {
+            type: String,
+            default: '#000'
+        },
+
+        /**
+         * 边框颜色
+         */
+        borderColor: String,
+
+        /**
+         * 输入内容的最大长度
+         */
+        maxLength: [String, Number],
+
+        /**
+         * 是否没有边框
+         */
+        noBorder: Boolean,
+
+        /**
+         * 是否获取焦点
+         */
+        isFocus: {
+            type: Boolean,
+            default: false
+        },
+
+        // TODO: hack 主动控制 padding-left 和 padding-right，为了避免一些在 a-if 渲染的情况下，一些内联样式属性不生效导致的问题
+        /**
+         * 左侧间距
+         *
+         * @ignore
+         */
+        paddingLeft: String,
+
+        /**
+         * 右侧间距
+         *
+         * @ignore
+         */
+        paddingRight: String,
+
+        /**
+         * 组件内间距
+         *
+         * @ignore
+         */
+        paddingWrapper: String,
+
+        /**
+         * 外边距top值
+         */
+        marginTop: {
+            type: String,
+            default: '.05rem'
+        },
+
+        /**
+         * 外边距bottom值
+         */
+        marginBottom: {
+            type: String,
+            default: '.05rem'
+        },
+
+        /**
+         * 外边距left值
+         */
+        marginLeft: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * 外边距right值
+         */
+        marginRight: {
+            type: String,
+            default: ''
+        }
+    },
+    data: {
+        focus: isFocus,
+        innerValue: value,
+        showClose: false,
+        unfocusColor: '#000',
+        unfocusBorderColor: '#eee',
+        disabledColor: '#dbdbdb',
+        disabledBordercolor: '#f1f1f1'
+    },
+    components: {
+        'c-icon': '../Icon/Icon',
+        'c-line': '../Line/Line'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleInput(e) {
+            this.innerValue = e.target.value;
+
+            /**
+             * 输入事件
+             *
+             * @event input
+             * @property {string} param1.value 输入框的值
+             */
+            this.$emit('input', {
+                value: e.target.value
+            });
+        },
+        handleChange(e) {
+            this.innerValue = e.target.value;
+        },
+        handleBlur(e) {
+            setTimeout(() => {
+                this.focus = false;
+            }, 50);
+
+            /**
+             * 失去焦点事件
+             *
+             * @event blur
+             * @property {string} param1.value 输入框的值
+             */
+            this.$emit('blur', {
+                value: e.target.value
+            });
+        },
+        checkClose(val) {
+            let type = this.type;
+            this.showClose = val && (type === 'text' || type === 'password' || type === 'search');
+        },
+        handleClose(val) {
+            this.innerValue = '';
+
+            /**
+             * 点击关闭(清除)事件
+             *
+             * @event clear
+             */
+            this.$emit('clear');
+            setTimeout(() => {
+                this.$refs.input.focus();
+            }, 60);
+        },
+        handleFocus(e) {
+            this.focus = true;
+
+            /**
+             * 获得焦点事件
+             *
+             * @event focus
+             * @property {string} param1.value 输入框的值
+             */
+            this.$emit('focus', {
+                value: e.target.value
+            });
+        },
+        leftTextLength() {
+            return this.leftText
+                ? this.leftText.replace(/[\u0391-\uffe5]/g, 'xo').length / 2 + 0.16
+                : 0.08;
+        },
+        rightTextLength() {
+            return this.rightText
+                ? this.rightText.replace(/[\u0391-\uffe5]/g, 'xo').length / 2 + 0.16
+                : (this.isShowCloseIcon ? 0.3 : 0.08);
+        },
+
+        /**
+         * 设置输入框的值
+         *
+         * @public
+         * @param {string} value 输入框的值
+         */
+        setValue(value) {
+            this.$refs.input.value = value;
+            this.innerValue = value;
+        }
+    },
+    watch: {
+        value(val) {
+            if (val !== this.innerValue) {
+                this.innerValue = val;
+            }
+        },
+        innerValue(val) {
+            this.checkClose(val && this.focus);
+
+            this.$emit('change', {
+                value: val
+            });
+        },
+        focus(val) {
+            this.checkClose(val && this.innerValue);
+        },
+        isFocus(isFocus) {
+            if (isFocus) {
+                this.$refs.input.focus();
+            }
+        }
+    }
+};
+</script>
+
+<script type="php">
+    function computed_leftTextLength($ctx) {
+        return ($ctx->_d["leftText"]
+            ? ((strlen($ctx->_d["leftText"]) + mb_strlen($ctx->_d["leftText"], 'utf8')) / 2) * 0.07 + 0.16
+            : 0.08);
+    }
+
+    function computed_rightTextLength($ctx) {
+        return $ctx->_d["rightText"]
+            ? ((strlen($ctx->_d["rightText"]) + mb_strlen($ctx->_d["rightText"], 'utf8')) / 2) * 0.07 + 0.16
+        : ($ctx->_d["isShowCloseIcon"] ? 0.3 : 0.08);
+    }
+</script>
+
+<style lang="less" module>
+.wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.wrapper-inner {
+    display: inline-block;
+    width: 100%;
+    position: relative;
+
+    // 扩展 input 区避免容易误操作触发整卡点击态
+    &::before {
+        content: ' ';
+        position: absolute;
+        left: -.1rem;
+        right: -.1rem;
+        top: 0;
+        bottom: 0;
+        z-index: 0;
+    }
+
+    :global(.c-input) {
+        position: relative;
+        z-index: 1;
+        font-size: 14px;
+        line-height: 18px;
+        height: auto;
+        padding-top: 9px;
+        padding-bottom: 9px;
+        // 增加一个默认的 horizontal padding
+        padding-left: .08rem;
+        padding-right: .08rem;
+        vertical-align: top;
+        -webkit-appearance: none;
+    }
+
+    :global(.c-input[type=search])::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+    }
+}
+.left-text {
+    position: absolute;
+    left: 8px;
+    top: 5px;
+    z-index: 1;
+    line-height: 18px;
+    font-size: 14px;
+    padding: 10px 0;
+    display: inline-block;
+}
+.right-text {
+    position: absolute;
+    right: 8px;
+    top: 5px;
+    z-index: 1;
+    line-height: 18px;
+    font-size: 14px;
+    padding: 10px 0;
+    display: inline-block;
+}
+.wrapper .close {
+    color: #ccc;
+    position: absolute;
+    right: -.02rem;
+    top: .02rem;
+    padding: .1rem;
+    z-index: 1;
+}
+.wrapper.active :global(.c-input) {
+    padding-right: .3rem;
+}
+.message-color {
+    color: #d00000;
+}
+</style>

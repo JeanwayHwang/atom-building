@@ -1,0 +1,104 @@
+<template>
+    <div
+        :style="{
+            'border-top': borderTop,
+            'border-bottom': borderBottom
+        }"
+        class="btn-layout c-line-top c-line-bottom c-gap-inner-top c-gap-inner-bottom"
+    >
+        <c-row>
+            <c-span
+                a-for="(option, optionIndex) in options"
+                :key="optionIndex"
+            >
+                <c-btn
+                    :text="option.text"
+                    :type="option.type"
+                    :primary-color="primaryColor"
+                    @click="handleBtnClick({
+                        optionIndex,
+                        option
+                    })"
+                />
+            </c-span>
+        </c-row>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+        /**
+         * 按钮栏的配置
+         *
+         * @property {string} text 按钮文案
+         * @property {string} type 按钮类型，参考 Button `type`
+         */
+        options: {
+            type: Array,
+            default: [
+                {
+                    text: '重置'
+                },
+                {
+                    text: '确定',
+                    type: 'primary'
+                }
+            ]
+        },
+        /**
+         * 顶部边线样式
+         */
+        borderTop: {
+            type: String,
+            default: '1px solid #eee'
+        },
+        /**
+         * 低部边线样式
+         */
+        borderBottom: {
+            type: String,
+            default: '1px solid #eee'
+        },
+        /**
+         * 主颜色
+         */
+        primaryColor: String
+    },
+    components: {
+        'c-btn': '../Button/Button',
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span'
+    }
+}
+</script>
+
+<script>
+export default {
+    methods: {
+        handleBtnClick(obj) {
+            obj.option.index = obj.optionIndex;
+
+            /**
+             * 点击事件
+             *
+             * @event click
+             * @property {object} param1 事件对象
+             * @property {number} param1.option.index 被点击的按钮的索引
+             * @property {number} param1.option.type 被点击的按钮的类型
+             * @property {number} param1.option.text 被点击的按钮的文案
+             */
+            this.$emit('click', obj.option);
+        }
+    }
+};
+</script>
+
+<style module>
+.btn-layout {
+    padding-left: .17rem;
+    padding-right: .17rem;
+    box-sizing: border-box;
+    background-color: #fff;
+}
+</style>

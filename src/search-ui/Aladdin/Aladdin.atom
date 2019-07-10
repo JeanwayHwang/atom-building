@@ -1,0 +1,457 @@
+<template>
+    <!-- 当为 Sigma 卡时需要给容器增加 c-sigma-container 的类 -->
+    <article
+        :data-module="dataModule"
+        :class="{
+            'c-sigma-container': tplInfo.style === 'sigma',
+            'c-zk-container': tplInfo.is_group,
+            'variant-card': oldUi,
+            [$style.feedback]: touchable,
+            'WA_LOG_SF': touchable && urlParams && urlParams.type === 'sf',
+            'WA_LOG_XCX': touchable && urlParams && urlParams.type === 'xcx',
+            'WA_LOG_LIGHT': touchable && urlParams && urlParams.type === 'easybrowse',
+            'c-border': tplInfo.style === 'sigma' && $platform === 'pc'
+        }"
+        :data-aftclk="(touchable && (url || (urlParams && urlParams.tcUrl))) ? '' : false"
+        :rl-node="touchable ? '' : null"
+        :rl-highlight-self="touchable ? '' : null"
+        :rl-link-href="touchable ? ((urlParams && urlParams.tcUrl) ? urlParams.tcUrl : url) : null"
+        :rl-link-data-sf-href="(touchable && urlParams && urlParams.sfUrl) ? urlParams.sfUrl : null"
+        :rl-link-data-sf-options="(touchable && urlParams && urlParams.options) ? urlParams.options : null"
+        :rl-link-data-url="(touchable && urlParams && urlParams.originUrl) ? urlParams.originUrl : null"
+        :rl-link-data-log="(touchable && urlParams && urlParams.log) ? urlParams.log : null"
+        :rl-link-data-click="(touchable && urlParams && urlParams.clickData) ? urlParams.clickData : null"
+        :rl-link-data-tc-redirect="(touchable && urlParams && urlParams.tcRedirect) ? urlParams.tcRedirect : null"
+        :rl-link-data-xcx="(touchable && urlParams && urlParams.type === 'xcx') ? urlParams.options : false | json"
+        :rl-link-data-ivk="(touchable && urlParams && urlParams.ivkParams) ? urlParams.ivkParams : false | json"
+        :rl-link-data-light="(touchable && urlParams && urlParams.type === 'easybrowse')
+        ? urlParams.options : false | json"
+        :rl-link-rt-disable="(touchable && urlParams && urlParams.rtDisable) ? '' : null"
+        :rl-link-origin-url="(touchable && urlParams && urlParams.fastUrl) ? urlParams.fastUrl : null"
+        class="c-container aladdin"
+    >
+        <!-- @slot 在标题上方的自定义内容 -->
+        <slot name="beforeTitle"/>
+        <!-- 标题 -->
+        <header
+            a-if="!hideHeader && (tplInfo.style !== 'sigma' || tplInfo.is_group)"
+            :class="oldUi ? '' : 'c-gap-bottom-small'"
+        >
+            <!-- @slot 标题 -->
+            <slot name="title">
+                <c-touchable-feedback
+                    :open="!touchable && (titleFeedback || (url ? true : false))"
+                    :is-jump="!!(url || (urlParams && urlParams.tcUrl))"
+                    :left="-.17"
+                    :right="-.17"
+                    :top="hasSlotBeforeTitle ? 0 : -.15"
+                >
+                    <component
+                        a-if="title"
+                        :is="tplInfo.is_group ? 'c-sub-title' : 'c-title'"
+                        :text="title"
+                        :clamp="titleClamp"
+                        :clamp-strategy="titleClampStrategy"
+                        :icon="titleIcon"
+                        :arrow="titleArrow"
+                        :url="url"
+                        :url-params="urlParams"
+                        :label="titleLabel"
+                        :label-type="titleLabelType"
+                        :size="titleSize"
+                        :font-weight="titleFontWeight"
+                        :aria-roledescription="(tplInfo && tplInfo.order) ? `搜索结果第${tplInfo.order}条.标题` : null"
+                        :color="titleColor"
+                        :data-module="titleDataModule"
+                        :visited="titleVisited"
+                        role="button"
+                        @click="onTitleClick"
+                    />
+                </c-touchable-feedback>
+            </slot>
+        </header>
+        <!-- 内容区 -->
+        <section>
+            <!-- @slot 内容 -->
+            <slot/>
+        </section>
+        <!-- 脚注 -->
+        <footer
+            a-if="!hideFooter && tplInfo.style !== 'sigma' && !tplInfo.is_group"
+            :class="oldUi ? '' : 'c-gap-top-small'"
+            role="text"
+        >
+            <!-- @slot 脚注 -->
+            <slot name="footer">
+                <c-footer
+                    a-if="showUrl || showLeftText || showRightUrl"
+                    :divider="footerDivider"
+                    :show-url="showUrl"
+                    :left-text="showLeftText"
+                    :left-icon="showLeftIcon"
+                    :right-text="showRightText"
+                    :right-url="showRightUrl"
+                    :right-url-params="showRightUrlParams"
+                    :feedback="feedback"
+                    :evaluate="evaluate"
+                    :right-touchable="footerRightTouchable"
+                    :footer-more-data-module="footerMoreDataModule"
+                    @feedback-click="feedbackClick"
+                    @feedbackclick="handleFeedbackClick"
+                    @click="onFooterClick"
+                    @leftclick="onLeftFooterClick"
+                />
+            </slot>
+        </footer>
+    </article>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 标题链接的地址
+         */
+        url: String,
+
+        /**
+         * 标题链接所需的参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        urlParams: Object,
+
+        /**
+         * 标题的文本，支持高亮
+         */
+        title: String,
+
+        /**
+         * 显示行数，范围为1-5；
+         * t1 默认大屏设备(网页宽度376px及以上)1行截断，小屏设备(网页宽度376px以下)不截断；
+         * t2 默认一行截断
+         */
+        titleClamp: [String, Number],
+
+        /**
+         * 截断策略；
+         *
+         * - 'default' 大屏设备（网页宽度 376px 及以上）1行截断，小屏设备（网页宽度 376px 以下）不截断；
+         * - 'L1S2' 大屏设备（网页宽度 376px 及以上）1行截断，小屏设备（网页宽度 376px 以下）且没有标签且没有图标时2行截断，有标签或者有图标时不截断；
+         */
+        titleClampStrategy: {
+            type: String
+        },
+
+        /**
+         * 标题图标
+         *
+         * @see See [Icon](./Icon#API) `type`
+         */
+        titleIcon: String,
+
+        /**
+         * 标题右侧是否有箭头，情景页一般要求设置为 true
+         */
+        titleArrow: Boolean,
+
+        /**
+         * 标题后的标签文本
+         */
+        titleLabel: String,
+
+        /**
+         * 标题后的标签类型
+         *
+         * @see See [Label](./Label#API) `type`
+         */
+        titleLabelType: String,
+
+        /**
+         * 标题尺寸，支持 `t1` `t2`
+         *
+         * @see See [Title](./Title#API) `size`
+         */
+        titleSize: String,
+
+        /**
+         * 标题字体粗细 css font-weight
+         */
+        titleFontWeight: {
+            type: String
+        },
+
+        /**
+         * 标题是否添加点击态：
+         * true 为添加；false 时会判断 url 是否存在，存在则添加点击态，否则不添加
+         */
+        titleFeedback: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 标题颜色
+         *
+         * @see See [Title](./Title#API) `color`
+         */
+        titleColor: String,
+
+        /**
+         * 标题访问后是否变灰
+         *
+         * @see See [Title](./Title#API) `visited`
+         */
+        titleVisited: Boolean,
+
+        /**
+         * 脚注显示的资源方链接
+         */
+        showUrl: String,
+
+        /**
+         * 脚注左侧文字
+         */
+        showLeftText: String,
+
+        /**
+         * 脚注左侧文字后面的图标
+         *
+         * @see See [Icon](./Icon#API) `type`
+         */
+        showLeftIcon: String,
+
+        /**
+         * 脚注右侧跳转显示的文字
+         */
+        showRightText: String,
+
+        /**
+         * 脚注右侧跳转链接
+         */
+        showRightUrl: String,
+
+        /**
+         * 脚注右侧跳转链接所需参数
+         *
+         * @see See [Link](./Link#API) `params`
+         */
+        showRightUrlParams: Object,
+
+        /**
+         * 脚注上方是否有分割线
+         */
+        footerDivider: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 是否去掉标题区域
+         */
+        hideHeader: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 是否去掉脚注区域
+         */
+        hideFooter: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 标题后的标签
+         *
+         * @ignore
+         */
+        oldUi: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 反馈参数；详情请参考：[Atom 卡片反馈功能开发规范](http://sfe.baidu.com:8188/standard/feedback.md)；其中 boolean 类型已经废弃使用
+         */
+        feedback: [Boolean, Object],
+
+        /**
+         * 评价数据；详见 [TooltipFuncBtn 组件文档](http://soy.baidu-int.com/component/TooltipFuncBtn)
+         *
+         * @property {string} url 评价跳转链接
+         * @property {object} params 评价跳转链接的 urlParams
+         */
+        evaluate: Object,
+
+        /**
+         * 模板信息，这里主要使用 tplInfo.style 字段，用来判断强弱卡
+         *
+         * @property {string} [style=normal] 卡片展现样式，包含 normal、sigma、weaken
+         */
+        tplInfo: {
+            type: Object,
+            default: {
+                style: 'normal'
+            }
+        },
+
+        /**
+         * 是否开启整卡可点
+         */
+        touchable: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 是否开启脚注右侧跳转链接点击态
+         */
+        footerRightTouchable: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * footer右侧查看更多的属性，默认是空
+         */
+        footerMoreDataModule: {
+            type: String,
+            default: ''
+        },
+
+        /**
+         * data-module 属性
+         *
+         * @ignore
+         */
+        dataModule: String,
+
+        /**
+         * 标题区域 data-module 属性
+         */
+        titleDataModule: String
+    },
+    components: {
+        'c-title': '../Title/Title',
+        'c-sub-title': '../Title/SubTitle',
+        'c-link': '../Link/Link',
+        'c-footer': '../Footer/Footer',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+
+<style lang="less" module>
+article.aladdin {
+    height: auto;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-box-pack: justify;
+    -webkit-box-align: stretch;
+    -webkit-box-lines: single;
+    display: -webkit-flex;
+    -webkit-flex-direction: column;
+    -webkit-justify-content: space-between;
+    -webkit-align-items: stretch;
+    -webkit-align-content: flex-start;
+    -webkit-flex-wrap: nowrap;
+    padding-top: .15rem;
+    position: relative;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+
+    &:global(.variant-card) {
+        padding-top: .10rem;
+    }
+
+    &:global(.variant-top-nav) {
+        padding-top: 0;
+    }
+
+    // 开启了整卡可点，覆盖结果页掉全局样式中 a 标签的默认点击态
+    &.feedback a {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+    }
+}
+
+.aladdin:global(.c-sigma-container) {
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.aladdin:global(.c-border) {
+    border: 1px solid #e3e3e3;
+    border-bottom-color: #e0e0e0;
+    border-right-color: #ececec;
+}
+.aladdin:global(.c-zk-container) {
+    margin-top: -.08rem;
+}
+</style>
+
+
+<script type="php">
+function computed_hasSlotBeforeTitle($ctx) {
+    return isset($ctx->slots["beforeTitle"]);
+}
+</script>
+
+<script>
+export default {
+    computed: {
+        hasSlotBeforeTitle() {
+            return this.$slots.beforeTitle !== undefined;
+        }
+    },
+    methods: {
+        onTitleClick(e) {
+
+            /**
+             * 标题点击事件
+             *
+             * @event title-click
+             * @property {Event} param1 透传标题的事件对象
+             */
+            this.$emit('title-click', e);
+        },
+        onFooterClick(e) {
+
+            /**
+             * 脚注点击事件
+             *
+             * @event footer-click
+             * @property {Event} param1 透传脚注的事件对象
+             */
+            this.$emit('footer-click', e);
+        },
+        onLeftFooterClick(e) {
+
+            /**
+             * 脚注左侧点击事件
+             *
+             * @event leftfooterclick
+             * @property {Event} param1 透传脚注的事件对象
+             */
+            this.$emit('leftfooterclick', e);
+        },
+        feedbackClick(e) {
+            this.$emit('feedback-click', e);
+        },
+        handleFeedbackClick(obj) {
+
+            /**
+             * 反馈按钮点击事件
+             *
+             * @event feedbackclick
+             * @property {object} param1 事件对象
+             * @property {Event} param1.event 透传的事件对象
+             * @property {object} param1.feedback 反馈数据
+             */
+            this.$emit('feedbackclick', obj);
+        }
+    }
+};
+</script>

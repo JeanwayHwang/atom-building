@@ -1,0 +1,58 @@
+{
+    "alias": [
+        "c-title"
+    ],
+    "type": "object",
+    "properties": {
+        "title": {
+            "type": "object",
+            "@ChineseName": "title 组件实例",
+            "description": "title 组件实例",
+            "properties": {
+                "url": {
+                    "type": [
+                        "string",
+                        "object"
+                    ],
+                    "@ChineseName": "title 链接",
+                    "@Demo": "https://m.baidu.com/search?url=xxx",
+                    "description": "title 链接"
+                },
+                "text": {
+                    "type": "string",
+                    "@ChineseName": "title 内容描述",
+                    "@Demo": "这里是 title 标题",
+                    "description": "标题文本，支持传入 html"
+                },
+                "icon": {
+                    "type": "string",
+                    "@ChineseName": "iconfont图标",
+                    "@Demo": "baidu",
+                    "description": "标题后面的 iconfont 图表"
+                },
+                "label": {
+                    "type": "string",
+                    "@ChineseName": "文字图标",
+                    "@Demo": "官方认证",
+                    "description": "标题后面的文字图标"
+                },
+                "clamp": {
+                    "type": [
+                        "string",
+                        "number"
+                    ],
+                    "@ChineseName": "截断显示行数，范围为1-5",
+                    "@Demo": "1",
+                    "description": "截断显示行数，范围为1-5"
+                }
+            },
+            "propsData": [
+                "url",
+                "text",
+                "icon",
+                "label",
+                "clamp"
+            ]
+        }
+    }
+}

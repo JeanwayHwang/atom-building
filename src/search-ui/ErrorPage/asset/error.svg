@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="270px" height="270px" viewBox="0 0 270 270" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.4 (67378) - http://www.bohemiancoding.com/sketch -->
+    <title>page break</title>
+    <desc>Created with Sketch.</desc>
+    <g id="百度App空页面设计规范更新1206V1.1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="3.图标样式" transform="translate(-4757.000000, -1438.000000)">
+            <g id="分组" transform="translate(306.000000, 725.000000)">
+                <g id="page-break" transform="translate(4451.000000, 713.000000)">
+                    <g id="Group-7" transform="translate(30.000000, 30.000000)">
+                        <circle id="Oval-3" stroke="#E9E9E9" stroke-width="20" cx="105" cy="105" r="95"></circle>
+                        <g id="Group-6" transform="translate(94.000000, 45.000000)" fill="#E9E9E9">
+                            <path d="M0,11 L0,75 C7.43989126e-16,81.0751322 4.92486775,86 11,86 L11,86 C17.0751322,86 22,81.0751322 22,75 L22,11 C22,4.92486775 17.0751322,-1.11598369e-15 11,0 L11,0 C4.92486775,1.11598369e-15 -7.43989126e-16,4.92486775 0,11 Z" id="Path"></path>
+                            <path d="M0,109 L0,109 C7.43989126e-16,115.075132 4.92486775,120 11,120 L11,120 C17.0751322,120 22,115.075132 22,109 L22,109 C22,102.924868 17.0751322,98 11,98 L11,98 C4.92486775,98 -7.43989126e-16,102.924868 0,109 Z" id="Path-Copy"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

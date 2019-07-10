@@ -1,0 +1,692 @@
+<template>
+    <div
+        :style="{
+            'margin-top': gap.top,
+            'margin-bottom': gap.bottom
+        }"
+        class="c-tags-container"
+    >
+        <ul
+            a-if="!allowScroll"
+            class="c-tags-content c-tags-row c-color c-row"
+            role="tablist"
+        >
+            <li
+                a-for="(label, index) in labelList"
+                :key="index"
+                :class="{
+                    'c-tags-selected': index === oSelectedIndex,
+                    'c-tags-negative': (label.type === 'negative' && index !== oSelectedIndex)
+                }"
+                :aria-selected="index === oSelectedIndex"
+                role="tab"
+                class="c-span4 WA_LOG_BTN"
+                rl-type="stop"
+                @click="handleTagItemClick(index)"
+            >
+                <!-- 如果有链接需要使用点击态组件 -->
+                <component
+                    :is="label.tagUrl ? 'c-touchable-feedback' : 'div'"
+                    :left="-.1"
+                    :right="-.1"
+                    border-radius="5px"
+                >
+                    <c-link
+                        :url="label.tagUrl"
+                        :params="label.tagParams"
+                        :class="{
+                            'c-tags-selected': index === oSelectedIndex,
+                            'c-tags-negative': (label.type === 'negative' && index !== oSelectedIndex)
+                        }"
+                        class="c-color c-line-clamp1"
+                    >
+                        <span>
+                            {{ label.name }}
+                        </span>
+                    </c-link>
+                </component>
+            </li>
+        </ul>
+        <!-- 可滑动tags -->
+        <div
+            a-else
+            ref="scrollView"
+            class="c-tags-scroll-wrapper"
+        >
+            <div
+                :class="{
+                    'c-tags-scroll-container-open': isMoreOpen,
+                    'c-tags-scroll-container-close': !isMoreOpen
+                }"
+                class="c-tags-scroll-content"
+            >
+                <ul
+                    :class="{
+                        'c-tags-scroll-expand': isExpand
+                    }"
+                    class="c-color"
+                    role="tablist"
+                >
+                    <li
+                        a-for="(label, index) in labelList"
+                        ref="item"
+                        :key="index"
+                        :class="{
+                            'WA_LOG_BTN': true,
+                            'c-tags-negative': (label.type === 'negative' && index !== oSelectedIndex),
+                            'c-tags-selected': index === oSelectedIndex
+                        }"
+                        :aria-selected="index === oSelectedIndex"
+                        role="tab"
+                        @click="handleTagItemClick(index)"
+                    >
+                        <!-- 如果有链接需要使用点击态组件 -->
+                        <component
+                            :is="label.tagUrl ? 'c-touchable-feedback' : 'div'"
+                            :left="-.1"
+                            :right="-.1"
+                            border-radius="5px"
+                        >
+                            <c-link
+                                :url="label.tagUrl"
+                                :params="label.tagParams"
+                                :style="{
+                                    paddingTop: '2px'
+                                }"
+                                class="c-color c-line-clamp1"
+                            >
+                                <span>
+                                    {{ label.name }}
+                                </span>
+                            </c-link>
+                        </component>
+                    </li>
+                </ul>
+            </div>
+            <p
+                a-if="allowScroll && isExpand"
+                :class="{
+                    'c-tags-wrap-toggleLabe-open': isMoreOpen,
+                    'c-tags-wrap-toggleLabe-close': !isMoreOpen
+                }"
+                class="c-color-gray c-tags-wrap-toggleLabe"
+                @touchmove.prevent
+            >
+                {{ toggleLabel }}
+            </p>
+            <div
+                a-if="allowScroll && isExpand"
+                class="c-tags-more-icon WA_LOG_OTHER"
+                @click="toggleMore"
+            >
+                <i
+
+                    :class="{
+                        'c-tags-more-icon-open': isMoreOpen,
+                        'c-tags-more-icon-close': !isMoreOpen
+                    }"
+                />
+            </div>
+            <div
+                a-if="!isExpand"
+                class="c-tags-scroll-right-mask"
+            >
+            </div>
+        </div>
+
+        <div class="c-tags-mask-cont">
+            <c-transition
+                :enter="{
+                    animations: {opacity: {}},
+                    options: {
+                        duration: 300,
+                        easing: 'cubic-bezier(.42, 0, .52, 1)'
+                    }
+                }"
+                :leave="{
+                    animations: {
+                        opacity: {
+                            reverse: true,
+                            fill: 'end'
+                        }
+                    },
+                    options: {
+                        duration: 300,
+                        easing: 'cubic-bezier(0, 0, .3, 1)'
+                    }
+                }"
+            >
+                <div
+                    a-show="allowScroll && isExpand && isMoreOpen"
+                    ref="mask"
+                    class="c-tags-mask"
+                    role="button"
+                    aria-label="关闭"
+                    @touchmove.prevent
+                    @click="toggleMore('mask')"
+                >
+                </div>
+            </c-transition>
+        </div>
+        <!-- 滑动tags 展开后布局 -->
+        <div
+            class="c-tags-more-cont"
+            @touchmove.prevent
+        >
+            <c-transition
+                :enter="{
+                    animations: {slideDown: {}},
+                    options: {
+                        duration: 300,
+                        easing: 'cubic-bezier(.42, 0, .52, 1)'
+                    }
+                }"
+                :leave="{
+                    animations: {
+                        slideDown: {
+                            reverse: true,
+                            fill: 'end'
+                        }
+                    },
+                    options: {
+                        duration: 160,
+                        easing: 'cubic-bezier(.46, 0, 1, 1)'
+                    }
+                }"
+            >
+                <div a-show="isMoreOpen">
+                    <!-- @slot 自定义下拉内容，可以给对应 tag 组件一个 ref，使用 this.$refs[refname].toggleChange(index) 实现切换选项卡 -->
+                    <slot>
+                        <div
+                            class="c-tags-layout"
+                        >
+                            <c-row
+                                a-for="(row, rowIndex) in oLabelList"
+                                :key="rowIndex"
+                                class="c-gap-bottom-large c-color-gray-a"
+                            >
+                                <c-span
+                                    a-for="(label, index) in row"
+                                    :key="index"
+                                    col="4"
+                                >
+                                    <div
+                                        a-if="label !== null"
+                                        :class="index + rowIndex * 3 === oSelectedIndex
+                                            ? {'c-tags-selected': true}
+                                            : {'c-tags-negative': label.type === 'negative'}
+                                        "
+                                        class="c-tags-btn WA_LOG_BTN"
+                                        @click="toggleChange(index+rowIndex*3)"
+                                    >
+                                        <span>
+                                            {{ label.name }}
+                                        </span>
+                                    </div>
+                                </c-span>
+                            </c-row>
+                        </div>
+                    </slot>
+                </div>
+            </c-transition>
+        </div>
+    </div>
+</template>
+<script type="config">
+{
+    props: {
+
+        /**
+         * 数据数组
+         *
+         * @property {string} name 标签名
+         * @property {string} type='default' 标签类型；'default' 默认类型；'negative' 消极
+         * @property {string} tagUrl 链接；这个加 tag 前缀是为了保证线上稳定
+         * @property {object} tagParams 链接参数；这个加 tag 前缀是为了保证线上稳定
+         */
+        labelList: {
+            type: Array,
+            required: true
+        },
+
+        /**
+         * 选中的标签索引
+         */
+        selectedIndex: {
+            type: Number,
+            default: 0
+        },
+
+        /**
+         * 是否允许tags滑动
+         */
+        allowScroll: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 下拉显示后的引导文字
+         */
+        toggleLabel: {
+            type: String,
+            default: '请选择分类'
+        },
+
+        /**
+         * 是否有下拉箭头，是否可展开
+         */
+        isExpand: {
+            type: Boolean,
+            default: true
+        },
+
+        /**
+         * 上下间隙大小
+         */
+        gap: {
+            type: Object,
+            default: {
+                top: '.1rem',
+                bottom: '.1rem'
+            }
+        },
+
+        /**
+         * 是否触发点击事件改选定选项
+         */
+        disableEvent: {
+            type: Boolean,
+            default: false
+        }
+
+    },
+    data: {
+        // 选定label索引
+        oSelectedIndex: selectedIndex,
+        // 是否展开状态
+        isMoreOpen: false,
+        // 滑动展开后，方便栅格化布局
+        oLabelList: [],
+        // 某些浏览器下快速点击会有问题，动效库bug修复后删除
+        isClickMask: false
+    },
+    components: {
+        'c-row': '../Row/Row',
+        'c-span': '../Row/Span',
+        'c-link': '../Link/Link',
+        'c-transition': '../Motion/Transition',
+        'c-touchable-feedback': '../TouchableFeedback/TouchableFeedback'
+    }
+}
+</script>
+<script>
+import IScroll from '@baidu/better-scroll';
+// 滑动动画时间
+const scrollTime = 500;
+export default {
+    methods: {
+
+        handleTagItemClick(index) {
+            if (this.disableEvent) {
+                return;
+            }
+            this.onChange(index);
+        },
+
+        onChange(index) {
+            if (this.allowScroll) {
+                if (index - 1 <= 0) {
+                    this.iScroll.scrollTo(0, 0, scrollTime);
+                }
+                if (index - 1 > 0) {
+                    this.iScroll.scrollToElement(this.$refs.item[index - 1], scrollTime);
+                }
+            }
+            this.oSelectedIndex = index;
+
+            /**
+             * 选项卡改变时触发.
+             *
+             * @property {number} param1 选中的标签的索引
+             * @property {string} param2 选中的标签的文字
+             * @event change
+             */
+            this.$emit('change', {current: index, text: this.labelList[index].name});
+        },
+        // 切换展开状态
+        toggleMore(val) {
+            if (val === 'mask') {
+                // 快速点击会出现蒙层闪动问题
+                if (!this.isClickMask && this.isMoreOpen) {
+                    this.isClickMask = true;
+                    this.isMoreOpen = !this.isMoreOpen;
+                    this.isClickMask = false;
+                }
+            }
+            else {
+                this.isMoreOpen = !this.isMoreOpen;
+            }
+
+            /**
+             * 当滑动tags展开关闭时触发.
+             *
+             * @property {boolean} param1 为true是为展开，为false时为关闭
+             * @event toggle
+             */
+            this.$emit('toggle', {toggle: this.isMoreOpen});
+        },
+        // 在展开状态选择label
+        toggleChange(index) {
+            this.onChange(index);
+            if (this.isMoreOpen) {
+                this.toggleMore();
+            }
+        }
+    },
+    watch: {
+        selectedIndex(value) {
+            this.onChange(value);
+        },
+        labelList(value) {
+            if (this.allowScroll) {
+                // 将label转化为二维数组方便栅格化布局
+                this.oLabelList = [];
+                let row = value.length / 3;
+                for (let i = 0; i < row; i++) {
+                    let arr = [];
+                    for (let j = 0; j < 3; j++) {
+                        if (i * 3 + j < value.length) {
+                            arr.push(value[i * 3 + j]);
+                        }
+                        else {
+                            arr.push(null);
+                        }
+                    }
+                    this.oLabelList.push(arr);
+                }
+                this.$nextTick(function () {
+                    // 更新滑动框
+                    this.iScroll.refresh();
+                    this.onChange(this.selectedIndex);
+                });
+            }
+        }
+    },
+    mounted() {
+        if (this.allowScroll) {
+            // 初始化 IScroll
+            let scrollOpt = {
+                bindToWrapper: true, // 将 touchmove 事件绑定至 dom 而非全局
+                scrollX: true,
+                scrollY: false,
+                disableMouse: true,
+                disablePointer: true,
+                eventPassthrough: true,
+                scrollbars: false
+            };
+            this.iScroll = new IScroll(this.$refs.scrollView, scrollOpt);
+            this.$root.$on('attach', () => {
+                this.iScroll.refresh();
+            });
+            let me = this;
+            this.iScroll.on('scrollEnd', function () {
+
+                /**
+                 * 当tags横划时触发，主要用于日志.
+                 *
+                 * @event scrollEnd
+                 */
+                me.$emit('scrollEnd');
+            });
+            // 初始化时将默认selected滑动到中间
+            if (this.selectedIndex - 1 <= 0) {
+                this.iScroll.scrollTo(0, 0, scrollTime);
+            }
+            if (this.selectedIndex - 1 > 0) {
+                this.iScroll.scrollToElement(this.$refs.item[this.selectedIndex - 1], scrollTime);
+            }
+            // 将label转化为二维数组方便栅格化布局
+            let row = this.labelList.length / 3;
+            for (let i = 0; i < row; i++) {
+                let arr = [];
+                for (let j = 0; j < 3; j++) {
+                    if (i * 3 + j < this.labelList.length) {
+                        arr.push(this.labelList[i * 3 + j]);
+                    }
+                    else {
+                        arr.push(null);
+                    }
+                }
+                this.oLabelList.push(arr);
+            }
+        }
+    },
+    beforeDestory() {
+        this.iScroll && this.iScroll.destory();
+        this.iScroll = null;
+    }
+};
+</script>
+<style lang="less" scoped>
+@content-height: .3rem;
+.c-tags-container {
+    position: relative;
+    background-color: #fff;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    .c-tags-content {
+        height: @content-height;
+        margin: 0 -0.04rem;
+        li {
+            list-style: none;
+            margin: 0 .04rem;
+            padding: 0;
+            border-radius: 5px;
+            border: solid 1px #eee;
+            height: .30rem;
+            width: 0;
+            line-height: .28rem;
+            text-align: center;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .c-tags-selected {
+            color: #555;
+            border-color: #555;
+        }
+        .c-tags-negative {
+            color: #999;
+        }
+    }
+    .c-tags-scroll-wrapper {
+        position: relative;
+        overflow: hidden;
+        height: @content-height;
+        background-color: #fff;
+    }
+    .c-tags-scroll-content {
+        position: absolute;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        width: auto;
+        height: 100%;
+        .c-tags-scroll-expand {
+            margin-right: .44rem;
+        }
+        ul {
+            list-style-type: none;
+            text-align: center;
+            display: flex;
+            flex-direction: row;
+            flex: none;
+            height: 100%;
+            width: auto;
+            margin-right: .22rem;
+        }
+        li:first-child {
+            margin-left: 0;
+        }
+        li {
+            margin: 0 .04rem;
+            padding: 0 .1rem;
+            border: solid 1px #eee;
+            border-radius: 5px;
+            color: #555;
+            display: flex;
+            flex-direction: row;
+            padding: 0 .1rem;
+            white-space: nowrap;
+            text-align: center;
+            span {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+        }
+        .c-tags-negative {
+            color: #999;
+        }
+        .c-tags-selected {
+            color: #555;
+            border-color: #555;
+        }
+    }
+    .c-tags-scroll-container-open {
+        transition: all .08s;
+        opacity: 0;
+        z-index: 9;
+    }
+    .c-tags-scroll-container-close {
+        transition: all .08s;
+        opacity: 1;
+        z-index: 10;
+    }
+    .c-tags-wrap-toggleLabe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        line-height: .3rem;
+        height: .3rem;
+        right: 0;
+    }
+    .c-tags-wrap-toggleLabe-open {
+        transition: all .08s;
+        z-index: 10;
+        opacity: 1;
+    }
+    .c-tags-wrap-toggleLabe-close {
+        transition: all .08s;
+        z-index: 9;
+        opacity: 0;
+    }
+    .c-tags-more-cont {
+        position: absolute;
+        top: .39rem;
+        left: -.17rem;
+        right: -.17rem;
+        overflow: hidden;
+        z-index: 12;
+    }
+
+    .c-tags-more-icon {
+        position: absolute;
+        top: 0;
+        right: -.17rem;
+        bottom: 0;
+        width: .39rem;
+        transform: translate3d(0, 0, 0);
+        z-index: 10;
+        background: #fff;
+        &:before {
+            content: '';
+            position: absolute;
+            width: .24rem;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 0 0 .2rem .2rem #fff;
+        }
+        i {
+            width: 0;
+            height: 0;
+            position: absolute;
+            top: 50%;
+            margin-top: -2.5px;
+            right: .17rem;
+            border-top: 5px solid #999;
+            border-right: 5px solid transparent;
+            border-left: 5px solid transparent;
+        }
+        .c-tags-more-icon-open {
+            transform: rotate(180deg);
+            transform-origin: center center;
+            transition: All .3s cubic-bezier(.42, 0, .52, 1);
+        }
+        .c-tags-more-icon-close {
+            transform: rotate(0deg);
+            transform-origin: center center;
+            transition: All .16s cubic-bezier(.46, 0, 1, 1);
+        }
+
+    }
+    .c-tags-scroll-right-mask {
+        position: absolute;
+        z-index: 11;
+        right: -.17rem;
+        top: 0;
+        width: .17rem;
+        height: @content-height;
+        box-shadow: 0 0 .22rem .22rem #fff;
+    }
+    .c-tags-layout {
+        background-color: #fff;
+        overflow: hidden;
+        font-size: .14rem;
+        width: 100%;
+        padding: 0 .17rem;
+        box-sizing: border-box;
+
+        .c-tags-btn {
+            height: .30rem;
+            width: 100%;
+            border: solid 1px #f1f1f1;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            span {
+                text-align: center;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+        }
+        .c-tags-selected {
+            color: #555;
+            border: solid 1px #555;
+        }
+        .c-tags-negative {
+            color: #999;
+            border-color: #f1f1f1;
+        }
+    }
+    .c-tags-mask-cont {
+        position: absolute;
+        top: .41rem;
+        right: -.17rem;
+        left: -.17rem;
+        z-index: 12;
+    }
+    .c-tags-mask {
+        background-color: rgba(0, 0, 0, .5);
+        width: 100%;
+        height: 1024px;
+    }
+}
+</style>

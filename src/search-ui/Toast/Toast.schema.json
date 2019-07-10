@@ -1,0 +1,66 @@
+{
+    "alias": [
+        "c-toast"
+    ],
+    "type": "object",
+    "properties": {
+        "toast": {
+            "type": "object",
+            "@ChineseName": "toast 组件实例",
+            "description": "toast 组件实例",
+            "properties": {
+                "iconType": {
+                    "type": "string",
+                    "@ChineseName": "图标类型",
+                    "@Demo": "baidu",
+                    "description": "图标类型"
+                },
+                "iconCode": {
+                    "type": "string",
+                    "@ChineseName": "图标编码",
+                    "@Demo": "&#xe732",
+                    "description": "图标编码"
+                },
+                "content": {
+                    "type": "string",
+                    "@ChineseName": "展示内容",
+                    "@Demo": "连网失败",
+                    "description": "展示内容"
+                },
+                "sdk": {
+                    "type": "boolean",
+                    "@ChineseName": "是否使用端能力",
+                    "@Demo": "false",
+                    "description": "是否使用端能力"
+                },
+                "customStyle": {
+                    "type": "object",
+                    "@ChineseName": "自定义颜色",
+                    "@Demo": "{'color': '#fff', 'background': 'rgba(0, 0, 0, 0.8)'}",
+                    "description": "自定义颜色"
+                },
+                "top": {
+                    "type": "string",
+                    "@chineseName": "自定义Toast距顶部的距离",
+                    "@Demo": "20px",
+                    "description": "自定义Toast距顶部的距离"
+                },
+                "bottom": {
+                  "type": "string",
+                  "@chineseName": "自定义Toast距低部的距离",
+                  "@Demo": "20%",
+                  "description": "自定义Toast距底部的距离"
+                }
+            },
+            "propsData": [
+                "iconType",
+                "iconCode",
+                "content",
+                "sdk",
+                "customStyle",
+                "top",
+                "bottom"
+            ]
+        }
+    }
+}

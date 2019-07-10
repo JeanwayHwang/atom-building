@@ -1,0 +1,257 @@
+{
+    "alias": [
+        "c-filter-enhanced",
+        "c-filter"
+    ],
+    "type": "object",
+    "properties": {
+        "filterEnhanced": {
+            "type": "object",
+            "@ChineseName": "FilterEnhanced 组件实例",
+            "description": "FilterEnhanced 组件实例，FilterEnhanced 的基础相关数据",
+            "properties": {
+                "selections": {
+                    "type": "array",
+                    "@ChineseName": "筛选项数据",
+                    "description": "筛选项数据",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "@ChineseName": "筛选项 tag 的初始文本",
+                                "@Demo": "标签1",
+                                "description": "筛选项 tag 的初始文本"
+                            },
+                            "type": {
+                                "type": "string",
+                                "@ChineseName": "筛选项 tag 类型",
+                                "@Demo": "list",
+                                "description": "筛选项 tag 类型，分为以下类型：多级筛选：'list'；复合筛选：'multi'；排序筛选：'order'；定义布局：'custom'"
+                            },
+                            "key": {
+                                "type": "string",
+                                "@ChineseName": "列表筛选第一级/排序筛选对应的键值",
+                                "@Demo": "key1",
+                                "description": "列表筛选第一级/排序筛选对应的键值"
+                            },
+                            "defaultValue": {
+                                "type": "string",
+                                "@ChineseName": "默认值",
+                                "@Demo": "value1,value2",
+                                "description": "默认值；多个值请使用逗号字符 , 分隔"
+                            },
+                            "column": {
+                                "type": "number",
+                                "@ChineseName": "多级筛选级数；当且仅当多级筛选(type === 'list')时才需要传递",
+                                "@Demo": 2,
+                                "description": "多级筛选级数；当且仅当多级筛选(type === 'list')时才需要传递"
+                            },
+                            "options": {
+                                "type": "array",
+                                "@ChineseName": "选项数组；包括列表筛选和复合筛选",
+                                "description": "选项数组；包括列表筛选和复合筛选；不同种类的筛选字段会有不同",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "text": {
+                                            "type": "string",
+                                            "@ChineseName": "选项的显示文案",
+                                            "@Demo": "选项1",
+                                            "description": "选项的显示文案"
+                                        },
+                                        "key": {
+                                            "type": "string",
+                                            "@ChineseName": "选项的实际值",
+                                            "@Demo": "key1",
+                                            "description": "选项的实际值"
+                                        },
+                                        "value": {
+                                            "type": "string",
+                                            "@ChineseName": "选项的实际值",
+                                            "@Demo": "value1",
+                                            "description": "选项的实际值"
+                                        },
+                                        "defaultValue": {
+                                            "type": "string",
+                                            "@ChineseName": "选项的默认值",
+                                            "@Demo": "value1,value2",
+                                            "description": "选项的默认值；多个值请使用逗号字符 ',' 分隔"
+                                        },
+                                        "label": {
+                                            "type": "string",
+                                            "@ChineseName": "小标题，当且仅当复合筛选(selections[].type === 'multi')时需要，不传则不显示",
+                                            "@Demo": "label1",
+                                            "description": "小标题，当且仅当复合筛选(selections[].type === 'multi')时需要，不传则不显示"
+                                        },
+                                        "noSpread": {
+                                            "type": "string",
+                                            "@ChineseName": "选项大于3时是否关闭展开收起功能，默认为选项大于3时打开展开收起功能，当且仅当复合筛选(selections[].type === 'multi')时需要",
+                                            "@Demo": "false",
+                                            "description": "选项大于3时是否关闭展开收起功能，默认为选项大于3时打开展开收起功能，当且仅当复合筛选(selections[].type === 'multi')时需要"
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "@ChineseName": "类型，分为以下类型：多选：'checkbox'；单选：'radio'；范围输入：'rangeInput'，当且仅当复合筛选(selections[].type === 'multi')时需要",
+                                            "@Demo": "checkbox",
+                                            "description": "类型，分为以下类型：多选：'checkbox'；单选：'radio'；范围输入：'rangeInput'，当且仅当复合筛选(selections[].type === 'multi')时需要"
+                                        },
+                                        "input": {
+                                            "type": "object",
+                                            "@ChineseName": "输入框数据，当且仅当复合筛选(selections[].type === 'multi')且子类型为范围输入时才有效(selections[].options[].type === 'rangeInput')",
+                                            "description": "输入框数据，当且仅当复合筛选(selections[].type === 'multi')且子类型为范围输入时才有效(selections[].options[].type === 'rangeInput')",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "errorTips": {
+                                                        "type": "string",
+                                                        "@ChineseName": "错误提示信息",
+                                                        "@Demo": "输入的值有误",
+                                                        "description": "错误提示信息"
+                                                    },
+                                                    "unit": {
+                                                        "type": "string",
+                                                        "@ChineseName": "输入值的单位",
+                                                        "@Demo": "元",
+                                                        "description": "输入值的单位"
+                                                    },
+                                                    "max": {
+                                                        "type": "object",
+                                                        "@ChineseName": "最大值对象",
+                                                        "description": "最大值对象",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "placeholder": {
+                                                                    "type": "string",
+                                                                    "@ChineseName": "最大值 placeholder",
+                                                                    "@Demo": "请输入最大价格",
+                                                                    "description": "最大值 placeholder"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "min": {
+                                                        "type": "object",
+                                                        "@ChineseName": "最小值对象",
+                                                        "description": "最小值对象",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "placeholder": {
+                                                                    "type": "string",
+                                                                    "@ChineseName": "最小值 placeholder",
+                                                                    "@Demo": "请输入最小价格",
+                                                                    "description": "最小值 placeholder"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "options": {
+                                            "type": "array",
+                                            "@ChineseName": "当为多级筛选(selections[].type === 'list')且级数大于1(selections[].column > 1)时，为选项的级联选项数组，结构和当前 option 完全一致；当为复合筛选(selections[].type === 'multi')时，选项如下",
+                                            "description": "选项的级联选项数组；结构和当前 option 完全一致；当且仅当列表筛选(selections[].type === 'list')且级数大于1(selections[].column > 1)时才有效",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "text": {
+                                                        "type": "string",
+                                                        "@ChineseName": "显示文案",
+                                                        "@Demo": "文案1",
+                                                        "description": "显示文案"
+                                                    },
+                                                    "value": {
+                                                        "type": "string",
+                                                        "@ChineseName": "实际的值",
+                                                        "@Demo": "value1",
+                                                        "description": "实际的值，多个值需要用 ',' 来分割"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "primaryColor": {
+                    "type": "string",
+                    "@ChineseName": "主颜色",
+                    "@Demo": "#02b7ca",
+                    "description": "主颜色"
+                },
+                "multiHeight": {
+                    "type": "string",
+                    "@ChineseName": "复合布局底部浮层高度",
+                    "@Demo": "60%",
+                    "description": "复合布局底部浮层高度，如果是百分比为占整个底部的百分比"
+                },
+                "multiMaxHeight": {
+                    "type": "string",
+                    "@ChineseName": "复合布局底部浮层最大高度",
+                    "@Demo": "70%",
+                    "description": "复合布局底部浮层最大高度，如果是百分比为占整个底部的百分比"
+                },
+                "customHeight": {
+                    "type": "string",
+                    "@ChineseName": "自定义布局底部浮层高度",
+                    "@Demo": "60%",
+                    "description": "自定义布局底部浮层高度，如果是百分比为整个底部的百分比"
+                },
+                "customMaxHeight": {
+                    "type": "string",
+                    "@ChineseName": "自定义布局底部浮层最大高度",
+                    "@Demo": "70%",
+                    "description": "自定义布局底部浮层最大高度，如果是百分比为整个底部的百分比"
+                },
+                "listLayerMaxHeight": {
+                    "type": "string",
+                    "@ChineseName": "多级筛选浮层的最大高度",
+                    "@Demo": "3.3rem",
+                    "description": "多级筛选浮层的最大高度，每行的高度是固定的 0.44rem，默认为7个半行，即 3.3rem；建议是传入整数行多一半这样的高度，漏出的半截会提醒用户该列表可滑动"
+                },
+                "transition": {
+                    "type": "boolean",
+                    "@ChineseName": "是否增加动效",
+                    "@Demo": true,
+                    "description": "是否增加动效，默认为 false；推荐加上"
+                },
+                "maskTop": {
+                    "type": "string",
+                    "@ChineseName": "浮层阴影蒙层距离顶部的距离",
+                    "@Demo": "84px",
+                    "description": "浮层阴影蒙层距离顶部的距离；由于浮层阴影是 fixed 元素，而如果直接设置 top = 0 的话会使上方元素被遮挡"
+                },
+                "maskZIndex": {
+                    "type": "number",
+                    "@ChineseName": "浮层阴影蒙层的 z-index 属性",
+                    "@Demo": 299,
+                    "description": "浮层阴影蒙层的 z-index 属性，这里取299是因为 浮层要比蒙层多1，而 sug 的 z-index 是300"
+                },
+                "hideCustomBottomBtn": {
+                    "type": "boolean",
+                    "@ChineseName": "自定义浮层是否隐藏底部确认重置按钮",
+                    "@Demo": false,
+                    "description": "自定义浮层是否隐藏底部确认重置按钮"
+                }
+            },
+            "propsData": [
+                "selections",
+                "primaryColor",
+                "multiHeight",
+                "multiMaxHeight",
+                "customHeight",
+                "customMaxHeight",
+                "listLayerMaxHeight",
+                "transition",
+                "maskTop",
+                "maskZIndex",
+                "hideCustomBottomBtn"
+            ]
+        }
+    }
+}

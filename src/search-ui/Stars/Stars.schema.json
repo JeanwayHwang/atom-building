@@ -1,0 +1,31 @@
+{
+    "alias": [
+        "c-stars"
+    ],
+    "type": "object",
+    "properties": {
+        "stars": {
+            "type": "object",
+            "properties": {
+                "stars": {
+                    "type": "number",
+                    "@ChineseName": "星星数",
+                    "description": "星星数",
+                    "@Demo": 0,
+                    "minimum": 0,
+                    "maximum": 5
+                },
+                "text": {
+                    "type": "string",
+                    "@ChineseName": "右侧文案",
+                    "description": "右侧文案",
+                    "@Demo": "345位用户评价"
+                }
+            },
+            "propsData": [
+                "stars",
+                "text"
+            ]
+        }
+    }
+}

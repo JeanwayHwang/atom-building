@@ -1,0 +1,62 @@
+<!-- @ignore -->
+<template>
+    <c-link :url="item.url" :params="item.params">
+        <c-img
+            :src="item.src"
+            :type="item.type"
+            :title="item.title"
+            :title-clamp="item.titleClamp"
+            :title-fix-height="titleFixHeight"
+            :sub-title="item.subTitle"
+            :sub-title-clamp="item.subTitleClamp"
+            :title-align="item.titleAlign ? item.titleAlign : 'left'"
+            :sub-title-align="item.subTitleAlign ? item.subTitleAlign : 'left'"
+            :pill-big-text="item.imgPillBigText"
+            :show-num="item.imgNum"
+            :icon-type="item.iconType"
+            :hack-white-stroke="!!item.hackWhiteStroke"
+            :default-image-type="item.defaultImageType ? item.defaultImageType : defaultImageType"
+            :grid-size="col"
+            :info="item.info"
+            :circle-mask-icon="item.circleMaskIcon"
+            :circle-mask-size="item.circleMaskSize"
+            class="c-color-link"
+            @click="onImgClick(item)"
+        >
+            <slot/>
+        </c-img>
+        <slot :name="'c-scroll-imgs-ext' + idx"/>
+    </c-link>
+</template>
+
+<script type="config">
+    {
+        props: {
+            idx: Number,
+            col: {
+                type: [Number, String],
+                default: 3
+            },
+            item: Object,
+            titleFixHeight: {
+                type: Boolean,
+                default: false
+            },
+            defaultImageType: String
+        },
+        components: {
+            'c-img': '../Image/Image',
+            'c-link': '../Link/Link'
+        }
+    }
+</script>
+
+<script>
+    export default {
+        methods: {
+            onImgClick(item) {
+                this.$emit('imgClick', item);
+            }
+        }
+    };
+</script>

@@ -1,0 +1,103 @@
+<template>
+    <component
+        :is="tcUrl ? 'a' : 'div'"
+        :href="tcUrl"
+        :class="{
+            'c-blocka': tcUrl,
+            'WA_LOG_SF': params && params.type === 'sf',
+            'WA_LOG_XCX': params && params.type === 'xcx',
+            'WA_LOG_LIGHT': params && params.type === 'easybrowse'
+        }"
+        :target="$platform === 'pc' ? target : '_self'"
+        :data-sf-href="(params && params.sfUrl) ? params.sfUrl : null"
+        :data-sf-options="(params && params.options) ? params.options : null"
+        :data-url="(params && params.originUrl) ? params.originUrl : null"
+        :data-log="(params && params.log) ? params.log : null"
+        :data-click="(params && params.clickData) ? params.clickData : null"
+        :data-tc-redirect="(params && params.tcRedirect) ? params.tcRedirect : null"
+        :rt-disable="(params && params.rtDisable) ? '' : null"
+        :origin-url="(params && params.fastUrl) ? params.fastUrl : null"
+        :data-visited="visited ? null : 'off'"
+        :data-xcx="(params && params.type === 'xcx') ? params.options : false | json"
+        :data-ivk="(params && params.ivkParams) ? params.ivkParams : false | json"
+        :data-light="(params && params.type === 'easybrowse') ? params.options : false | json"
+        @click="onClick"
+    >
+        <!-- @slot 跳转区域内容，注意 `a` 标签不能嵌套 -->
+        <slot/>
+    </component>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 链接的地址
+         */
+        url: [String, Object],
+
+        /**
+         * 链接所需参数
+         *
+         * @property {'tc' | 'sf' | 'xcx' | 'easybrowse'} type 链接的类型，tc 表示普通的tc跳转，sf 表示跳转到情景页，xcx 表示调起小程序, easybrowse表示轻浏览框架打开
+         * @property {string} tcUrl tc 链接
+         * @property {string} sfUrl sf 链接
+         * @property {string} options 当 type 是 sf 时表示`data-sf-options`所需的 json 类型配置，当 type 是 xcx 时表示调起小程序所需的参数
+         * @property {string} originUrl `data-url` 所需的原链接；当 type 是 xcx 时也需要传入，作为调起小程序失败时的兜底进行跳转
+         * @property {string} log `data-log` 所需的 json 类型配置；当 type 是 xcx 时也需要传入，小程序打点统计使用
+         * @property {string} clickData `data-click` 所需的 json 类型配置，异步拼接sf链接的时候产生该数据；当 type 是 xcx 时也需要传入，小程序打点统计使用
+         * @property {number} tcRedirect `data-tc-redirect` 所需的配置数据，决定tc链接是否通过服务端重定向（302）的方式来跳转，如果是的话需要将此字段设为：1；tc链接默认是通过前端js重定向的方式跳转的
+         * @property {boolean} rtDisable 是否禁止 sf 跳转 (@yangjun14)，用于 html 标签里的 `rt-disable` 属性
+         * @property {string} fastUrl 点出加速属性，如果有这个属性就走手百点出加速逻辑（只在手百环境下生效），即直接跳落地页不用 tc 链接重定向（@zhangzhiqiang04），用于 html 标签里的 `origin-url` 属性；（这里不使用 originUrl 作为字段名，是因为 originUrl 已经被 `data-url` 属性使用了）
+         */
+        params: {
+            type: [String, Object]
+        },
+
+        /**
+         * 链接是否点击后变灰
+         */
+        visited: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 链接标签的 target 属性，pc 上生效
+         */
+        target: {
+            type: String,
+            default: '_blank'
+        }
+    },
+    computed: {
+        tcUrl: (params && params.tcUrl) ? params.tcUrl : url
+    }
+}
+</script>
+
+<script>
+/**
+ * @file 跳转链接
+ * @author cxtom <cxtom2008@gmail.com>
+ * @changer wangkai37 <wangkai37@baidu.com>
+ */
+
+/* global page */
+
+export default {
+    methods: {
+        onClick(e) {
+
+            /**
+             * 点击事件
+             *
+             * @event title-click
+             * @property {Event} param1 透传事件对象
+             */
+            this.$emit('click', e);
+        }
+    }
+};
+</script>

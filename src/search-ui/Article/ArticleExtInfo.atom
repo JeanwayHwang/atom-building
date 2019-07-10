@@ -1,0 +1,60 @@
+<template>
+    <c-line
+        :clamp="1"
+        class="c-article-ext-info c-color-gray"
+    >
+        <span
+            a-if="source"
+            class="c-gap-right"
+        >
+            {{ source }}
+        </span>
+        <c-timespan
+            a-if="time"
+            :time="time"
+            class="c-gap-right"
+        />
+        <span
+            a-if="readNum"
+            class="c-gap-right"
+        >
+            {{ readNum }}人阅读
+        </span>
+        <!-- @slot 扩展内容 -->
+        <slot/>
+    </c-line>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * 时间戳 单位：毫秒
+         */
+        time: [Number, String],
+
+        /**
+         * 文章阅读数
+         */
+        readNum: [Number, String],
+
+        /**
+         * 文章来源
+         */
+        source: String,
+
+        /**
+         * 是否显示拓展辅助信息
+         */
+        showExtInfo: {
+            type: Boolean,
+            default: false
+        }
+    },
+    components: {
+        'c-line': '../Line/Line',
+        'c-timespan': '../Timespan/Timespan'
+    }
+}
+</script>

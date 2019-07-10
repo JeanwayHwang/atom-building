@@ -1,0 +1,299 @@
+<!-- @ignore -->
+<!-- 列表布局栏 -->
+<template>
+    <!-- 列表包裹层，主要用于 flex 布局和提供背景色 -->
+    <section
+        :style="{
+            'max-height': listLayerMaxHeight
+        }"
+        class="c-filter-list-wrapper"
+    >
+        <!-- 列 -->
+        <div
+            a-for="(item, index) in list"
+            :key="index"
+            :class="{
+                'c-filter-list-column-scrollbar': data.column === 1,
+                'c-filter-list-left-border-index1': index === 1,
+                'c-filter-list-left-border': index > 1 && index < list.length
+            }"
+            :style="{
+                'width': 1 / data.column * 100 + '%',
+                'background-color': index !== 0 ? '#fff' : '#f8f8f8'
+            }"
+            class="c-filter-list-column"
+        >
+            <!-- 选项 -->
+            <template a-if="item.options">
+                <div
+                    a-for="(option, optionIndex) in item.options"
+                    :key="optionIndex"
+                    :class="{
+                        'c-line-bottom': index === 0,
+                        'c-filter-list-item-ganged-index0': index === 0 && data.column > 1,
+                        'c-filter-list-item-selected': (item.defaultValue === option.value)
+                            || (!item.defaultValue && item.selectedIndex === optionIndex)
+                    }"
+                    :style="{
+                        color: (item.defaultValue === option.value
+                            || (!item.defaultValue && item.selectedIndex === optionIndex))
+                            ? selectedColor
+                            : unselectedColor
+                    }"
+                    class="c-line-clamp1 c-filter-list-item WA_LOG_BTN"
+                    @click="handleTagItemListItemClick({
+                        optionIndex,
+                        option,
+                        item,
+                        index
+                    })"
+                >
+                    {{ option.text }}
+                    <!-- 对勾图标；只有当一列时，或者两列时最后一行才显示对勾图标 -->
+                    <c-icon
+                        a-if="item.defaultValue === option.value
+                            && (data.column === 1 || (data.column === 2 && index === 1))
+                        "
+                        class="c-filter-list-item-icon"
+                        type="check"
+                    />
+                </div>
+            </template>
+            <!-- 占位元素；options 不存在时显示 -->
+            <template else>
+                <div class="c-row"/>
+            </template>
+        </div>
+    </section>
+</template>
+
+<script type="config">
+    {
+        props: {
+            // store
+            store: {
+                type: Object
+            },
+            // 传入的数据
+            data: {
+                type: Object
+            },
+            // 列表浮层最大高度，默认为7行半文案的高度 3.3rem
+            listLayerMaxHeight: {
+                type: String,
+                default: '3.3rem'
+            },
+            // 选中的颜色
+            selectedColor: {
+                type: String,
+                default: '#000'
+            },
+            // 未选中的颜色
+            unselectedColor: {
+                type: String,
+                default: '#555'
+            }
+        },
+        data: {
+            height: '0'
+        },
+        components: {
+            'c-icon': '../Icon/Icon'
+        }
+    }
+</script>
+
+<script>
+    export default {
+        methods: {
+            // 选中项点击事件
+            handleTagItemListItemClick(obj) {
+                const {
+                    item, // 当前列的数据
+                    index, // 当前列的索引
+                    option // 当前选中项
+                } = obj;
+
+                // 判断是否是最后一列，如果是最后一列就代表确认操作
+                if (index === this.data.column - 1) {
+                    // 清空同一 key 的所有 defaultValue
+                    this.clearSameKeyDefaultValue(this.list[0], item.key);
+                    // 设置值
+                    this.$set(item, 'defaultValue', option.value);
+                    // 设置 tag 显示的值
+                    // this.$set(this.data, 'text', option.text);
+                    // 当前改变项的数据
+                    const currentChange = {
+                        type: this.data.type,
+                        index: this.data.index,
+                        result: {}
+                    };
+                    // 把每列的键值都装进去
+                    this.list.forEach(columnItem => {
+                        // 如果该列没有默认值但是存在 selectedIndex
+                        if (!columnItem.defaultValue) {
+                            // 这里写两行是因为 ESLint max-len 限制
+                            if (columnItem.selectedIndex !== undefined && columnItem.selectedIndex !== -1) {
+                                // 把选中值赋给默认值
+                                this.$set(columnItem, 'defaultValue', columnItem.options[columnItem.selectedIndex].value);
+                            }
+                        }
+                        currentChange.result[columnItem.key] = columnItem.defaultValue;
+                    });
+                    // 关闭底部区域
+                    this.store.closeBottomLayoutAction(true, currentChange);
+                }
+                // 不是最后一列
+                else {
+                    // 设置值
+                    this.$set(item, 'defaultValue', option.value);
+                }
+            },
+            // 清空同一 key 的所有 defaultValue；这个功能是当用户选择一个新的选项时，清除旧的选项，避免两个选项同时存在带来的混乱
+            clearSameKeyDefaultValue(item, key) {
+                const self = this;
+                // 递归中断条件
+                if (!item) {
+                    return;
+                }
+                // 判断 key 是否相等
+                if (item.key === key) {
+                    // 如果相等置为 null
+                    this.$set(item, 'defaultValue', null);
+                    // 找到相同的 key 即返回
+                    return;
+                }
+                // 如果没有返回，再从级联的层级里找
+                if (item.options) {
+                    item.options.forEach(optionItem => {
+                        if (optionItem.options) {
+                            // 递归
+                            self.clearSameKeyDefaultValue(optionItem, key);
+                        }
+                    });
+                }
+            }
+        },
+        computed: {
+            // 根据级联的 data 递归生成 list；把嵌套的 data 放到 list 数组里，把嵌套结构变成平行结构，便于遍历生成 dom
+            list() {
+                // 建立一个空数组
+                let list = [];
+                // 取得第一个 item；这里直接引用对象，而不是深复制数据，是为了方便在选中项点击的时候通过打平后列表也可以直接修改原级联数据的值
+                let item = this.data;
+                // 开始递归遍历
+                for (let i = 0; i < this.data.column; i++) {
+                    // 把数据放进数组里
+                    list.push(item);
+                    // 如果该 item 的选项存在，并且默认值也存在
+                    if (item && item.options && item.defaultValue) {
+                        // 选中项
+                        let theChosenOne = null;
+                        // 遍历 options，找到选中的那项
+                        for (let j = 0; j < item.options.length; j++) {
+                            let optionItem = item.options[j];
+                            if (optionItem.value === item.defaultValue) {
+                                theChosenOne = optionItem;
+                            }
+                        }
+                        // 如果选中项存在
+                        if (theChosenOne) {
+                            // 递归
+                            item = theChosenOne;
+                        }
+                    }
+                    // 如果没有 defaultValue，则默认选中第一项
+                    else if (item && !item.defaultValue) {
+                        // 如果不是最后一列
+                        if (i !== this.data.column - 1) {
+                            // 设置选中态
+                            this.$set(item, 'selectedIndex', 0);
+                        }
+                        item = item.options && item.options[0];
+                    }
+                    else {
+                        item = {};
+                    }
+                }
+                return list;
+            }
+        }
+    };
+</script>
+
+<style lang="less" scoped>
+    .c-filter-list-wrapper {
+        display: box;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        background: #f8f8f8;
+        // iOS 弹性滚动
+        -webkit-overflow-scrolling: touch;
+    }
+    .c-filter-list-column {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1 1 auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+    .c-filter-list-column-scrollbar {
+        &::-webkit-scrollbar {
+            width: 3px;
+        }
+        &::-webkit-scrollbar-thumb:vertical {
+            background-color: #e0e0e0;
+            border-radius: 3px;
+        }
+        &::-webkit-scrollbar-track {
+            background-color: #fff;
+        }
+        &::-webkit-scrollbar-track-piece {
+            background-color: #fff;
+        }
+    }
+    // 左侧边线 index === 1 时
+    .c-filter-list-left-border-index1 {
+        -webkit-box-shadow: -1px 0 0 0 #eee;
+                box-shadow: -1px 0 0 0 #eee;
+    }
+    .c-filter-list-left-border {
+        border-left: 1px solid #eee;
+    }
+    .c-filter-list-item {
+        position: relative;
+        height: .44rem;
+        line-height: .44rem;
+        padding: 0 .17rem;
+        background-color: #fff;
+        -webkit-box-sizing: border-box;
+                box-sizing: border-box;
+    }
+    // 右侧图标
+    .c-filter-list-item-icon {
+        position: absolute;
+        right: .17rem;
+    }
+    // 选中样式
+    .c-filter-list-item-selected {
+        font-weight: bold;
+    }
+    // 联动第一列样式
+    .c-filter-list-item-ganged-index0 {
+        background-color: #f8f8f8;
+        border-right: 1px solid #eee;
+    }
+    // 联动第一列 && 选中样式
+    .c-filter-list-item-ganged-index0.c-filter-list-item-selected {
+        position: relative;
+        box-sizing: border-box;
+        background-color: #fff;
+        border-right: 1px solid #fff;
+        // 下侧边线去掉，使用box-shadow模拟，因为边线本身会少一个像素格
+        border-bottom: none;
+        // 这里是为了覆盖右侧边线和下侧边线
+        -webkit-box-shadow: 1px 0 0 0 #fff, 0 1px 0 0 #eee;
+                box-shadow: 1px 0 0 0 #fff, 0 1px 0 0 #eee;
+        z-index: 1;
+    }
+</style>

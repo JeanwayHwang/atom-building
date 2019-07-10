@@ -1,0 +1,226 @@
+<template>
+    <div class="c-selector">
+        <div class="c-selector-btns WA_LOG_BTN" @click="filterOpen">
+            <!-- @slot 按钮区域 -->
+            <slot/>
+        </div>
+        <div class="c-selector-wrapper">
+            <c-transition
+                :enter=" {
+                    animations: {
+                        opacity: {}
+                    },
+                    options: {
+                        duration: durationIn
+                    }
+                }"
+                :leave=" {
+                    animations: {
+                        opacity: {
+                            reverse: true
+                        }
+                    },
+                    options: {
+                        duration: durationOut
+                    }
+                }"
+                name="c-selector-mask-show"
+            >
+                <div
+                    a-if="open"
+                    class="mask"
+                    role="button"
+                    aria-label="关闭"
+                    @click="filterClose"
+                    @touchmove.prevent
+                />
+            </c-transition>
+            <c-transition
+                :enter=" {
+                    animations: {
+                        slideUp: {}
+                    },
+                    options: {
+                        duration: durationIn
+                    }
+                }"
+                :leave=" {
+                    animations: {
+                        slideUp: {
+                            reverse: true
+                        }
+                    },
+                    options: {
+                        duration: durationOut
+                    }
+                }"
+                name="c-selector-panel-show"
+            >
+                <c-selector-radio
+                    a-if="open && type === 'radio'"
+                    :title="title"
+                    :data="data"
+                    :title-align="titleAlign"
+                    :selected-idx="selectedIndex"
+                    @clickItem="clickItem"
+                    @select="select"
+                    @close="filterClose"
+                />
+                <c-selector-multi
+                    a-else-if="open && type === 'multi'"
+                    :title="title"
+                    :data="data"
+                    :title-align="titleAlign"
+                    :selected-idxes="selectedIndexes"
+                    :left-text="leftText"
+                    :right-text="rightText"
+                    @select="select"
+                />
+            </c-transition>
+        </div>
+    </div>
+</template>
+<script type="config">
+    {
+        props: {
+
+            /**
+             * 标题的文本
+             */
+            title: {
+                type: String,
+                default: ''
+            },
+
+            /**
+             * 选框类型 'radio'单选 'multi'多选
+             */
+            type: {
+                type: String,
+                default: 'radio'
+            },
+
+            /**
+             * 标题左侧文字
+             */
+            leftText: {
+                type: String,
+                default: '全选'
+            },
+
+            /**
+             * 标题右侧文字
+             */
+            rightText: {
+                type: String,
+                default: '保存'
+            },
+
+            /**
+             * 选项数据
+             *
+             * @property {string} text 文案
+             * @property {string} value 值
+             * @property {boolean} selected 是否选中
+             */
+            data: {
+                type: Array,
+                required: true
+            },
+
+            /**
+             * 是否打开
+             */
+            open: {
+                type: Boolean,
+                default: false
+            },
+
+            /**
+             * 标题位置；居中：center；左对齐：left
+             */
+            titleAlign: {
+                type: String,
+                default: 'center'
+            }
+        },
+        data: {
+            durationIn: 320,
+            durationOut: 240,
+            selectedIndex: -1,
+            selectedIndexes: []
+        },
+        components: {
+            'c-transition': '../Motion/Transition',
+            'c-selector-radio': './SelectorRadio',
+            'c-selector-multi': './SelectorMulti'
+        }
+    }
+</script>
+<script>
+export default {
+    methods: {
+        filterOpen() {
+
+            /**
+             * 打开浮层
+             *
+             * @event open
+             */
+            this.$emit('open');
+        },
+        filterClose() {
+
+            /**
+             * 关闭浮层
+             *
+             * @event close
+             */
+            this.$emit('close');
+        },
+        clickItem(value) {
+            this.selectedIndex = this.type === 'multi' ? -1 : value || -1;
+
+            /**
+             * 点击选项
+             *
+             * @event clickItem
+             */
+            this.$emit('clickItem', value);
+        },
+        select(infos) {
+            this.selectedIndexes = this.type === 'multi' ? infos : [];
+
+            /**
+             * 选择条目时触发（若为多选，则为确定时触发）
+             *
+             * @event select
+             * @property {object|array} param1 多选时，是形如 [0, 1, 3] 的数组，内容为多选选中序号；单选时是对象
+             * @property {number} param1.index 选择条目的序号
+             * @property {string} param1.text 选择条目的文案
+             * @property {string} param1.value 选择条目的值
+             */
+            this.$emit('select', infos);
+            this.$emit('close');
+        }
+    }
+};
+</script>
+<style module>
+    .mask {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, .4);
+        z-index: 501;
+        -webkit-backface-visibility: hidden;
+                backface-visibility: hidden;
+        -webkit-transform-style: preserve-3d;
+    }
+
+    .c-selector-btns {
+        border-radius: 5px;
+    }
+</style>

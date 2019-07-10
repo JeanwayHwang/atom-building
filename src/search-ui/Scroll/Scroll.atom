@@ -1,0 +1,621 @@
+<template>
+    <div
+        class="c-row-tile"
+    >
+        <div
+            class="c-scroll-wrapper"
+            @touchend="needTouch ? touchend($event) : null"
+            @touchcancel="needTouch ? touchend($event) : null"
+            @touchstart="needTouch ? touchstart($event) : null"
+            @touchmove="needTouch ? touchmove($event) : null"
+        >
+            <div
+                a-if="width"
+                ref="scrollHorizontal"
+                :class="[
+                    snap ? 'c-scroll-inner' : 'c-scroll-touch',
+                    bounce ? 'c-scroll-bounce' : ''
+                ]"
+                voice-action="scroll-horizontal"
+                @scroll="bounce ? onScroll($event) : null"
+            >
+                <div
+                    ref="scroller"
+                    :class="{
+                        'c-scroll-scroller-flex': scrollerFlex
+                    }"
+                    :style="[
+                        {
+                            width: width + '%'
+                        },
+                        snap
+                            ? {
+                                'padding-right': '.17rem'
+                            }
+                            : {}
+                    ]"
+                    class="c-scroll-scroller"
+                >
+                    <div
+                        a-for="(node, i) in list"
+                        ref="scrollItem"
+                        :key="i"
+                        :style="{
+                            width: node.col * rate / width * 100 + '%',
+                            paddingRight: right / allCols + '%'
+                        }"
+                        class="c-scroll-item"
+                    >
+                        <!-- @slot:default 需要横滑的ScrollItem -->
+                        <slot :name="'__c__' + i"/>
+                    </div>
+                    <!-- @slot 横滑的 ScrollItem 之后的内容 一般为查看更多 -->
+                    <slot name="more"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="config">
+{
+    props: {
+
+        /**
+         * snap 滑动时定位到元素
+         */
+        snap: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * snap 滑动的距离（为 itemWidth 的倍数）
+         */
+        snapStepX: Number,
+
+        /**
+         * 是否使用 flex 布局，示例见 `ScrollImgs` / `SrcollArticle` / `ScrollTwo` / `NewsArticle`
+         */
+        scrollerFlex: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 是否是弹性滚动
+         */
+        bounce: {
+            type: Boolean,
+            default: false
+        },
+
+        /**
+         * 有时候我们需要知道滚动的位置。（只有在 snap 为 true 时可用）
+         * 当 probeType 为 1 的时候，会非实时（屏幕滑动超过一定时间后）派发scroll 事件；
+         * 当 probeType 为 2 的时候，会在屏幕滑动的过程中实时的派发 scroll 事件；
+         * 当 probeType 为 3 的时候，不仅在屏幕滑动的过程中，而且在 momentum 滚动动画运行过程中实时派发 scroll 事件。
+         */
+        probeType: {
+            type: Number,
+            default: 3
+        },
+
+        /**
+         * 是否强制开启 better-scroll
+         */
+        betterScroll: {
+            type: Boolean,
+            default: false
+        }
+    },
+    data: {
+        // 比率
+        rate: 97 / 1140 * 100,
+        // padding-right
+        right: 24 / 97 * 100,
+        // 项宽度
+        itemWidth: 0,
+        // slot 的个数
+        slotsCount: 0,
+        // 页数
+        pageNum: 0,
+        // 当前页面的索引
+        pageIndex: 0,
+        // 是否是IOS，mounted 以后才生效
+        isIOS: false,
+        // 滑动效果的时间，500ms
+        scrollTime: 500
+    },
+    computed: {
+        needTouch: !(snap || (bounce && !isIOS))
+    }
+}
+</script>
+
+<script>
+import BScroll from '@baidu/better-scroll';
+import UA from '@searchfe/user-agent';
+import {getRect} from '../util/domUtil';
+
+export default {
+
+    render() {
+
+        let vnodes = this.$slots.default || [];
+        let width = 0;
+        let index = 0;
+        let allCols = 0;
+        this.list = [];
+
+        if (vnodes && vnodes.length) {
+            // 拿到第一个 componentOptions 不为空的 vnode 节点，计算栅格数
+            for (let i = 0; i < vnodes.length; i++) {
+                let vnodeItem = vnodes[i];
+                if (vnodeItem.componentOptions) {
+                    // 拿到第一个子节点的 col 栅格数
+                    this.col = ~~vnodeItem.componentOptions.propsData.col;
+                    break;
+                }
+            }
+            // 计算 slots 的个数
+            this.slotsCount = vnodes.length;
+        }
+
+        // 遍历所有 vnode 节点
+        vnodes.forEach(vnode => {
+            // 如果 vnode 配置都没有，就返回吧
+            if (!vnode.componentOptions) {
+                return;
+            }
+            // 拿到 propsData
+            let data = vnode.componentOptions.propsData;
+            let col = ~~data.col;
+            // 计算总 col
+            allCols += col;
+            // 如果是 snap
+            if (this.snap || this.betterScroll) {
+                width += col * this.$data.rate + 0.5;
+            }
+            // 普通滑动
+            else {
+                width += col * this.$data.rate;
+            }
+            // 把 propsData 放入数组里
+            this.list.push(data);
+            // 把节点放入特定的 slot
+            this.$slots['__c__' + index] = [vnode];
+            // 索引++
+            index++;
+        });
+
+        // 总宽度
+        this.width = width;
+        // 总栅格数
+        this.allCols = allCols;
+
+        return this.$super.render();
+    },
+
+    mounted() {
+
+        const wrapper = this.$refs.scrollHorizontal;
+
+        this.isIOS = UA.isIOS();
+
+        // 如果是： snap 滑动时定位到元素 || 弹性并且不是 iOS || 强制使用 better-scroll
+        // 则使用 better-scroll
+        if (this.snap || (this.bounce && !this.isIOS) || this.betterScroll) {
+
+            // 计算项宽度
+            this.calculateItemWidth();
+
+            // 使用 better-scroll
+            this.bScroll = new BScroll(wrapper, {
+                bindToWrapper: true, // 将 touchmove 事件绑定至 dom 而非全局
+                scrollX: true,
+                scrollY: false,
+                momentum: this.bounce,
+                disableMouse: true,
+                disablePointer: true,
+                eventPassthrough: true,
+                scrollbars: false,
+                probeType: this.probeType,
+                // 只有 snap 才设置 snap
+                snap: this.snap
+                    ? {
+                        loop: false,
+                        threshold: 0.1,
+                        stepX: this.getStepX(),
+                        easing: {
+                            style: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                        }
+                    }
+                    : false
+            });
+
+            if (this.bounce) {
+                this.maxScrollX = this.bScroll.maxScrollX;
+                this.onScroll();
+            }
+
+            this.bScroll.on('beforeScrollStart', () => {
+
+                /**
+                 * 滚动开始之前，bounce === true || snap === true 时生效
+                 *
+                 * @event beforescrollstart
+                 */
+                this.$emit('beforescrollstart');
+            });
+
+            this.bScroll.on('scrollStart', () => {
+
+                /**
+                 * 滚动开始，bounce === true || snap === true 时生效
+                 *
+                 * @event scrollstart
+                 */
+                this.$emit('scrollstart');
+            });
+
+            this.bScroll.on('scroll', obj => {
+
+                /**
+                 * 滚动中，bounce === true || snap === true 时生效
+                 *
+                 * @event scroll
+                 * @property {number} x 当前位置
+                 * @property {number} startX 开始滚动的位置
+                 * @property {number} maxScrollX 最大滚动位置
+                 */
+                this.$emit('scroll', this.bounce ? {
+                    x: obj.x,
+                    maxScrollX: this.maxScrollX,
+                    startX: this.bScroll.startX
+                } : obj);
+            });
+
+            this.bScroll.on('touchEnd', obj => {
+
+                /**
+                 * 触摸结束事件，bounce === true || snap === true 时生效
+                 *
+                 * @event touchend
+                 * @property {number} x 当前位置
+                 * @property {number} maxScrollX 最大滚动位置
+                 */
+                this.$emit('touchend', this.bounce ? {
+                    x: obj.x,
+                    maxScrollX: this.maxScrollX
+                } : obj);
+            });
+
+            this.bScroll.on('scrollEnd', obj => {
+                // 只有 snap 有值才会有 bScroll.currentPage 这个字段
+                this.pageIndex = this.bScroll.currentPage && this.bScroll.currentPage.pageX;
+
+                /**
+                 * 滚动/翻页结束事件
+                 *
+                 * @event scrollend
+                 * @property {number} param1 页码
+                 * @property {Object} param2 滚动相关参数
+                 * @property {number} param2.x 当前位置
+                 * @property {number} param2.startX 开始滚动的位置
+                 * @property {number} param2.maxScrollX 最大滚动位置
+                 */
+                this.$emit(
+                    'scrollend',
+                    this.pageIndex,
+                    this.bounce
+                        ? {
+                            x: obj.x,
+                            maxScrollX: this.maxScrollX,
+                            startX: this.bScroll.startX
+                        }
+                        : obj
+                );
+                // 线上稳定性兼容
+                this.$emit('scrollEnd', this.pageIndex, obj);
+            });
+
+            this.refresh = this.refresh.bind(this);
+            this.$root.$on('attach', () => {
+                this.refresh();
+            });
+
+            window.addEventListener('orientationchange', this.refresh);
+            window.addEventListener('pageshow', this.refresh);
+
+        }
+        else if (this.isIOS && this.bounce) {
+            const scroller = wrapper.children[0];
+            this.maxScrollX = wrapper.clientWidth - scroller.clientWidth
+                - getRect(scroller).left;
+        }
+
+        this.navControl = navigator.control || {};
+        this.direcObj = {};
+    },
+
+    destroyed() {
+        window.removeEventListener('orientationchange', this.refresh);
+        window.removeEventListener('pageshow', this.refresh);
+    },
+
+    methods: {
+
+        // ***** snap 滑动到元素
+
+        // 计算项宽度
+        calculateItemWidth() {
+            // 获得宽度；默认为屏幕宽度
+            this.itemWidth = document.body.clientWidth;
+            if (this.$refs.scrollItem && this.$refs.scrollItem[0]) {
+                // 获得第一项的宽度
+                this.itemWidth = this.$refs.scrollItem[0].offsetWidth;
+            }
+        },
+
+        // snap 时，计算步长
+        getStepX() {
+            // 默认使用 item 的宽度
+            let stepX = this.itemWidth;
+            // 如果 snapStepX 存在并且是 number 类型的话
+            if (this.snapStepX && typeof this.snapStepX === 'number') {
+                stepX = this.snapStepX * this.itemWidth;
+            }
+            return stepX;
+        },
+
+        // 刷新
+        refresh() {
+
+            // snap
+            if (this.snap) {
+                // 这里延迟是因为切换横竖屏后无法立即获得宽度
+                setTimeout(() => {
+                    // 重新计算宽度
+                    this.calculateItemWidth();
+                    // 判断 bScroll 实例里的 snap 是否是对象
+                    if (typeof this.bScroll.options.snap === 'object') {
+                        // 重新设置 snap
+                        this.bScroll.options.snap.stepX = this.getStepX();
+                    }
+                    // 调用 api 刷新
+                    this.bScroll.refresh();
+                }, 500);
+            }
+
+            // 弹性滑动
+            else if (this.bounce) {
+                this.bScroll.refresh();
+            }
+        },
+
+        onScroll() {
+
+            const wrapper = this.$refs.scrollHorizontal;
+            const nowX = -wrapper.scrollLeft;
+
+            if (this.bounce && !this.isIOS) {
+                if (nowX) {
+                    clearTimeout(this.timer);
+                    this.timer = setTimeout(() => {
+                        this.bScroll.x = nowX;
+                        this.bScroll._translate(nowX, 0);
+                        wrapper.scrollLeft = 0;
+                    }, 200);
+                }
+            }
+        },
+
+        // ***** 浏览器原生滑动
+
+        touchstart(e) {
+
+            if (this.navControl.gesture) {
+                this.navControl.gesture(false);
+            }
+
+            this.direcObj.sx = e.touches[0].clientX;
+            this.direcObj.ex = e.touches[0].clientX;
+            this.direcObj.sy = e.touches[0].clientY;
+            this.direcObj.ey = e.touches[0].clientY;
+
+            if (this.bounce && this.isIOS) {
+                const wrapper = this.$refs.scrollHorizontal;
+                this.pointX = this.startX = wrapper.scrollLeft;
+                this.started = false;
+                this.startTime = Date.now();
+            }
+
+        },
+
+        touchmove(e) {
+
+            this.direcObj.ex = e.touches[0].clientX;
+            this.direcObj.ey = e.touches[0].clientY;
+
+            if (this.bounce && this.isIOS) {
+
+                const wrapper = this.$refs.scrollHorizontal;
+                this.pointX = wrapper.scrollLeft;
+                const absDistX = Math.abs(this.pointX - this.startX);
+
+                // We need to move at least momentumLimitDistance pixels for the scrolling to initiate
+                if (absDistX < 3) {
+                    return;
+                }
+
+                if (!this.started) {
+                    this.$emit('beforescrollstart');
+                    this.$emit('scrollstart');
+                }
+
+                this.started = true;
+
+                this.$emit('scroll', {
+                    x: -this.pointX,
+                    maxScrollX: this.maxScrollX,
+                    startX: -this.startX
+                });
+            }
+        },
+
+        touchend(e) {
+
+            // 只考虑横滑,纵向滑动忽略
+            if (this.navControl.gesture) {
+                this.navControl.gesture(true);
+            }
+
+            // 弹性 Android 走 better-scroll，忽略
+            if (this.bounce && !this.isIOS) {
+                return;
+            }
+
+            if (this.bounce && this.isIOS) {
+                this.$emit('touchend', {
+                    x: -this.pointX,
+                    maxScrollX: this.maxScrollX
+                });
+            }
+
+            if (Math.abs(this.direcObj.ex - this.direcObj.sx) > 30) {
+                // 符合规范的事件名
+                this.$emit('scrollend', 0, {
+                    x: -this.pointX,
+                    maxScrollX: this.maxScrollX,
+                    startX: -this.startX
+                });
+                // 线上稳定性兼容
+                this.$emit('scrollEnd', 0, {
+                    x: -this.pointX,
+                    maxScrollX: this.maxScrollX,
+                    startX: -this.startX
+                });
+            }
+        },
+
+        /**
+         * 得到 better-scroll 的实例
+         *
+         * @public
+         * @return {Object} better-scroll 的实例
+         */
+        getBScrollIns() {
+            return this.bScroll;
+        },
+
+        /**
+         * 滚动到指定位置
+         *
+         * @public
+         * @param {number} index 要滚动到位置的索引
+         */
+        scrollTo(index) {
+            if (!this.bScroll) {
+                return;
+            }
+            if (index <= 0) {
+                this.bScroll.scrollTo(0, 0, this.scrollTime);
+            }
+            else {
+                this.bScroll.scrollToElement(this.$slots.default[index].elm, this.scrollTime);
+            }
+        }
+    }
+};
+</script>
+
+<script type="php">
+function created($ctx) {
+    $data = $ctx->getMessage('scroll-item-data');
+    $ctx->_d["list"] = $data;
+}
+
+function render ($ctx, $isXml = false) {
+    $vnodes = $ctx->slots['default'];
+    $width = 0;
+    $allCols = 0;
+
+    if (!empty($vnodes)) {
+
+        // 计算 slots 的个数
+        $ctx->_d['slotsCount'] = count($vnodes);
+
+        $index = 0;
+        foreach ($vnodes as $vnode) {
+            if ($vnode !== '<!---->') {
+                $data = $ctx->_d['list'][$index];
+                $col = $data['col'];
+                $allCols += $col;
+                if ($ctx->_d['snap'] || $ctx->_d['betterScroll']) {
+                    $width += $col * $ctx->_d['rate'] + 0.5;
+                }
+                else {
+                    $width += $col * $ctx->_d['rate'];
+                }
+                $ctx->slots['__c__' . $index] = array($vnode);
+                $index++;
+            }
+        }
+    }
+
+    $ctx->_d['width'] = $width;
+    $ctx->_d['allCols'] = $allCols;
+
+    return parent::render($ctx, false);
+}
+</script>
+
+<style scoped lang="less">
+.c-scroll-wrapper .c-scroll-inner,
+.c-scroll-wrapper .c-scroll-touch {
+    padding-right: .17rem;
+    padding-left: .17rem;
+}
+.c-scroll-wrapper .c-scroll-bounce {
+}
+.c-scroll-scroller {
+    white-space: nowrap;
+    position: relative;
+    padding-right: .09rem;
+    box-sizing: initial;
+}
+.c-scroll-item {
+    display: inline-block;
+    vertical-align: top;
+}
+.c-scroll-scroller-flex {
+    display: flex;
+    // 使用定位来解决 iOS 10.1 及以下高度 100% 填充问题
+    // In Safari 10.1 and below, the height of (non flex) children are not recognized in percentages
+    // https://bugs.webkit.org/show_bug.cgi?id=137730
+    .c-scroll-item {
+        position: relative;
+    }
+}
+.scroll-btn-left,
+.scroll-btn-right {
+    position: absolute;
+    top: 50%;
+    margin-top: -18px;
+}
+.scroll-btn-left {
+    left: -18px;
+}
+.scroll-btn-right {
+    right: -18px;
+}
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity .3s;
+}
+.fade-enter,
+.fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+    opacity: 0;
+}
+</style>

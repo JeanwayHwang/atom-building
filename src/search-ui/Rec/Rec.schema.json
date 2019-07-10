@@ -1,0 +1,55 @@
+{
+    "alias": [
+        "c-rec"
+    ],
+    "type": "object",
+    "properties": {
+        "rec": {
+            "type": "object",
+            "@ChineseName": "rec 组件实例",
+            "description": "rec 组件实例，rec 的基础相关数据",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "@ChineseName": "推荐卡片标题文案",
+                    "description": "推荐卡片标题文案",
+                    "@Demo": "去全网搜索"
+                },
+                "num": {
+                    "type": "number",
+                    "@ChineseName": "推荐条数最大限制",
+                    "description": "推荐条数最大限制",
+                    "@Demo": "8"
+                },
+                "list": {
+                    "type": "array",
+                    "@ChineseName": "数据列表",
+                    "description": "数据列表",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "@ChineseName": "每一条内容的标题",
+                                "description": "每一条内容的标题",
+                                "@Demo": "在中国谁比刘德华更红"
+                            },
+                            "href": {
+                                "type": "string",
+                                "@ChineseName": "每一条内容对应的链接地址",
+                                "description": "每一条内容对应的链接地址",
+                                "@Demo": "https://m.baidu.com/s?&word=%E5%9C%A8%E4%B8%AD%E5%9B%BD%E8%B0%81%E6%AF%94%E5%88%98%E5%BE%B7%E5%8D%8E%E6%9B%B4%E7%BA%A2"
+                            }
+                        }
+                    }
+                }
+            },
+            "propsData": [
+                "title",
+                "num",
+                "list"
+            ]
+        }
+    }
+}
