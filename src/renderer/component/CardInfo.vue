@@ -80,12 +80,12 @@ export default {
     height: auto;
     position: absolute;
     left: 50%;
-    top: 80px;
+    top: 30px;
     margin-left: -200px;
-    margin-bottom: 20px;
 }
 .form-title {
     text-align: center;
     font-size: 22px;
+    margin-bottom: 40px;
 }
 </style>
