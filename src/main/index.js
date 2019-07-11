@@ -9,8 +9,11 @@ if (process.env.NODE_ENV !== 'development') {
 
 // 主进程存储模板状态数据
 global.tplModel = {
-  tplInfo: '',
-  count: 0
+  tplInfo: ''
+};
+
+global.infoModel = {
+  cardInfo: {},
 };
 
 let mainWindow

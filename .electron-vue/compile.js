@@ -51,8 +51,9 @@ function atomCompile(content, folderName, fileName) {
         fs.writeFile(filePath, compiled.js, err => {
             console.log(`${err ? '写入失败' : '写入成功'} —— ${fileName}`);
         });
-        // fs.appendFile(path.join(__dirname, `../src/renderer/asset/main.css`), compiled.css, err => {
-        //     if (err) throw err;
-        // });
+        // css文件采用追加方式写入
+        fs.appendFile(path.join(__dirname, `../src/renderer/asset/main.css`), compiled.css, err => {
+            if (err) throw err;
+        });
     });
 }

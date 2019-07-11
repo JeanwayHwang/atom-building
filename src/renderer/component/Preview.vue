@@ -1,5 +1,5 @@
 <template>
-    <div id="preview">
+    <div class="preview-wrap">
         <c-link>
             <c-row>
                 <c-span col="4">
@@ -27,6 +27,10 @@
                 <span class="c-color-gray footer-text">度读小说 智能小程序</span>
             </c-link>
         </div>
+        <div class="download-btn-wrap">
+            <el-button type="primary" round class="download-btn">一键生成</el-button>
+            
+        </div>
     </div>
 </template>
 
@@ -50,7 +54,21 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '../asset/base.css';
 @import '../asset/main.css';
+.preview-wrap {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+.download-btn-wrap {
+    position: absolute;
+    left: 0;
+    bottom: 20px;
+    text-align: center;
+    .download-btn {
+        display: inline-block;
+    }
+}
 </style>
